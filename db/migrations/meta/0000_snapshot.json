@@ -393,9 +393,7 @@
         "salesInvoicesRaw_internalRefNo_unique": {
           "name": "salesInvoicesRaw_internalRefNo_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "internalRefNo"
-          ]
+          "columns": ["internalRefNo"]
         }
       },
       "policies": {},

@@ -1,7 +1,7 @@
 # ---- Base Stage ----
 # Use the official Node.js 20 LTS image as a base.
 # Alpine images are small and secure.
-FROM node:20-alpine AS base
+FROM node:24-alpine AS base
 WORKDIR /app
 
 # ---- Dependencies Stage ----

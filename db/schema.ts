@@ -61,5 +61,5 @@ export const salesInvoicesRawTable = pgTable("salesInvoicesRaw", {
   ewayBillNo: varchar(),
   materialGroup: varchar(),
   materialDescription2: varchar().notNull(),
-  uom: varchar().notNull(), 
+  uom: varchar().notNull(),
 });
