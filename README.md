@@ -1,36 +1,27 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# KCI MIS
+
+Runs in containers - one for the app, one for the DB.
 
 ## Getting Started
 
-First, run the development server:
+Create an .env file with the following variables:
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+    POSTGRES_USER=postgres
+    POSTGRES_PASSWORD=postgres
+    POSTGRES_DB=kci-mis
+    HOST_DB_PORT=5433
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+I recommend the above values since they work well with containerized Postgres. `HOST_DB_PORT` exposes the postgres service on port 5433 of the host machine. I have used 5433 because host machines will probably have a natively installed Postgres at the default port 5432.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Load CSV data into the database
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Download the sales register data from SAP, and convert it into a CSV file using Excel.
 
-## Learn More
+Upload the data using our data service:
 
-To learn more about Next.js, take a look at the following resources:
+    $ npm run data-service:build
+    $ npm run data-service:execute -- file/path/to.csv
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Run the NextJS app to view MIS
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+    $ npm start

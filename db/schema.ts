@@ -1,4 +1,11 @@
-import { date, decimal, integer, pgTable, varchar } from "drizzle-orm/pg-core";
+import {
+  bigint,
+  date,
+  decimal,
+  integer,
+  pgTable,
+  varchar,
+} from "drizzle-orm/pg-core";
 
 export const salesInvoicesRawTable = pgTable("salesInvoicesRaw", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -14,15 +21,15 @@ export const salesInvoicesRawTable = pgTable("salesInvoicesRaw", {
   freightByKciValue: decimal(),
   transporterName: varchar(),
   lrNo: varchar(),
-  lrDat: date(),
+  lrDate: date(),
   vehicleNo: varchar(),
   recipientCity: varchar().notNull(),
   placeOfSupply: varchar(),
   salesOrg: integer().notNull(),
   salesOrgDescription: varchar().notNull(),
   divDescription: varchar().notNull(),
-  contractNo: integer(),
-  internalRefNo: integer().notNull().unique(),
+  contractNo: bigint({ mode: "bigint" }),
+  internalRefNo: bigint({ mode: "bigint" }).notNull().unique(),
   invItem: integer(),
   invoiceType: varchar(),
   invoiceTypeDescription: varchar(),
@@ -30,7 +37,7 @@ export const salesInvoicesRawTable = pgTable("salesInvoicesRaw", {
   incotermsDescription: varchar(),
   soDate: date().notNull(),
   soQty: decimal().notNull(),
-  giNo: integer(),
+  giNo: bigint({ mode: "bigint" }),
   giDate: date(),
   gstTaxInvNo: varchar(),
   recipientGstRegNo: varchar(),

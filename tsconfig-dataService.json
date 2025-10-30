@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "CommonJS",
+    "outDir": "./.dist",
+    "noEmit": false,
+    "moduleResolution": "node",
+    "esModuleInterop": true
+  },
+  "include": ["dataService/**/*", "db/**/*"],
+  "exclude": ["node_modules", ".next", "dist"]
+}
