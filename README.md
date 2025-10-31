@@ -13,6 +13,14 @@ Create an .env file with the following variables:
 
 I recommend the above values since they work well with containerized Postgres. `HOST_DB_PORT` exposes the postgres service on port 5433 of the host machine. I have used 5433 because host machines will probably have a natively installed Postgres at the default port 5432.
 
+### Start the app and DB containers
+
+    $ docker compose up dev
+
+OR
+
+    $ docker compose up prod
+
 ### Load CSV data into the database
 
 Download the sales register data from SAP, and convert it into a CSV file using Excel.
@@ -21,7 +29,3 @@ Upload the data using our data service:
 
     $ npm run data-service:build
     $ npm run data-service:execute -- file/path/to.csv
-
-### Run the NextJS app to view MIS
-
-    $ npm start
