@@ -3,7 +3,11 @@ import { parse } from "csv-parse";
 import fs from "fs";
 import { mapKeys, trim } from "lodash";
 import { db } from "./drizzle";
-import { nullifyEmpty, transformDateFormat } from "./transformers";
+import {
+  normalizeStrings,
+  nullifyEmpty,
+  transformDateFormat,
+} from "./transformers";
 
 const columnMapping = {
   invoiceDate: "Inv. Date",
@@ -77,6 +81,17 @@ const columnTransformations: Partial<
   soDate: [transformDateFormat],
   giDate: [transformDateFormat],
   receiptVoucherDate: [transformDateFormat],
+  materialDescription: [
+    normalizeStrings([
+      "Formaldehyde",
+      "Formaldehyde-37%",
+      "Formaldehyde-36.5%",
+      "Formaldehyde-40%",
+      "Formaldehyde-43%",
+      "Hexamine",
+    ]),
+  ],
+  materialDescription2: [normalizeStrings(["Formaldehyde", "Hexamine"])],
 };
 
 function applyTransformations(value: any, transformers: any[] | undefined) {
