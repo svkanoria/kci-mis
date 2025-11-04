@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "data-service:build": "dotenvx run -- tsc --project tsconfig-dataService.json",
-    "data-service:execute": "dotenvx run -- node ./.dist/dataService/uploadData.js"
+    "data-service:execute": "dotenvx run -- node ./.dist/dataService/uploadData.js",
+    "data-service": "npm run data-service:build && npm run data-service:execute"
   },
   "dependencies": {
     "@dotenvx/dotenvx": "^1.51.0",
@@ -24,7 +25,8 @@
     "pg": "^8.16.3",
     "react": "19.2.0",
     "react-dom": "19.2.0",
-    "tailwind-merge": "^3.3.1"
+    "tailwind-merge": "^3.3.1",
+    "winston": "^3.18.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

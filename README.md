@@ -27,5 +27,4 @@ Download the sales register data from SAP, and convert it into a CSV file using 
 
 Upload the data using our data service:
 
-    $ npm run data-service:build
-    $ npm run data-service:execute -- file/path/to.csv
+    $ npm run data-service -- file/path/to.csv

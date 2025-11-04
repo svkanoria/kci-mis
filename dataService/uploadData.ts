@@ -1,6 +1,7 @@
 import { insertSalesInvoicesFromCSV } from "./insertSalesInvoicesFromCSV";
 import path from "path";
 import fs from "fs";
+import logger from "./logger";
 
 async function main() {
   const filePath = process.argv[2];
@@ -18,11 +19,11 @@ async function main() {
   }
 
   try {
-    console.log("Processing file:", absolutePath);
+    logger.info(`Processing file: ${absolutePath}`);
     await insertSalesInvoicesFromCSV(absolutePath);
-    console.log("File processed successfully.");
+    logger.info("File processed successfully.");
   } catch (error) {
-    console.error("An error occurred while processing the file:", error);
+    logger.error(`An error occurred while processing the file: ${error}`);
     process.exit(1);
   }
 }

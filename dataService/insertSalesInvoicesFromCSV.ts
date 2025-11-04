@@ -9,6 +9,7 @@ import {
   replaceStrings,
   transformDateFormat,
 } from "./transformers";
+import logger from "./logger";
 
 const columnMapping = {
   invoiceDate: "Inv. Date",
@@ -121,10 +122,14 @@ function applyTransformations(value: any, transformers: any[] | undefined) {
 function mapAndTransformCSVRecord(record: any) {
   const mappedRecord: any = {};
   for (const [schemaColumn, csvColumn] of Object.entries(columnMapping)) {
-    mappedRecord[schemaColumn] = applyTransformations(
-      record[csvColumn],
-      columnTransformations[schemaColumn as keyof typeof columnMapping],
-    );
+    try {
+      mappedRecord[schemaColumn] = applyTransformations(
+        record[csvColumn],
+        columnTransformations[schemaColumn as keyof typeof columnMapping],
+      );
+    } catch (error) {
+      throw new Error(`Could not transform column '${csvColumn}': ${error}`);
+    }
   }
   return mappedRecord;
 }
@@ -172,14 +177,15 @@ export async function insertSalesInvoicesFromCSV(filePath: string) {
   let skippedCount = 0;
   let failedCount = 0;
   for (const csvRecord of records) {
-    console.log(
-      `Uploading record #${++i}: InternalRefNo ${csvRecord["Internal Ref no"]}`,
-    );
+    const internalRefNo = csvRecord["Internal Ref no"];
+    logger.info(`Uploading record #${++i}, InternalRefNo '${internalRefNo}'`);
     let record;
     try {
       record = mapAndTransformCSVRecord(csvRecord);
     } catch (error) {
-      console.error(`Upload failed: ${error}`);
+      logger.error(
+        `Upload failed. Record #${++i}, InternalRefNo '${internalRefNo}'. Reason: ${error}`,
+      );
       failedCount++;
     }
 
@@ -193,18 +199,26 @@ export async function insertSalesInvoicesFromCSV(filePath: string) {
             set: record,
           });
       } catch (error) {
-        console.error(`Upload failed: ${error}`);
+        logger.error(
+          `Upload failed. Record #${++i}, InternalRefNo '${internalRefNo}'. Reason: ${error}`,
+        );
         failedCount++;
       }
       uploadedCount++;
     } else {
-      console.warn("Missing one or more required fields. Skipping upload.");
+      logger.warn(
+        `Upload skipped. Record #${++i}, InternalRefNo '${internalRefNo}'. Reason: Missing field(s)`,
+      );
       skippedCount++;
     }
   }
-  console.log("Summary");
-  console.log("=======");
-  console.log(`Uploaded : ${uploadedCount}`);
-  console.log(`Skipped  : ${skippedCount}`);
-  console.log(`Failed   : ${failedCount}`);
+
+  logger.info("Summary");
+  logger.info("=======");
+  logger.info(`Uploaded : ${uploadedCount}`);
+  logger.info(`Skipped  : ${skippedCount}`);
+  logger.info(`Failed   : ${failedCount}`);
+  logger.info(
+    `Find details on skipped and failed uploads in .logs/data-service.log`,
+  );
 }
