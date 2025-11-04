@@ -9,10 +9,10 @@ export default async function Home() {
       totalQty: sum(salesInvoicesRawTable.qty).as("totalQty"),
     })
     .from(salesInvoicesRawTable)
-    .where(eq(salesInvoicesRawTable.materialDescription2, "FORMALDEHYDE"))
+    .where(eq(salesInvoicesRawTable.materialDescription, "Formaldehyde-43%"))
     .groupBy(salesInvoicesRawTable.recipientName)
     .orderBy(sql`"totalQty" DESC`)
-    .limit(10);
+    .limit(100);
 
   return (
     <div className="p-4">
