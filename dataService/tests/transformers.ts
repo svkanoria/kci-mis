@@ -1,4 +1,4 @@
-import { isStringCloseEnough } from "../transformers";
+import { isStringCloseEnough, replaceStrings } from "../transformers";
 
 console.log("### Testing isStringCloseEnough:");
 
@@ -18,3 +18,17 @@ const pairs = [
 for (const [str, ref] of pairs) {
   console.log(`str:${str}, ref:${ref}: ${isStringCloseEnough(str, ref)}`);
 }
+
+console.log("### Testing replaceStrings");
+
+console.log(
+  replaceStrings([[/Formaldehyde.*37.*Drums/i, "Formaldehyde-37% in Drums"]])(
+    "FORMALDEHYDE 37% in Drums (Refilled)",
+  ),
+);
+
+console.log(
+  replaceStrings([[/Anhydrous\s*Ammonia/i, "Anhydrous Ammonia"]])(
+    "ANHYDROUS AMMONIA (NH3)",
+  ),
+);

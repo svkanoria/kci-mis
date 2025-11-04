@@ -6,6 +6,7 @@ import { db } from "./drizzle";
 import {
   normalizeStrings,
   nullifyEmpty,
+  replaceStrings,
   transformDateFormat,
 } from "./transformers";
 
@@ -87,19 +88,45 @@ const columnTransformations: Partial<
       "Formaldehyde-37%",
       "Formaldehyde-36.5%",
       "Formaldehyde-40%",
+      "Formaldehyde-41%",
       "Formaldehyde-43%",
       "Hexamine",
+      "Steam",
+      "Pentaerythritol-TG",
+      "Pentaerythritol-NG",
+      "Di-Pentaerythritol",
+      "Sodium Formate",
+    ]),
+    replaceStrings([
+      [/Formaldehyde.*37.*Drums/i, "Formaldehyde-37% in Drums"],
+      [/Anhydrous\s*Ammonia/i, "Andyhrous Ammonia"],
+      [/Pentaerythritol\sTG/, "Pentaerythritol"],
+      [/Hexamine/, "Hexamine"],
     ]),
   ],
-  materialDescription2: [normalizeStrings(["Formaldehyde", "Hexamine"])],
+  materialDescription2: [
+    normalizeStrings(["Formaldehyde", "Hexamine"]),
+    replaceStrings([[/Steam\s*Generation/i, "Steam"]]),
+  ],
 };
 
 function applyTransformations(value: any, transformers: any[] | undefined) {
-  const augmentedTransformers = [nullifyEmpty, trim, ...(transformers ?? [])];
-  return augmentedTransformers.reduce(
+  const allTransformers = [nullifyEmpty, trim, ...(transformers ?? [])];
+  return allTransformers.reduce(
     (acc, transformer) => (acc == null ? acc : transformer(acc)),
     value,
   );
+}
+
+function mapAndTransformCSVRecord(record: any) {
+  const mappedRecord: any = {};
+  for (const [schemaColumn, csvColumn] of Object.entries(columnMapping)) {
+    mappedRecord[schemaColumn] = applyTransformations(
+      record[csvColumn],
+      columnTransformations[schemaColumn as keyof typeof columnMapping],
+    );
+  }
+  return mappedRecord;
 }
 
 const requiredColumns: (keyof typeof columnMapping)[] = [
@@ -139,22 +166,45 @@ export async function insertSalesInvoicesFromCSV(filePath: string) {
     records.push(mapKeys(record, (v, k) => k.trim()));
   }
 
-  // Map CSV columns to schema fields
-  const mappedRecords = records.map((record) => {
-    const mappedRecord: any = {};
-    for (const [schemaColumn, csvColumn] of Object.entries(columnMapping)) {
-      mappedRecord[schemaColumn] = applyTransformations(
-        record[csvColumn],
-        columnTransformations[schemaColumn as keyof typeof columnMapping],
-      );
+  // Insert records into the database
+  let i = 0;
+  let uploadedCount = 0;
+  let skippedCount = 0;
+  let failedCount = 0;
+  for (const csvRecord of records) {
+    console.log(
+      `Uploading record #${++i}: InternalRefNo ${csvRecord["Internal Ref no"]}`,
+    );
+    let record;
+    try {
+      record = mapAndTransformCSVRecord(csvRecord);
+    } catch (error) {
+      console.error(`Upload failed: ${error}`);
+      failedCount++;
     }
-    return mappedRecord;
-  });
 
-  // Insert mapped records into the database
-  for (const record of mappedRecords) {
-    if (doesRecordHaveRequiredData(record)) {
-      await db.insert(salesInvoicesRawTable).values(record);
+    if (record && doesRecordHaveRequiredData(record)) {
+      try {
+        await db
+          .insert(salesInvoicesRawTable)
+          .values(record)
+          .onConflictDoUpdate({
+            target: salesInvoicesRawTable.internalRefNo,
+            set: record,
+          });
+      } catch (error) {
+        console.error(`Upload failed: ${error}`);
+        failedCount++;
+      }
+      uploadedCount++;
+    } else {
+      console.warn("Missing one or more required fields. Skipping upload.");
+      skippedCount++;
     }
   }
+  console.log("Summary");
+  console.log("=======");
+  console.log(`Uploaded : ${uploadedCount}`);
+  console.log(`Skipped  : ${skippedCount}`);
+  console.log(`Failed   : ${failedCount}`);
 }

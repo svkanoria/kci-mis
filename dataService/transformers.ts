@@ -94,3 +94,13 @@ export const normalizeStrings =
     }
     return str;
   };
+
+export const replaceStrings =
+  (replacements: [RegExp, string][]) => (str: string) => {
+    for (const [regex, replacement] of replacements) {
+      if (regex.test(str)) {
+        return replacement;
+      }
+    }
+    return str;
+  };
