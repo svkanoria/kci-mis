@@ -1,7 +1,8 @@
 # ---- Base Stage ----
-# Use the official Node.js 20 LTS image as a base.
+# Use the official Node.js 22 LTS image as a base.
 # Alpine images are small and secure.
-FROM node:24-alpine AS base
+# GOTCHA: radix-ui modules did not resolve correctly with Node.js 24.
+FROM node:22-alpine AS base
 WORKDIR /app
 
 # ---- Dependencies Stage ----
