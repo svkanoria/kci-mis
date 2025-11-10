@@ -215,6 +215,6 @@ export async function insertSalesInvoicesFromCSV(filePath: string) {
   logger.info(`Skipped  : ${skippedCount}`);
   logger.info(`Failed   : ${failedCount}`);
   logger.info(
-    `Find details on skipped and failed uploads in .logs/data-service.log`,
+    `Find details on skipped and failed uploads in .logs/data-ingestor.log`,
   );
 }

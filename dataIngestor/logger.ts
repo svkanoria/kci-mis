@@ -7,7 +7,7 @@ const logger = winston.createLogger({
       format: winston.format.cli(),
     }),
     new winston.transports.File({
-      filename: "./.logs/dataService.log",
+      filename: "./.logs/dataIngestor.log",
       level: "warn",
       format: winston.format.simple(),
       options: { flags: "w" },

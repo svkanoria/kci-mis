@@ -7,6 +7,6 @@
     "moduleResolution": "node",
     "esModuleInterop": true
   },
-  "include": ["dataService/**/*", "db/**/*"],
+  "include": ["dataIngestor/**/*", "db/**/*"],
   "exclude": ["node_modules", ".next", "dist"]
 }

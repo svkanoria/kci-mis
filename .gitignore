@@ -40,8 +40,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Data Service build
+# Data Ingestor build
 /.dist
 
-# Data Service logs
+# Data Ingestor logs
 /.logs
