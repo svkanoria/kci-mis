@@ -1,14 +1,14 @@
 import { Heading } from "@/components/typography/heading";
 import { Combobox } from "@/components/ui/combobox";
 import { DatePicker } from "@/components/ui/datePicker";
-import { getTopCustomersByVolume } from "@/lib/api";
+import { getTopCustomersByRate } from "@/dataApi";
 
 export default async function Page() {
-  const data = await getTopCustomersByVolume("Formaldehyde-37%", 100);
+  const data = await getTopCustomersByRate("Formaldehyde-37%", 100, 10000);
 
   return (
     <div className="p-4">
-      <Heading level="h1">Top Customers</Heading>
+      <Heading level="h1">Top Customers By Rate</Heading>
       <div className="p-4 border mb-4">
         <DatePicker />
         <Combobox
@@ -22,13 +22,15 @@ export default async function Page() {
           ]}
         />
       </div>
-      <ul>
+      <table>
         {data.map((row) => (
-          <li key={row.recipientName}>
-            {row.recipientName}: {row.totalQty}
-          </li>
+          <tr key={row.recipientName}>
+            <td>{row.recipientName}</td>
+            <td>{row.rate}</td>
+            <td>{row.qty}</td>
+          </tr>
         ))}
-      </ul>
+      </table>
     </div>
   );
 }

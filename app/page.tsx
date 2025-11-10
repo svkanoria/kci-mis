@@ -7,7 +7,13 @@ export default async function Home() {
       <Heading level="h1">KCI MIS</Heading>
       <ul>
         <li>
-          <Link href="/topCustomers">Top Customers</Link>
+          <Link href="/topCustomersByRate">Top Customers By Rate</Link>
+        </li>
+        <li>
+          <Link href="/topCustomersByRevenue">Top Customers By Revenue</Link>
+        </li>
+        <li>
+          <Link href="/topCustomersByVolume">Top Customers By Volume</Link>
         </li>
       </ul>
     </div>
