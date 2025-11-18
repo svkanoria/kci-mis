@@ -31,74 +31,158 @@ function isValidDate(date: Date | undefined) {
   return !isNaN(date.getTime());
 }
 
-export function DatePicker() {
-  const [open, setOpen] = React.useState(false);
-  const [date, setDate] = React.useState<Date | undefined>(
-    new Date("2025-04-01"),
-  );
-  const [month, setMonth] = React.useState<Date | undefined>(date);
-  const [value, setValue] = React.useState(formatDate(date));
-
-  return (
-    <div className="relative flex gap-2">
-      <Input
-        value={value}
-        placeholder="Select Date"
-        className="bg-background pr-10"
-        onChange={(e) => {
-          const date = new Date(e.target.value);
-          setValue(e.target.value);
-          if (isValidDate(date)) {
-            setDate(date);
-            setMonth(date);
-          }
-        }}
-        onBlur={(e) => {
-          const date = new Date(e.target.value);
-          setValue(formatDate(date));
-          if (!isValidDate(date)) {
-            setDate(undefined);
-            setMonth(undefined);
-          }
-        }}
-        onKeyDown={(e) => {
-          if (e.key === "ArrowDown") {
-            e.preventDefault();
-            setOpen(true);
-          }
-        }}
-      />
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            id="date-picker"
-            variant="ghost"
-            className="absolute top-1/2 right-2 size-6 -translate-y-1/2"
-          >
-            <CalendarIcon className="size-3.5" />
-            <span className="sr-only">Select date</span>
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent
-          className="w-auto overflow-hidden p-0"
-          align="end"
-          alignOffset={-8}
-          sideOffset={10}
-        >
-          <Calendar
-            mode="single"
-            selected={date}
-            captionLayout="dropdown"
-            month={month}
-            onMonthChange={setMonth}
-            onSelect={(date) => {
-              setDate(date);
-              setValue(formatDate(date));
-              setOpen(false);
-            }}
-          />
-        </PopoverContent>
-      </Popover>
-    </div>
-  );
+/**
+ * Props for the DatePicker component.
+ *
+ * @interface DatePickerProps
+ *
+ * @property {Date} [value] - The currently selected date. If provided, the
+ * component operates in controlled mode.
+ * @property {Date} [defaultValue] - The default date to be selected when the
+ * component is first rendered. Used in uncontrolled mode.
+ * @property {(date: Date | undefined) => void} [onChange] - Callback function
+ * triggered when the selected date changes. Receives the new date or
+ * `undefined` if the selection is cleared.
+ * @property {string} [placeholder] - Placeholder text to display when no date
+ * is selected.
+ * @property {boolean} [disabled] - Whether the date picker is disabled and not
+ * interactive.
+ */
+interface DatePickerProps {
+  value?: Date;
+  defaultValue?: Date;
+  onChange?: (date: Date | undefined) => void;
+  placeholder?: string;
+  disabled?: boolean;
 }
+
+export const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(
+  (props, ref) => {
+    const {
+      value: controlledValue,
+      defaultValue,
+      onChange,
+      placeholder = "Select Date",
+      disabled = false,
+    } = props;
+
+    const [open, setOpen] = React.useState(false);
+
+    // Component is controlled if 'value' prop was provided
+    const isControlled = "value" in props;
+
+    // Internal state for uncontrolled mode
+    const [internalDate, setInternalDate] = React.useState<Date | undefined>(
+      defaultValue ?? new Date("2025-04-01"),
+    );
+
+    const date = isControlled ? controlledValue : internalDate;
+
+    const [month, setMonth] = React.useState<Date | undefined>(date);
+    const [inputValue, setInputValue] = React.useState(formatDate(date));
+    const lastEmittedDate = React.useRef<Date | undefined>(date);
+
+    // Sync input value when date changes (for controlled mode)
+    React.useEffect(() => {
+      if (isControlled) {
+        const isSameAsEmitted =
+          (controlledValue === undefined &&
+            lastEmittedDate.current === undefined) ||
+          controlledValue?.getTime() === lastEmittedDate.current?.getTime();
+
+        if (isSameAsEmitted) {
+          if (controlledValue) {
+            setMonth(controlledValue);
+          }
+          return;
+        }
+
+        setInputValue(formatDate(controlledValue));
+        if (controlledValue) {
+          setMonth(controlledValue);
+        }
+        lastEmittedDate.current = controlledValue;
+      }
+    }, [controlledValue, isControlled]);
+
+    const handleDateChange = (newDate: Date | undefined) => {
+      lastEmittedDate.current = newDate;
+      // Always call onChange if provided
+      onChange?.(newDate);
+
+      // In uncontrolled mode, also update internal state
+      if (!isControlled) {
+        setInternalDate(newDate);
+      }
+    };
+
+    return (
+      <div className="relative flex gap-2">
+        <Input
+          ref={ref}
+          value={inputValue}
+          placeholder={placeholder}
+          disabled={disabled}
+          className="bg-background pr-10"
+          onChange={(e) => {
+            const newDate = new Date(e.target.value);
+            setInputValue(e.target.value);
+            if (isValidDate(newDate)) {
+              handleDateChange(newDate);
+              setMonth(newDate);
+            }
+          }}
+          onBlur={(e) => {
+            const newDate = new Date(e.target.value);
+            // Reformat to 'canonicalize' input value on blur
+            setInputValue(formatDate(newDate));
+            if (!isValidDate(newDate)) {
+              handleDateChange(undefined);
+              setMonth(undefined);
+            }
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "ArrowDown" && !disabled) {
+              e.preventDefault();
+              setOpen(true);
+            }
+          }}
+        />
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              id="date-picker"
+              variant="ghost"
+              disabled={disabled}
+              className="absolute top-1/2 right-2 size-6 -translate-y-1/2"
+            >
+              <CalendarIcon className="size-3.5" />
+              <span className="sr-only">Select date</span>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent
+            className="w-auto overflow-hidden p-0"
+            align="end"
+            alignOffset={-8}
+            sideOffset={10}
+          >
+            <Calendar
+              mode="single"
+              selected={date}
+              captionLayout="dropdown"
+              month={month}
+              onMonthChange={setMonth}
+              onSelect={(newDate) => {
+                handleDateChange(newDate);
+                setInputValue(formatDate(newDate));
+                setOpen(false);
+              }}
+            />
+          </PopoverContent>
+        </Popover>
+      </div>
+    );
+  },
+);
+
+DatePicker.displayName = "DatePicker";
