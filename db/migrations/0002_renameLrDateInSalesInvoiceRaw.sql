@@ -1,1 +1,0 @@
-ALTER TABLE "salesInvoicesRaw" RENAME COLUMN "lrDat" TO "lrDate";

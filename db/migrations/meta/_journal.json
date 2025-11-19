@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1761672708032,
+      "when": 1763539613100,
       "tag": "0000_createSalesInvoiceRaw",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1761844631608,
-      "tag": "0001_modifyIntegerColumnTypesInSalesInvoiceRaw",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1761846746884,
-      "tag": "0002_renameLrDateInSalesInvoiceRaw",
       "breakpoints": true
     }
   ]
