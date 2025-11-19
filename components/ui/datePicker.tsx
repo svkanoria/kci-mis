@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { CalendarIcon } from "lucide-react";
+import * as chrono from "chrono-node";
 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -125,7 +126,7 @@ export const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(
           disabled={disabled}
           className="bg-background pr-10"
           onChange={(e) => {
-            const newDate = new Date(e.target.value);
+            const newDate = chrono.parseDate(e.target.value) ?? undefined;
             setInputValue(e.target.value);
             if (isValidDate(newDate)) {
               handleDateChange(newDate);
@@ -133,7 +134,7 @@ export const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(
             }
           }}
           onBlur={(e) => {
-            const newDate = new Date(e.target.value);
+            const newDate = chrono.parseDate(e.target.value) ?? undefined;
             // Reformat to 'canonicalize' input value on blur
             setInputValue(formatDate(newDate));
             if (!isValidDate(newDate)) {
