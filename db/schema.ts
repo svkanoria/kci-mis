@@ -67,7 +67,6 @@ export const salesInvoicesRawTable = pgTable("salesInvoicesRaw", {
   recipientCity: varchar().notNull(),
   recipientGstRegNo: varchar().notNull(),
   recipientName: varchar().notNull(),
-  salesOrg: integer().notNull(),
   salesOrgDescription: varchar().notNull(),
   sgstAmount: decimal(),
   sgstPct: decimal(),

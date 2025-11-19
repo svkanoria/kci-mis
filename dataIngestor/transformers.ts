@@ -17,6 +17,11 @@ export function transformDateFormat(str: string) {
   return `${day}/${month}/${year}`;
 }
 
+export function transformNumberStr(str: string) {
+  if (!str) return str;
+  return str.replace(/,/g, "");
+}
+
 /**
  * Calculates the Levenshtein distance between two strings
  */

@@ -8,8 +8,10 @@ import {
   nullifyEmpty,
   replaceStrings,
   transformDateFormat,
+  transformNumberStr,
 } from "./transformers";
 import logger from "./logger";
+import { DrizzleQueryError } from "drizzle-orm";
 
 // Keep keys sorted alphabetically for ease
 const columnMapping: Record<
@@ -74,7 +76,6 @@ const columnMapping: Record<
   recipientCity: "Reciepient City",
   recipientGstRegNo: "Reciepient GST Reg no",
   recipientName: "Reciepient Name",
-  salesOrg: "Sales Org",
   salesOrgDescription: "Sales Org Description",
   sgstAmount: "SGST Amount",
   sgstPct: "SGST %",
@@ -94,9 +95,22 @@ const columnMapping: Record<
 const columnTransformations: Partial<
   Record<keyof typeof columnMapping, any[]>
 > = {
+  assessableValue: [transformNumberStr],
+  basicAmount: [transformNumberStr],
+  basicRate: [transformNumberStr],
+  cgstAmount: [transformNumberStr],
+  commissionRate: [transformNumberStr],
+  commissionValue: [transformNumberStr],
+  contractDate: [transformDateFormat],
+  freightByCustRate: [transformNumberStr],
+  freightByCustValue: [transformNumberStr],
+  freightByKciRate: [transformNumberStr],
+  freightByKciValue: [transformNumberStr],
   giDate: [transformDateFormat],
   gstTaxInvDate: [transformDateFormat],
+  igstAmount: [transformNumberStr],
   invDate: [transformDateFormat],
+  invoiceValue: [transformNumberStr],
   lrDate: [transformDateFormat],
   materialDescription: [
     normalizeStrings(["Steam", "Sodium Formate"]),
@@ -116,8 +130,17 @@ const columnTransformations: Partial<
       [/Hexamine/i, "Hexamine"],
     ]),
   ],
+  netRealisation: [transformNumberStr],
+  netRealisationPerUnit: [transformNumberStr],
   receiptVoucherDate: [transformDateFormat],
+  qty: [transformNumberStr],
+  sgstAmount: [transformNumberStr],
   soDate: [transformDateFormat],
+  soQty: [transformNumberStr],
+  taxableValue: [transformNumberStr],
+  tcsAmount: [transformNumberStr],
+  tcsSaleAmount: [transformNumberStr],
+  ugstAmount: [transformNumberStr],
 };
 
 function applyTransformations(value: any, transformers: any[] | undefined) {
@@ -171,18 +194,33 @@ const requiredColumns: (keyof typeof columnMapping)[] = [
   "recipientCity",
   "recipientGstRegNo",
   "recipientName",
-  "salesOrg",
   "salesOrgDescription",
   "soDate",
   "soQty",
   "uom",
 ];
 
-function doesRecordHaveRequiredData(record: any) {
+function getMissingFields(record: any) {
+  const missingFields = [];
   for (const column of requiredColumns) {
-    if (record[column] == null) return false;
+    if (record[column] == null) {
+      missingFields.push(column);
+    }
   }
-  return true;
+  return missingFields;
+}
+
+function stringifyUploadError(error: any) {
+  let str = "";
+  if (error instanceof DrizzleQueryError) {
+    if (error.cause) {
+      str += `${error.cause}; `;
+    }
+    str += `${error.message}`;
+  } else {
+    str = `${error}`;
+  }
+  return str;
 }
 
 export async function insertSalesInvoicesFromCSV(filePath: string) {
@@ -207,12 +245,13 @@ export async function insertSalesInvoicesFromCSV(filePath: string) {
       record = mapAndTransformCSVRecord(csvRecord);
     } catch (error) {
       logger.error(
-        `Upload failed. Record #${++i}, InternalRefNo '${internalRefNo}'. Reason: ${error}`,
+        `Upload failed. Record #${i}, InternalRefNo '${internalRefNo}'. Reason: ${error}`,
       );
       failedCount++;
     }
 
-    if (record && doesRecordHaveRequiredData(record)) {
+    const missingFields = getMissingFields(record);
+    if (missingFields.length === 0) {
       try {
         await db
           .insert(salesInvoicesRawTable)
@@ -223,14 +262,14 @@ export async function insertSalesInvoicesFromCSV(filePath: string) {
           });
       } catch (error) {
         logger.error(
-          `Upload failed. Record #${++i}, InternalRefNo '${internalRefNo}'. Reason: ${error}`,
+          `Upload failed. Record #${i}, InternalRefNo '${internalRefNo}'. Reason: ${stringifyUploadError(error)}`,
         );
         failedCount++;
       }
       uploadedCount++;
     } else {
       logger.warn(
-        `Upload skipped. Record #${++i}, InternalRefNo '${internalRefNo}'. Reason: Missing field(s)`,
+        `Upload skipped. Record #${i}, InternalRefNo '${internalRefNo}'. Reason: Missing field(s) ${missingFields.join(", ")}`,
       );
       skippedCount++;
     }

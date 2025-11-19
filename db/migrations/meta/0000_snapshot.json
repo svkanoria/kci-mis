@@ -1,5 +1,5 @@
 {
-  "id": "f9c0a081-7e92-4653-b642-dfad665be6de",
+  "id": "9e7ceab2-cbb9-4f34-b58b-cb4cc19855b7",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -187,15 +187,15 @@
           "primaryKey": false,
           "notNull": false
         },
-        "gstTaxInvNo": {
-          "name": "gstTaxInvNo",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
         "gstTaxInvDate": {
           "name": "gstTaxInvDate",
           "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "gstTaxInvNo": {
+          "name": "gstTaxInvNo",
+          "type": "varchar",
           "primaryKey": false,
           "notNull": true
         },
@@ -370,12 +370,6 @@
         "recipientName": {
           "name": "recipientName",
           "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "salesOrg": {
-          "name": "salesOrg",
-          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
