@@ -8,6 +8,13 @@
       "when": 1763544093128,
       "tag": "0000_createSalesInvoiceRaw",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1763576963166,
+      "tag": "0001_modifySalesInvoiceRawColumnTypes",
+      "breakpoints": true
     }
   ]
 }

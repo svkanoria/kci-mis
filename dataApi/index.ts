@@ -1,6 +1,6 @@
 import { db } from "@/db/drizzle";
 import { salesInvoicesRawTable } from "@/db/schema";
-import { avg, eq, gte, SQL, sql, sum } from "drizzle-orm";
+import { avg, eq, gte, sql, sum } from "drizzle-orm";
 
 export function getTopCustomersByRate(
   materialDescription: string,
@@ -9,13 +9,13 @@ export function getTopCustomersByRate(
 ) {
   return db
     .select({
-      recipientName: salesInvoicesRawTable.recipientName,
+      consigneeName: salesInvoicesRawTable.consigneeName,
       rate: avg(salesInvoicesRawTable.basicRate).as("rate"),
       qty: sum(salesInvoicesRawTable.qty),
     })
     .from(salesInvoicesRawTable)
     .where(eq(salesInvoicesRawTable.materialDescription, materialDescription))
-    .groupBy(salesInvoicesRawTable.recipientName)
+    .groupBy(salesInvoicesRawTable.consigneeName)
     .having(({ qty }) => gte(qty, minQty.toString()))
     .orderBy(sql`"rate" DESC`)
     .limit(limit);
@@ -27,12 +27,12 @@ export function getTopCustomersByRevenue(
 ) {
   return db
     .select({
-      recipientName: salesInvoicesRawTable.recipientName,
+      consigneeName: salesInvoicesRawTable.consigneeName,
       revenue: sum(salesInvoicesRawTable.netRealisation).as("revenue"),
     })
     .from(salesInvoicesRawTable)
     .where(eq(salesInvoicesRawTable.materialDescription, materialDescription))
-    .groupBy(salesInvoicesRawTable.recipientName)
+    .groupBy(salesInvoicesRawTable.consigneeName)
     .orderBy(sql`"revenue" DESC`)
     .limit(limit);
 }
@@ -43,15 +43,12 @@ export function getTopCustomersByVolume(
 ) {
   return db
     .select({
-      recipientName: salesInvoicesRawTable.recipientName,
+      consigneeName: salesInvoicesRawTable.consigneeName,
       qty: sum(salesInvoicesRawTable.qty).as("qty"),
     })
     .from(salesInvoicesRawTable)
     .where(eq(salesInvoicesRawTable.materialDescription, materialDescription))
-    .groupBy(salesInvoicesRawTable.recipientName)
+    .groupBy(salesInvoicesRawTable.consigneeName)
     .orderBy(sql`"qty" DESC`)
     .limit(limit);
-}
-function orderBy(arg0: SQL<unknown>) {
-  throw new Error("Function not implemented.");
 }

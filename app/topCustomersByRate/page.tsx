@@ -4,7 +4,7 @@ import { getTopCustomersByRate } from "@/dataApi";
 import { DRP } from "./drp";
 
 export default async function Page() {
-  const data = await getTopCustomersByRate("Formaldehyde-37%", 100, 10000);
+  const data = await getTopCustomersByRate("Formaldehyde-37%", 1000);
 
   return (
     <div className="p-4">
@@ -25,14 +25,15 @@ export default async function Page() {
       <table>
         <tbody>
           {data.map((row) => (
-            <tr key={row.recipientName}>
-              <td>{row.recipientName}</td>
+            <tr key={row.consigneeName}>
+              <td>{row.consigneeName}</td>
               <td>{row.rate}</td>
               <td>{row.qty}</td>
             </tr>
           ))}
         </tbody>
       </table>
+      <div>{data.length} results</div>
     </div>
   );
 }
