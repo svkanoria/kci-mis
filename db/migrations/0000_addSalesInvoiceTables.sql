@@ -1,3 +1,14 @@
+CREATE TABLE "salesInvoicesDerived" (
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "salesInvoicesDerived_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
+	"rawId" integer,
+	"normalizationFactor" numeric NOT NULL,
+	"normBasicRate" numeric,
+	"normNetRealisationPerUnit" numeric,
+	"normQty" numeric NOT NULL,
+	"productCategory" varchar NOT NULL,
+	CONSTRAINT "salesInvoicesDerived_rawId_unique" UNIQUE("rawId")
+);
+--> statement-breakpoint
 CREATE TABLE "salesInvoicesRaw" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "salesInvoicesRaw_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"assessableValue" numeric,
@@ -15,9 +26,9 @@ CREATE TABLE "salesInvoicesRaw" (
 	"consigneeRegion" varchar NOT NULL,
 	"contractNo" bigint,
 	"contractDate" date,
-	"distChannel" integer NOT NULL,
+	"distChannel" varchar NOT NULL,
 	"distChannelDescription" varchar NOT NULL,
-	"division" integer NOT NULL,
+	"division" varchar NOT NULL,
 	"divDescription" varchar NOT NULL,
 	"exchangeRate" numeric,
 	"ewayBillNo" varchar,
@@ -43,7 +54,7 @@ CREATE TABLE "salesInvoicesRaw" (
 	"invoiceValue" numeric,
 	"lrDate" date,
 	"lrNo" varchar,
-	"materialCode" integer NOT NULL,
+	"materialCode" varchar NOT NULL,
 	"materialDescription" varchar NOT NULL,
 	"netRealisation" numeric,
 	"netRealisationPerUnit" numeric,
@@ -73,3 +84,5 @@ CREATE TABLE "salesInvoicesRaw" (
 	"vehicleNo" varchar,
 	CONSTRAINT "salesInvoicesRaw_internalRefNo_unique" UNIQUE("internalRefNo")
 );
+--> statement-breakpoint
+ALTER TABLE "salesInvoicesDerived" ADD CONSTRAINT "salesInvoicesDerived_rawId_salesInvoicesRaw_id_fk" FOREIGN KEY ("rawId") REFERENCES "public"."salesInvoicesRaw"("id") ON DELETE no action ON UPDATE no action;

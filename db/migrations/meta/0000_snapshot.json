@@ -1,9 +1,97 @@
 {
-  "id": "9e7ceab2-cbb9-4f34-b58b-cb4cc19855b7",
+  "id": "09b586e2-566e-4d89-aa6d-866d9da70ea2",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
+    "public.salesInvoicesDerived": {
+      "name": "salesInvoicesDerived",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "salesInvoicesDerived_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "rawId": {
+          "name": "rawId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "normalizationFactor": {
+          "name": "normalizationFactor",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "normBasicRate": {
+          "name": "normBasicRate",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "normNetRealisationPerUnit": {
+          "name": "normNetRealisationPerUnit",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "normQty": {
+          "name": "normQty",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "productCategory": {
+          "name": "productCategory",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "salesInvoicesDerived_rawId_salesInvoicesRaw_id_fk": {
+          "name": "salesInvoicesDerived_rawId_salesInvoicesRaw_id_fk",
+          "tableFrom": "salesInvoicesDerived",
+          "tableTo": "salesInvoicesRaw",
+          "columnsFrom": [
+            "rawId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "salesInvoicesDerived_rawId_unique": {
+          "name": "salesInvoicesDerived_rawId_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "rawId"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.salesInvoicesRaw": {
       "name": "salesInvoicesRaw",
       "schema": "",
@@ -117,7 +205,7 @@
         },
         "distChannel": {
           "name": "distChannel",
-          "type": "integer",
+          "type": "varchar",
           "primaryKey": false,
           "notNull": true
         },
@@ -129,7 +217,7 @@
         },
         "division": {
           "name": "division",
-          "type": "integer",
+          "type": "varchar",
           "primaryKey": false,
           "notNull": true
         },
@@ -285,7 +373,7 @@
         },
         "materialCode": {
           "name": "materialCode",
-          "type": "integer",
+          "type": "varchar",
           "primaryKey": false,
           "notNull": true
         },

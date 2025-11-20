@@ -8,8 +8,10 @@
     "start": "next start",
     "lint": "eslint",
     "data-ingestor:build": "dotenvx run -- tsc --project tsconfig-dataIngestor.json",
-    "data-ingestor:execute": "dotenvx run -- node ./.dist/dataIngestor/uploadData.js",
-    "data-ingestor": "npm run data-ingestor:build && npm run data-ingestor:execute"
+    "data-ingestor:run-upload": "dotenvx run -- node ./.dist/dataIngestor/uploadData.js",
+    "data-ingestor:upload": "npm run data-ingestor:build && npm run data-ingestor:run-upload",
+    "data-ingestor:run-derive": "dotenvx run -- node ./.dist/dataIngestor/populateDerivedData.js",
+    "data-ingestor:derive": "npm run data-ingestor:build && npm run data-ingestor:run-derive"
   },
   "dependencies": {
     "@dotenvx/dotenvx": "^1.51.0",

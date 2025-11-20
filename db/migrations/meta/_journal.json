@@ -5,29 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1763544093128,
-      "tag": "0000_createSalesInvoiceRaw",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1763576963166,
-      "tag": "0001_modifySalesInvoiceRawColumnTypes",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1763634561726,
-      "tag": "0002_createSalesInvoiceDerived",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1763636373597,
-      "tag": "0003_renameSalesInvoiceDerivedData",
+      "when": 1763665144237,
+      "tag": "0000_addSalesInvoiceTables",
       "breakpoints": true
     }
   ]

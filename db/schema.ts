@@ -84,7 +84,9 @@ export const salesInvoicesRawTable = pgTable("salesInvoicesRaw", {
 
 export const salesInvoicesDerivedTable = pgTable("salesInvoicesDerived", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  rawId: integer().references(() => salesInvoicesRawTable.id),
+  rawId: integer()
+    .references(() => salesInvoicesRawTable.id)
+    .unique(),
   // Normalization factor (eg. to convert 43% FD to 37% FD)
   normalizationFactor: decimal().notNull(),
   normBasicRate: decimal(),
