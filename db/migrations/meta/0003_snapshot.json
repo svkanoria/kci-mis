@@ -1,0 +1,563 @@
+{
+  "id": "8dd34ed7-45d4-47a2-a4d7-c71dbfcd235d",
+  "prevId": "05d50e8b-1ab2-4e39-b605-0698c1b149e4",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.salesInvoiceDerived": {
+      "name": "salesInvoiceDerived",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "name": "salesInvoiceDerived_id_seq",
+            "increment": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "startWith": "1",
+            "cache": "1",
+            "cycle": false,
+            "schema": "public",
+            "type": "always"
+          }
+        },
+        "rawId": {
+          "name": "rawId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "normalizationFactor": {
+          "name": "normalizationFactor",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "normBasicRate": {
+          "name": "normBasicRate",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "normNetRealisationPerUnit": {
+          "name": "normNetRealisationPerUnit",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "normQty": {
+          "name": "normQty",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "productCategory": {
+          "name": "productCategory",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "salesInvoiceDerived_rawId_salesInvoicesRaw_id_fk": {
+          "name": "salesInvoiceDerived_rawId_salesInvoicesRaw_id_fk",
+          "tableFrom": "salesInvoiceDerived",
+          "columnsFrom": [
+            "rawId"
+          ],
+          "tableTo": "salesInvoicesRaw",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.salesInvoicesRaw": {
+      "name": "salesInvoicesRaw",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "name": "salesInvoicesRaw_id_seq",
+            "increment": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "startWith": "1",
+            "cache": "1",
+            "cycle": false,
+            "schema": "public",
+            "type": "always"
+          }
+        },
+        "assessableValue": {
+          "name": "assessableValue",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "basicAmount": {
+          "name": "basicAmount",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "basicRate": {
+          "name": "basicRate",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cgstAmount": {
+          "name": "cgstAmount",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cgstPct": {
+          "name": "cgstPct",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "commissionRate": {
+          "name": "commissionRate",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "commissionValue": {
+          "name": "commissionValue",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "consignee": {
+          "name": "consignee",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "consigneeCity": {
+          "name": "consigneeCity",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "consigneeGstRegNo": {
+          "name": "consigneeGstRegNo",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "consigneeName": {
+          "name": "consigneeName",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "consigneePlaceOfSupplyCode": {
+          "name": "consigneePlaceOfSupplyCode",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "consigneeRegion": {
+          "name": "consigneeRegion",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "contractNo": {
+          "name": "contractNo",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "contractDate": {
+          "name": "contractDate",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "distChannel": {
+          "name": "distChannel",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "distChannelDescription": {
+          "name": "distChannelDescription",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "division": {
+          "name": "division",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "divDescription": {
+          "name": "divDescription",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "exchangeRate": {
+          "name": "exchangeRate",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ewayBillNo": {
+          "name": "ewayBillNo",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "freightByCustRate": {
+          "name": "freightByCustRate",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "freightByCustValue": {
+          "name": "freightByCustValue",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "freightByKciRate": {
+          "name": "freightByKciRate",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "freightByKciValue": {
+          "name": "freightByKciValue",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "giDate": {
+          "name": "giDate",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "giNo": {
+          "name": "giNo",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "gstTaxInvDate": {
+          "name": "gstTaxInvDate",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "gstTaxInvNo": {
+          "name": "gstTaxInvNo",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "hsnCode": {
+          "name": "hsnCode",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "igstAmount": {
+          "name": "igstAmount",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "igstPct": {
+          "name": "igstPct",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "incoterms": {
+          "name": "incoterms",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "incotermsDescription": {
+          "name": "incotermsDescription",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "internalRefNo": {
+          "name": "internalRefNo",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "invItem": {
+          "name": "invItem",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "invDate": {
+          "name": "invDate",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "invoiceCurrency": {
+          "name": "invoiceCurrency",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "invoiceType": {
+          "name": "invoiceType",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "invoiceTypeDescription": {
+          "name": "invoiceTypeDescription",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "invoiceValue": {
+          "name": "invoiceValue",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lrDate": {
+          "name": "lrDate",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lrNo": {
+          "name": "lrNo",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "materialCode": {
+          "name": "materialCode",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "materialDescription": {
+          "name": "materialDescription",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "netRealisation": {
+          "name": "netRealisation",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "netRealisationPerUnit": {
+          "name": "netRealisationPerUnit",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "placeOfSupply": {
+          "name": "placeOfSupply",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "placeOfSupplyCode": {
+          "name": "placeOfSupplyCode",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "plant": {
+          "name": "plant",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "poNumber": {
+          "name": "poNumber",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "qty": {
+          "name": "qty",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "receiptVoucherDate": {
+          "name": "receiptVoucherDate",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "receiptVoucherNo": {
+          "name": "receiptVoucherNo",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "recipient": {
+          "name": "recipient",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "recipientCity": {
+          "name": "recipientCity",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "recipientGstRegNo": {
+          "name": "recipientGstRegNo",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "recipientName": {
+          "name": "recipientName",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "salesOrgDescription": {
+          "name": "salesOrgDescription",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sgstAmount": {
+          "name": "sgstAmount",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sgstPct": {
+          "name": "sgstPct",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "soDate": {
+          "name": "soDate",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "soQty": {
+          "name": "soQty",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "taxableValue": {
+          "name": "taxableValue",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tcsAmount": {
+          "name": "tcsAmount",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tcsSaleAmount": {
+          "name": "tcsSaleAmount",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "transporterName": {
+          "name": "transporterName",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ugstAmount": {
+          "name": "ugstAmount",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ugstPct": {
+          "name": "ugstPct",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "uom": {
+          "name": "uom",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "vehicleNo": {
+          "name": "vehicleNo",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "salesInvoicesRaw_internalRefNo_unique": {
+          "name": "salesInvoicesRaw_internalRefNo_unique",
+          "columns": [
+            "internalRefNo"
+          ],
+          "nullsNotDistinct": false
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "views": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

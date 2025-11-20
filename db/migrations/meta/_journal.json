@@ -15,6 +15,20 @@
       "when": 1763576963166,
       "tag": "0001_modifySalesInvoiceRawColumnTypes",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1763634561726,
+      "tag": "0002_createSalesInvoiceDerived",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1763636373597,
+      "tag": "0003_renameSalesInvoiceDerivedData",
+      "breakpoints": true
     }
   ]
 }

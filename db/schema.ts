@@ -81,3 +81,15 @@ export const salesInvoicesRawTable = pgTable("salesInvoicesRaw", {
   uom: varchar().notNull(),
   vehicleNo: varchar(),
 });
+
+export const salesInvoicesDerivedTable = pgTable("salesInvoicesDerived", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  rawId: integer().references(() => salesInvoicesRawTable.id),
+  // Normalization factor (eg. to convert 43% FD to 37% FD)
+  normalizationFactor: decimal().notNull(),
+  normBasicRate: decimal(),
+  normNetRealisationPerUnit: decimal(),
+  normQty: decimal().notNull(),
+  // For example, FD 37%, 40% etc. all become 'Formaldehyde'
+  productCategory: varchar().notNull(),
+});
