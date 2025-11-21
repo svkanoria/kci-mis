@@ -13,21 +13,18 @@ export default async function Page({
   const toStr = typeof to === "string" ? to : undefined;
   const productStr = typeof product === "string" ? product : undefined;
 
-  const initialRange: DateRange | undefined =
-    fromStr || toStr
-      ? {
-          from: fromStr ? new Date(fromStr) : undefined,
-          to: toStr ? new Date(toStr) : undefined,
-        }
-      : undefined;
+  const initialRange: DateRange = {
+    from: fromStr ? new Date(fromStr) : undefined,
+    to: toStr ? new Date(toStr) : undefined,
+  };
 
   const selectedProduct = productStr;
 
   const data = await getTopCustomersByRate(
     {
+      from: initialRange.from,
+      to: initialRange.to,
       product: selectedProduct,
-      from: initialRange?.from,
-      to: initialRange?.to,
     },
     1000,
   );

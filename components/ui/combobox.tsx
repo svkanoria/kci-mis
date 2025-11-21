@@ -44,6 +44,8 @@ export function Combobox(props: {
   const isControlled = "value" in props;
   const value = isControlled ? propValue : internalValue;
 
+  console.log("Combobox render", { value, internalValue, propValue });
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -54,7 +56,8 @@ export function Combobox(props: {
           className="w-[200px] justify-between"
         >
           {value
-            ? options.find((option) => option.value === value)?.label
+            ? (options.find((option) => option.value === value)?.label ??
+              "Invalid value")
             : placeholder}
           <ChevronsUpDown className="opacity-50" />
         </Button>
@@ -70,9 +73,8 @@ export function Combobox(props: {
                   key={option.value}
                   value={option.value}
                   onSelect={(currentValue) => {
-                    // Toggle selection if currently selected clicked
-                    const newValue =
-                      currentValue === value ? undefined : currentValue;
+                    // If currently selected value is clicked, deselect it
+                    const newValue = currentValue === value ? "" : currentValue;
                     if (!isControlled) {
                       setInternalValue(newValue);
                     }

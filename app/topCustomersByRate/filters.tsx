@@ -13,8 +13,8 @@ interface FiltersProps {
 }
 
 interface FilterFormValues {
-  range: DateRange | undefined;
-  product: string | undefined;
+  range: DateRange;
+  product: string;
 }
 
 export function Filters({ initialRange, initialProduct }: FiltersProps) {
@@ -23,8 +23,8 @@ export function Filters({ initialRange, initialProduct }: FiltersProps) {
 
   const { control, handleSubmit } = useForm<FilterFormValues>({
     defaultValues: {
-      range: initialRange,
-      product: initialProduct,
+      range: initialRange ?? { from: undefined, to: undefined },
+      product: initialProduct ?? "",
     },
   });
 
@@ -36,7 +36,7 @@ export function Filters({ initialRange, initialProduct }: FiltersProps) {
     if (data.range?.to) {
       params.set("to", format(data.range.to, "yyyy-MM-dd"));
     }
-    if (data.product) {
+    if (data.product !== "") {
       params.set("product", data.product);
     }
     router.replace(`${pathname}?${params.toString()}`);

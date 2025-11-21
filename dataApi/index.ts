@@ -10,11 +10,6 @@ export interface FilterParams {
 
 function getCommonConditions(filters: FilterParams) {
   const conditions = [];
-  if (filters.product) {
-    conditions.push(
-      eq(salesInvoicesRawTable.materialDescription, filters.product),
-    );
-  }
   if (filters.from) {
     conditions.push(
       gte(
@@ -29,6 +24,11 @@ function getCommonConditions(filters: FilterParams) {
         salesInvoicesRawTable.invDate,
         filters.to.toISOString().split("T")[0],
       ),
+    );
+  }
+  if (filters.product) {
+    conditions.push(
+      eq(salesInvoicesRawTable.materialDescription, filters.product),
     );
   }
   return conditions;
