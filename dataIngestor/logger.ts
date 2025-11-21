@@ -1,14 +1,14 @@
 import winston from "winston";
 
 const logger = winston.createLogger({
-  level: "info",
+  level: "debug",
   transports: [
     new winston.transports.Console({
       format: winston.format.cli(),
     }),
     new winston.transports.File({
       filename: "./.logs/dataIngestor.log",
-      level: "warn",
+      level: "info",
       format: winston.format.simple(),
       options: { flags: "w" },
     }),

@@ -1,7 +1,10 @@
-import { db } from "./drizzle";
-import { salesInvoicesDerivedTable, salesInvoicesRawTable } from "../db/schema";
+import { db } from "../drizzle";
+import {
+  salesInvoicesDerivedTable,
+  salesInvoicesRawTable,
+} from "../../db/schema";
 import { gt, sql } from "drizzle-orm";
-import logger from "./logger";
+import logger from "../logger";
 
 function getDerivedValues(
   rawRecord: typeof salesInvoicesRawTable.$inferSelect,
@@ -46,12 +49,10 @@ function getDerivedValues(
   };
 }
 
-async function main() {
+export async function computeDerivedData() {
   const BATCH_SIZE = 100;
   let lastId = 0;
   let processedCount = 0;
-
-  logger.info("Starting derived data computation...");
 
   while (true) {
     const batch = await db
@@ -85,8 +86,4 @@ async function main() {
     processedCount += batch.length;
     logger.info(`Processed ${processedCount} records...`);
   }
-
-  logger.info("Derived data computation complete.");
 }
-
-main();

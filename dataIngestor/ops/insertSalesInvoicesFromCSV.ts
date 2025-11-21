@@ -1,16 +1,16 @@
-import { salesInvoicesRawTable } from "../db/schema";
+import { salesInvoicesRawTable } from "../../db/schema";
 import { parse } from "csv-parse";
 import fs from "fs";
 import { mapKeys, trim } from "lodash";
-import { db } from "./drizzle";
+import { db } from "../drizzle";
 import {
   normalizeStrings,
   nullifyEmpty,
   replaceStrings,
   transformDateFormat,
   transformNumberStr,
-} from "./transformers";
-import logger from "./logger";
+} from "../utils/transformers";
+import logger from "../logger";
 import { DrizzleQueryError } from "drizzle-orm";
 
 // Keep keys sorted alphabetically for ease
@@ -239,13 +239,15 @@ export async function insertSalesInvoicesFromCSV(filePath: string) {
   let failedCount = 0;
   for (const csvRecord of records) {
     const internalRefNo = csvRecord["Internal Ref no"];
-    logger.info(`Uploading record #${++i}, InternalRefNo '${internalRefNo}'`);
+    logger.verbose(
+      `Uploading record #${++i}, internalRefNo '${internalRefNo}'`,
+    );
     let record;
     try {
       record = mapAndTransformCSVRecord(csvRecord);
     } catch (error) {
       logger.error(
-        `Upload failed. Record #${i}, InternalRefNo '${internalRefNo}'. Reason: ${error}`,
+        `Upload failed for record #${i}, internalRefNo '${internalRefNo}'. Reason: ${error}`,
       );
       failedCount++;
     }
@@ -260,16 +262,16 @@ export async function insertSalesInvoicesFromCSV(filePath: string) {
             target: salesInvoicesRawTable.internalRefNo,
             set: record,
           });
+        uploadedCount++;
       } catch (error) {
         logger.error(
-          `Upload failed. Record #${i}, InternalRefNo '${internalRefNo}'. Reason: ${stringifyUploadError(error)}`,
+          `Upload failed for record #${i}, internalRefNo '${internalRefNo}'. Reason: ${stringifyUploadError(error)}`,
         );
         failedCount++;
       }
-      uploadedCount++;
     } else {
       logger.warn(
-        `Upload skipped. Record #${i}, InternalRefNo '${internalRefNo}'. Reason: Missing field(s) ${missingFields.join(", ")}`,
+        `Upload skipped for record #${i}, internalRefNo '${internalRefNo}'. Reason: Missing field(s) ${missingFields.join(", ")}`,
       );
       skippedCount++;
     }
@@ -280,7 +282,5 @@ export async function insertSalesInvoicesFromCSV(filePath: string) {
   logger.info(`Uploaded : ${uploadedCount}`);
   logger.info(`Skipped  : ${skippedCount}`);
   logger.info(`Failed   : ${failedCount}`);
-  logger.info(
-    `Find details on skipped and failed uploads in .logs/data-ingestor.log`,
-  );
+  logger.info(`TOTAL    : ${i}`);
 }

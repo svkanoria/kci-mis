@@ -1,4 +1,4 @@
-import { isStringCloseEnough, replaceStrings } from "../transformers";
+import { isStringCloseEnough, replaceStrings } from "../utils/transformers";
 
 console.log("### Testing isStringCloseEnough:");
 
