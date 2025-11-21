@@ -88,6 +88,10 @@ async function main() {
       logger.info(logStyles.info("Computing derived data..."));
       await computeDerivedData();
       logger.info(logStyles.success("Data ingestion complete."));
+
+      logger.verbose(
+        chalk.magenta("See ./.logs/dataIngestor.log file for details."),
+      );
     });
 
   await program.parseAsync(process.argv);
