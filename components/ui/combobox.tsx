@@ -44,8 +44,6 @@ export function Combobox(props: {
   const isControlled = "value" in props;
   const value = isControlled ? propValue : internalValue;
 
-  console.log("Combobox render", { value, internalValue, propValue });
-
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -73,7 +71,10 @@ export function Combobox(props: {
                   key={option.value}
                   value={option.value}
                   onSelect={(currentValue) => {
-                    // If currently selected value is clicked, deselect it
+                    // If currently selected value is clicked, deselect it.
+                    // Note that to deselect it, we set the value to "", and not
+                    // to undefined. Setting to undefined leads to problems with
+                    // react-hook-form's default value handling.
                     const newValue = currentValue === value ? "" : currentValue;
                     if (!isControlled) {
                       setInternalValue(newValue);
