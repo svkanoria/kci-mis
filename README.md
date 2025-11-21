@@ -25,4 +25,4 @@ OR
 
 Upload the data using our data ingestor service:
 
-    $ npm run data-ingestor -- /path/to/directory/of/csv/files
+    $ npm run data-ingestor
