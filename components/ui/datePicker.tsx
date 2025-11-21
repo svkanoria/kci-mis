@@ -74,7 +74,7 @@ export const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(
 
     // Internal state for uncontrolled mode
     const [internalDate, setInternalDate] = React.useState<Date | undefined>(
-      defaultValue ?? new Date("2000-01-01"),
+      defaultValue ?? undefined,
     );
 
     const date = isControlled ? controlledValue : internalDate;

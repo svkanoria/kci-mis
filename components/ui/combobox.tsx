@@ -25,7 +25,7 @@ export function Combobox(props: {
   emptyMessage?: string;
   searchMessage?: string;
   value?: string;
-  onValueChange?: (value: string | undefined) => void;
+  onChange?: (value: string | undefined) => void;
 }) {
   const {
     options,
@@ -33,7 +33,7 @@ export function Combobox(props: {
     emptyMessage = "No results.",
     searchMessage = "Search for option...",
     value: propValue,
-    onValueChange,
+    onChange,
   } = props;
 
   const [open, setOpen] = React.useState(false);
@@ -76,7 +76,7 @@ export function Combobox(props: {
                     if (!isControlled) {
                       setInternalValue(newValue);
                     }
-                    onValueChange?.(newValue);
+                    onChange?.(newValue);
                     setOpen(false);
                   }}
                 >
