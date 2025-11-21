@@ -5,21 +5,27 @@ import { DateRange, DateRangePicker } from "@/components/ui/dateRangePicker";
 import { Button } from "@/components/ui/button";
 import { useRouter, usePathname } from "next/navigation";
 import { useState } from "react";
+import { format } from "date-fns";
 
-export function Filters() {
+interface FiltersProps {
+  initialRange?: DateRange;
+  initialProduct?: string;
+}
+
+export function Filters({ initialRange, initialProduct }: FiltersProps) {
   const router = useRouter();
   const pathname = usePathname();
 
-  const [range, setRange] = useState<DateRange | undefined>(undefined);
-  const [product, setProduct] = useState<string | undefined>(undefined);
+  const [range, setRange] = useState<DateRange | undefined>(initialRange);
+  const [product, setProduct] = useState<string | undefined>(initialProduct);
 
   const handleGo = () => {
     const params = new URLSearchParams();
     if (range?.from) {
-      params.set("from", range.from.toISOString());
+      params.set("from", format(range.from, "yyyy-MM-dd"));
     }
     if (range?.to) {
-      params.set("to", range.to.toISOString());
+      params.set("to", format(range.to, "yyyy-MM-dd"));
     }
     if (product) {
       params.set("product", product);
