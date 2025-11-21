@@ -21,9 +21,16 @@ export default async function Page({
         }
       : undefined;
 
-  const selectedProduct = productStr ?? "Formaldehyde-37%";
+  const selectedProduct = productStr;
 
-  const data = await getTopCustomersByRate(selectedProduct, 1000);
+  const data = await getTopCustomersByRate(
+    {
+      product: selectedProduct,
+      from: initialRange?.from,
+      to: initialRange?.to,
+    },
+    1000,
+  );
 
   return (
     <div className="p-4">
@@ -33,6 +40,7 @@ export default async function Page({
         initialProduct={selectedProduct}
         key={`${selectedProduct}-${fromStr}-${toStr}`}
       />
+      <div>{data.length} results</div>
       <table>
         <tbody>
           {data.map((row) => (
@@ -44,7 +52,6 @@ export default async function Page({
           ))}
         </tbody>
       </table>
-      <div>{data.length} results</div>
     </div>
   );
 }

@@ -3,7 +3,10 @@ import { Combobox } from "@/components/ui/combobox";
 import { getTopCustomersByRevenue } from "@/dataApi";
 
 export default async function Page() {
-  const data = await getTopCustomersByRevenue("Formaldehyde-37%", 1000);
+  const data = await getTopCustomersByRevenue(
+    { product: "Formaldehyde-37%" },
+    1000,
+  );
 
   return (
     <div className="p-4">
