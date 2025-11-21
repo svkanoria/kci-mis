@@ -4,7 +4,7 @@ import { Command } from "commander";
 import { select } from "@inquirer/prompts";
 import { fileSelector } from "inquirer-file-selector";
 import chalk from "chalk";
-import logger from "./logger";
+import logger, { logStyles } from "./logger";
 import { computeDerivedData } from "./ops/computeDerivedData";
 import { insertSalesInvoicesFromCSV } from "./ops/insertSalesInvoicesFromCSV";
 
@@ -40,15 +40,19 @@ async function main() {
         const absolutePath = path.resolve(dirPath);
 
         if (!fs.existsSync(absolutePath)) {
-          logger.error(
-            chalk.red(`The specified path does not exist: ${absolutePath}`),
+          console.error(
+            logStyles.error(
+              `The specified path does not exist: ${absolutePath}`,
+            ),
           );
           process.exit(1);
         }
 
         if (!fs.statSync(absolutePath).isDirectory()) {
-          logger.error(
-            chalk.red(`The specified path is not a directory: ${absolutePath}`),
+          console.error(
+            logStyles.error(
+              `The specified path is not a directory: ${absolutePath}`,
+            ),
           );
           process.exit(1);
         }
@@ -58,8 +62,8 @@ async function main() {
           .filter((file) => path.extname(file).toLowerCase() === ".csv");
 
         if (files.length === 0) {
-          logger.warn(
-            chalk.yellow("No CSV files found in the specified directory."),
+          console.warn(
+            logStyles.warn("No CSV files found in the specified directory."),
           );
           return;
         }
@@ -69,21 +73,21 @@ async function main() {
         for (const file of files) {
           const filePath = path.join(absolutePath, file);
           try {
-            logger.info(chalk.cyan(`Uploading data from '${file}'...`));
+            logger.info(logStyles.info(`Uploading data from '${file}'...`));
             await insertSalesInvoicesFromCSV(filePath);
-            logger.info(chalk.green(`Successfully uploaded '${file}'`));
+            logger.info(logStyles.success(`Completed upload from '${file}'.`));
           } catch (error) {
             logger.error(
-              chalk.red(`Error uploading data from '${file}': ${error}`),
+              logStyles.error(`Error uploading data from '${file}': ${error}`),
             );
             process.exit(1);
           }
         }
       }
 
-      logger.info(chalk.blue("Computing derived data..."));
+      logger.info(logStyles.info("Computing derived data..."));
       await computeDerivedData();
-      logger.info(chalk.green("Data ingestion complete."));
+      logger.info(logStyles.success("Data ingestion complete."));
     });
 
   await program.parseAsync(process.argv);

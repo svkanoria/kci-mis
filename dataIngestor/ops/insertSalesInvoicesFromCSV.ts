@@ -10,8 +10,9 @@ import {
   transformDateFormat,
   transformNumberStr,
 } from "../utils/transformers";
-import logger from "../logger";
+import logger, { logStyles } from "../logger";
 import { DrizzleQueryError } from "drizzle-orm";
+import chalk from "chalk";
 
 // Keep keys sorted alphabetically for ease
 const columnMapping: Record<
@@ -247,7 +248,9 @@ export async function insertSalesInvoicesFromCSV(filePath: string) {
       record = mapAndTransformCSVRecord(csvRecord);
     } catch (error) {
       logger.error(
-        `Upload failed for record #${i}, internalRefNo '${internalRefNo}'. Reason: ${error}`,
+        logStyles.error(
+          `Upload failed for record #${i}, internalRefNo '${internalRefNo}'. Reason: ${error}`,
+        ),
       );
       failedCount++;
     }
@@ -265,22 +268,26 @@ export async function insertSalesInvoicesFromCSV(filePath: string) {
         uploadedCount++;
       } catch (error) {
         logger.error(
-          `Upload failed for record #${i}, internalRefNo '${internalRefNo}'. Reason: ${stringifyUploadError(error)}`,
+          logStyles.error(
+            `Upload failed for record #${i}, internalRefNo '${internalRefNo}'. Reason: ${stringifyUploadError(error)}`,
+          ),
         );
         failedCount++;
       }
     } else {
       logger.warn(
-        `Upload skipped for record #${i}, internalRefNo '${internalRefNo}'. Reason: Missing field(s) ${missingFields.join(", ")}`,
+        logStyles.warn(
+          `Upload skipped for record #${i}, internalRefNo '${internalRefNo}'. Reason: Missing field(s) ${missingFields.join(", ")}`,
+        ),
       );
       skippedCount++;
     }
   }
 
-  logger.info("Summary");
-  logger.info("=======");
+  logger.info(chalk.cyan("Summary"));
+  logger.info(chalk.cyan("======="));
   logger.info(`Uploaded : ${uploadedCount}`);
   logger.info(`Skipped  : ${skippedCount}`);
   logger.info(`Failed   : ${failedCount}`);
-  logger.info(`TOTAL    : ${i}`);
+  logger.info(chalk.bold(`TOTAL    : ${i}`));
 }
