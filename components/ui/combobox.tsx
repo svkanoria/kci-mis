@@ -19,19 +19,30 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
-export function Combobox({
-  options,
-  placeholder = "Select an option...",
-  emptyMessage = "No results.",
-  searchMessage = "Search for option...",
-}: {
+export function Combobox(props: {
   options: { value: string; label: string }[];
   placeholder?: string;
   emptyMessage?: string;
   searchMessage?: string;
+  value?: string;
+  onValueChange?: (value: string | undefined) => void;
 }) {
+  const {
+    options,
+    placeholder = "Select an option...",
+    emptyMessage = "No results.",
+    searchMessage = "Search for option...",
+    value: propValue,
+    onValueChange,
+  } = props;
+
   const [open, setOpen] = React.useState(false);
-  const [value, setValue] = React.useState("");
+  const [internalValue, setInternalValue] = React.useState<string | undefined>(
+    undefined,
+  );
+
+  const isControlled = "value" in props;
+  const value = isControlled ? propValue : internalValue;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -59,7 +70,13 @@ export function Combobox({
                   key={option.value}
                   value={option.value}
                   onSelect={(currentValue) => {
-                    setValue(currentValue === value ? "" : currentValue);
+                    // Toggle selection if currently selected clicked
+                    const newValue =
+                      currentValue === value ? undefined : currentValue;
+                    if (!isControlled) {
+                      setInternalValue(newValue);
+                    }
+                    onValueChange?.(newValue);
                     setOpen(false);
                   }}
                 >
