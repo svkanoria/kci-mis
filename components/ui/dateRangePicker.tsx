@@ -40,8 +40,8 @@ export const DateRangePicker = React.forwardRef<
     DateRange | undefined
   >(
     defaultValue ?? {
-      from: new Date("2025-04-01"),
-      to: new Date("2025-04-30"),
+      from: new Date("2000-01-01"),
+      to: new Date("2000-01-31"),
     },
   );
 

@@ -1,12 +1,13 @@
 "use client";
 
 import { DateRange, DateRangePicker } from "@/components/ui/dateRangePicker";
+import { getEndOfPreviousFY, getStartOfPreviousFY } from "@/utils/date";
 import { useState } from "react";
 
 export function DRP() {
   const [range, setRange] = useState<DateRange | undefined>({
-    from: new Date("2025-04-01"),
-    to: new Date("2025-04-30"),
+    from: getStartOfPreviousFY(),
+    to: getEndOfPreviousFY(),
   });
 
   return (
