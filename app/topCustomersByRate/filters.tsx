@@ -4,31 +4,41 @@ import { Combobox } from "@/components/ui/combobox";
 import { DateRange, DateRangePicker } from "@/components/ui/dateRangePicker";
 import { Button } from "@/components/ui/button";
 import { useRouter, usePathname } from "next/navigation";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, Control, DefaultValues } from "react-hook-form";
 import { format } from "date-fns";
 
-interface FiltersProps {
+interface FiltersProps<T extends FilterFormValues> {
   initialRange?: DateRange;
   initialProduct?: string;
+  renderExtraFields?: (control: Control<T>) => React.ReactNode;
+  onExtraSubmit?: (data: T, params: URLSearchParams) => void;
+  extraDefaultValues?: Partial<T>;
 }
 
-interface FilterFormValues {
+export interface FilterFormValues {
   range: DateRange;
   product: string;
 }
 
-export function Filters({ initialRange, initialProduct }: FiltersProps) {
+export function Filters<T extends FilterFormValues = FilterFormValues>({
+  initialRange,
+  initialProduct,
+  renderExtraFields,
+  onExtraSubmit,
+  extraDefaultValues,
+}: FiltersProps<T>) {
   const router = useRouter();
   const pathname = usePathname();
 
-  const { control, handleSubmit } = useForm<FilterFormValues>({
+  const { control, handleSubmit } = useForm<T>({
     defaultValues: {
       range: initialRange ?? { from: undefined, to: undefined },
       product: initialProduct ?? "",
-    },
+      ...extraDefaultValues,
+    } as DefaultValues<T>,
   });
 
-  const onSubmit = (data: FilterFormValues) => {
+  const onSubmit = (data: T) => {
     const params = new URLSearchParams();
     if (data.range?.from) {
       params.set("from", format(data.range.from, "yyyy-MM-dd"));
@@ -39,20 +49,23 @@ export function Filters({ initialRange, initialProduct }: FiltersProps) {
     if (data.product !== "") {
       params.set("product", data.product);
     }
+    if (onExtraSubmit) {
+      onExtraSubmit(data, params);
+    }
     router.replace(`${pathname}?${params.toString()}`);
   };
 
   return (
     <form className="p-4 border mb-4 flex gap-4 items-center">
       <Controller
-        control={control}
+        control={control as unknown as Control<FilterFormValues>}
         name="range"
         render={({ field }) => (
           <DateRangePicker value={field.value} onChange={field.onChange} />
         )}
       />
       <Controller
-        control={control}
+        control={control as unknown as Control<FilterFormValues>}
         name="product"
         render={({ field }) => (
           <Combobox
@@ -70,6 +83,7 @@ export function Filters({ initialRange, initialProduct }: FiltersProps) {
           />
         )}
       />
+      {renderExtraFields && renderExtraFields(control)}
       <Button onClick={handleSubmit(onSubmit)}>Go</Button>
     </form>
   );
