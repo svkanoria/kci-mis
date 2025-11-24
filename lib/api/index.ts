@@ -37,7 +37,7 @@ function getCommonConditions(filters: FilterParams) {
 export function getTopCustomersByRate(
   filters: FilterParams,
   limit: number,
-  minQty = 0,
+  qtyThreshold = 0,
 ) {
   return db
     .select({
@@ -48,7 +48,7 @@ export function getTopCustomersByRate(
     .from(salesInvoicesRawTable)
     .where(and(...getCommonConditions(filters)))
     .groupBy(salesInvoicesRawTable.consigneeName)
-    .having(({ qty }) => gte(qty, minQty.toString()))
+    .having(({ qty }) => gte(qty, qtyThreshold.toString()))
     .orderBy(sql`"rate" DESC`)
     .limit(limit);
 }

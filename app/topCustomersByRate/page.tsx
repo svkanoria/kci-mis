@@ -8,7 +8,11 @@ export default async function Page({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const { from, to, product } = extractFilterParams(await searchParams);
+  const resolvedSearchParams = await searchParams;
+  const { from, to, product } = extractFilterParams(resolvedSearchParams);
+  const qtyThreshold = resolvedSearchParams.qtyThreshold
+    ? Number(resolvedSearchParams.qtyThreshold)
+    : undefined;
 
   const data = await getTopCustomersByRate(
     {
@@ -17,6 +21,7 @@ export default async function Page({
       product,
     },
     1000,
+    qtyThreshold,
   );
 
   return (
@@ -26,7 +31,8 @@ export default async function Page({
         initialFrom={from}
         initialTo={to}
         initialProduct={product}
-        key={`${from}-${to}-${product}`}
+        initialQtyThreshold={qtyThreshold}
+        key={`${from}-${to}-${product}-${qtyThreshold}`}
       />
       <div>{data.length} results</div>
       <table>

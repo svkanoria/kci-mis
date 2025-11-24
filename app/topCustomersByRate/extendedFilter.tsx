@@ -5,43 +5,40 @@ import {
   FilterFormValues,
   FilterProps,
 } from "@/app/_components/filter";
-import { Combobox } from "@/components/ui/combobox";
+import { Input } from "@/components/ui/input";
 import { Controller } from "react-hook-form";
 
 interface ExtendedFilterFormValues extends FilterFormValues {
-  interval: string;
+  qtyThreshold: string;
 }
 
 export function ExtendedFilter({
-  initialInterval,
+  initialQtyThreshold,
   ...props
 }: FilterProps<ExtendedFilterFormValues> & {
-  initialInterval?: string;
+  initialQtyThreshold?: number;
 }) {
   return (
     <Filter<ExtendedFilterFormValues>
       {...props}
-      extraDefaultValues={{ interval: initialInterval ?? "total" }}
+      extraDefaultValues={{
+        qtyThreshold: initialQtyThreshold?.toString() ?? "",
+      }}
       onExtraSubmit={(data, params) => {
-        if (data.interval) {
-          params.set("interval", data.interval);
+        if (data.qtyThreshold !== "") {
+          params.set("qtyThreshold", data.qtyThreshold);
         }
       }}
       renderExtraFields={(control) => (
         <Controller
           control={control}
-          name="interval"
+          name="qtyThreshold"
           render={({ field }) => (
-            <Combobox
-              options={[
-                { value: "total", label: "Total" },
-                { value: "year", label: "Year" },
-                { value: "quarter", label: "Quarter" },
-                { value: "month", label: "Month" },
-              ]}
-              placeholder="Select Interval"
-              value={field.value}
-              onChange={field.onChange}
+            <Input
+              className="max-w-50"
+              type="number"
+              placeholder="Qty Threshold (MT)"
+              {...field}
             />
           )}
         />
