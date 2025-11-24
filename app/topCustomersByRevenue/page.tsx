@@ -1,8 +1,8 @@
 import { Heading } from "@/components/typography/heading";
 import { Combobox } from "@/components/ui/combobox";
 import { getTopCustomersByRevenue } from "@/lib/api";
-import { extractFilterParams } from "../_utils/filters";
-import { Filters } from "../_components/filters";
+import { extractFilterParams } from "../_utils/filter";
+import { Filter } from "../_components/filter";
 
 export default async function Page({
   searchParams,
@@ -23,7 +23,7 @@ export default async function Page({
   return (
     <div className="p-4">
       <Heading level="h1">Top Customers By Revenue</Heading>
-      <Filters
+      <Filter
         initialFrom={from}
         initialTo={to}
         initialProduct={product}

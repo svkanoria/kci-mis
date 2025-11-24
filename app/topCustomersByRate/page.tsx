@@ -1,7 +1,7 @@
 import { Heading } from "@/components/typography/heading";
 import { getTopCustomersByRate } from "@/lib/api";
-import { Filters } from "../_components/filters";
-import { extractFilterParams } from "../_utils/filters";
+import { ExtendedFilter } from "./extendedFilter";
+import { extractFilterParams } from "../_utils/filter";
 
 export default async function Page({
   searchParams,
@@ -22,7 +22,7 @@ export default async function Page({
   return (
     <div className="p-4">
       <Heading level="h1">Top Customers By Rate</Heading>
-      <Filters
+      <ExtendedFilter
         initialFrom={from}
         initialTo={to}
         initialProduct={product}

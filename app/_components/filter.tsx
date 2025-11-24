@@ -7,7 +7,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useForm, Controller, Control, DefaultValues } from "react-hook-form";
 import { format } from "date-fns";
 
-interface FiltersProps<T extends FilterFormValues> {
+export interface FilterProps<T extends FilterFormValues> {
   initialFrom?: Date;
   initialTo?: Date;
   initialProduct?: string;
@@ -21,14 +21,14 @@ export interface FilterFormValues {
   product: string;
 }
 
-export function Filters<T extends FilterFormValues = FilterFormValues>({
+export function Filter<T extends FilterFormValues = FilterFormValues>({
   initialFrom,
   initialTo,
   initialProduct,
   renderExtraFields,
   onExtraSubmit,
   extraDefaultValues,
-}: FiltersProps<T>) {
+}: FilterProps<T>) {
   const router = useRouter();
   const pathname = usePathname();
 
