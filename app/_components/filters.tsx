@@ -8,7 +8,8 @@ import { useForm, Controller, Control, DefaultValues } from "react-hook-form";
 import { format } from "date-fns";
 
 interface FiltersProps<T extends FilterFormValues> {
-  initialRange?: DateRange;
+  initialFrom?: Date;
+  initialTo?: Date;
   initialProduct?: string;
   renderExtraFields?: (control: Control<T>) => React.ReactNode;
   onExtraSubmit?: (data: T, params: URLSearchParams) => void;
@@ -21,7 +22,8 @@ export interface FilterFormValues {
 }
 
 export function Filters<T extends FilterFormValues = FilterFormValues>({
-  initialRange,
+  initialFrom,
+  initialTo,
   initialProduct,
   renderExtraFields,
   onExtraSubmit,
@@ -32,7 +34,7 @@ export function Filters<T extends FilterFormValues = FilterFormValues>({
 
   const { control, handleSubmit } = useForm<T>({
     defaultValues: {
-      range: initialRange ?? { from: undefined, to: undefined },
+      range: { from: initialFrom, to: initialTo },
       product: initialProduct ?? "",
       ...extraDefaultValues,
     } as DefaultValues<T>,

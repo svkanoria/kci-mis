@@ -1,30 +1,20 @@
 import { Heading } from "@/components/typography/heading";
-import { getTopCustomersByRate } from "@/dataApi";
-import { Filters } from "./filters";
-import { DateRange } from "@/components/ui/dateRangePicker";
+import { getTopCustomersByRate } from "@/lib/api";
+import { Filters } from "../_components/filters";
+import { extractFilterParams } from "../_utils/filters";
 
 export default async function Page({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const { from, to, product } = await searchParams;
-  const fromStr = typeof from === "string" ? from : undefined;
-  const toStr = typeof to === "string" ? to : undefined;
-  const productStr = typeof product === "string" ? product : undefined;
-
-  const initialRange: DateRange = {
-    from: fromStr ? new Date(fromStr) : undefined,
-    to: toStr ? new Date(toStr) : undefined,
-  };
-
-  const selectedProduct = productStr;
+  const { from, to, product } = extractFilterParams(await searchParams);
 
   const data = await getTopCustomersByRate(
     {
-      from: initialRange.from,
-      to: initialRange.to,
-      product: selectedProduct,
+      from,
+      to,
+      product,
     },
     1000,
   );
@@ -33,9 +23,10 @@ export default async function Page({
     <div className="p-4">
       <Heading level="h1">Top Customers By Rate</Heading>
       <Filters
-        initialRange={initialRange}
-        initialProduct={selectedProduct}
-        key={`${selectedProduct}-${fromStr}-${toStr}`}
+        initialFrom={from}
+        initialTo={to}
+        initialProduct={product}
+        key={`${from}-${to}-${product}`}
       />
       <div>{data.length} results</div>
       <table>

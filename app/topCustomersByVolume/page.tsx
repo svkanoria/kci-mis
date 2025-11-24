@@ -1,28 +1,35 @@
 import { Heading } from "@/components/typography/heading";
 import { Combobox } from "@/components/ui/combobox";
-import { getTopCustomersByVolume } from "@/dataApi";
+import { getTopCustomersByVolume } from "@/lib/api";
+import { extractFilterParams } from "../_utils/filters";
+import { Filters } from "../_components/filters";
 
-export default async function Page() {
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const { from, to, product } = extractFilterParams(await searchParams);
+
   const data = await getTopCustomersByVolume(
-    { product: "Formaldehyde-37%" },
+    {
+      from,
+      to,
+      product,
+    },
     1000,
   );
 
   return (
     <div className="p-4">
       <Heading level="h1">Top Customers By Volume</Heading>
-      <div className="p-4 border mb-4">
-        <Combobox
-          options={[
-            { value: "Formaldehyde", label: "Formaldehyde" },
-            { value: "Formaldehyde-37%", label: "Formaldehyde-37%" },
-            { value: "Formaldehyde-40%", label: "Formaldehyde-40%" },
-            { value: "Formaldehyde-41%", label: "Formaldehyde-41%" },
-            { value: "Formaldehyde-43%", label: "Formaldehyde-43%" },
-            { value: "Formaldehyde-36.5%", label: "Formaldehyde-36.5%" },
-          ]}
-        />
-      </div>
+      <Filters
+        initialFrom={from}
+        initialTo={to}
+        initialProduct={product}
+        key={`${from}-${to}-${product}`}
+      />
+      <div>{data.length} results</div>
       <table>
         <tbody>
           {data.map((row) => (
@@ -33,7 +40,6 @@ export default async function Page() {
           ))}
         </tbody>
       </table>
-      <div>{data.length} results</div>
     </div>
   );
 }
