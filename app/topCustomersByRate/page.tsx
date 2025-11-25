@@ -2,6 +2,8 @@ import { Heading } from "@/components/typography/heading";
 import { getTopCustomersByRate } from "@/lib/api";
 import { ExtendedFilter } from "./extendedFilter";
 import { extractFilterParams } from "../_utils/filter";
+import { DataGrid } from "./dataGrid";
+import { Suspense } from "react";
 
 export default async function Page({
   searchParams,
@@ -14,7 +16,7 @@ export default async function Page({
     ? Number(resolvedSearchParams.qtyThreshold)
     : undefined;
 
-  const data = await getTopCustomersByRate(
+  const data = getTopCustomersByRate(
     {
       from,
       to,
@@ -25,7 +27,7 @@ export default async function Page({
   );
 
   return (
-    <div className="p-4">
+    <div className="flex h-full flex-col gap-4 p-4">
       <Heading level="h1">Top Customers By Rate</Heading>
       <ExtendedFilter
         initialFrom={from}
@@ -34,18 +36,9 @@ export default async function Page({
         initialQtyThreshold={qtyThreshold}
         key={`${from}-${to}-${product}-${qtyThreshold}`}
       />
-      <div>{data.length} results</div>
-      <table>
-        <tbody>
-          {data.map((row) => (
-            <tr key={row.consigneeName}>
-              <td>{row.consigneeName}</td>
-              <td>{row.rate}</td>
-              <td>{row.qty}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <Suspense fallback={<div>Loading...</div>}>
+        <DataGrid data={data} />
+      </Suspense>
     </div>
   );
 }

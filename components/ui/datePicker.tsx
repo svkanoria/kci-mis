@@ -12,6 +12,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 function formatDate(date: Date | undefined) {
   if (!date) {
@@ -20,7 +21,7 @@ function formatDate(date: Date | undefined) {
 
   return date.toLocaleDateString("en-US", {
     day: "2-digit",
-    month: "long",
+    month: "short",
     year: "numeric",
   });
 }
@@ -48,6 +49,8 @@ function isValidDate(date: Date | undefined) {
  * is selected.
  * @property {boolean} [disabled] - Whether the date picker is disabled and not
  * interactive.
+ * @property {string} [className] - Additional CSS classes to apply to the
+ * component container.
  */
 interface DatePickerProps {
   value?: Date;
@@ -55,6 +58,7 @@ interface DatePickerProps {
   onChange?: (date: Date | undefined) => void;
   placeholder?: string;
   disabled?: boolean;
+  className?: string;
 }
 
 export const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(
@@ -65,6 +69,7 @@ export const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(
       onChange,
       placeholder = "Select Date",
       disabled = false,
+      className,
     } = props;
 
     const [open, setOpen] = React.useState(false);
@@ -118,7 +123,7 @@ export const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(
     };
 
     return (
-      <div className="relative flex gap-2">
+      <div className={cn("relative flex gap-2", className)}>
         <Input
           ref={ref}
           value={inputValue}

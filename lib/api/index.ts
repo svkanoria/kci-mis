@@ -42,13 +42,17 @@ export function getTopCustomersByRate(
   return db
     .select({
       consigneeName: salesInvoicesRawTable.consigneeName,
-      rate: avg(salesInvoicesRawTable.basicRate).as("rate"),
-      qty: sum(salesInvoicesRawTable.qty),
+      rate: sql<number>`avg(${salesInvoicesRawTable.basicRate})`
+        .mapWith(Number)
+        .as("rate"),
+      qty: sql<number>`sum(${salesInvoicesRawTable.qty})`
+        .mapWith(Number)
+        .as("qty"),
     })
     .from(salesInvoicesRawTable)
     .where(and(...getCommonConditions(filters)))
     .groupBy(salesInvoicesRawTable.consigneeName)
-    .having(({ qty }) => gte(qty, qtyThreshold.toString()))
+    .having(({ qty }) => gte(qty, qtyThreshold))
     .orderBy(sql`"rate" DESC`)
     .limit(limit);
 }

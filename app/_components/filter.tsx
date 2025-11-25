@@ -58,12 +58,16 @@ export function Filter<T extends FilterFormValues = FilterFormValues>({
   };
 
   return (
-    <form className="p-4 border mb-4 flex gap-4 items-center">
+    <form className="p-4 border flex gap-4 items-center shrink-0">
       <Controller
         control={control as unknown as Control<FilterFormValues>}
         name="range"
         render={({ field }) => (
-          <DateRangePicker value={field.value} onChange={field.onChange} />
+          <DateRangePicker
+            value={field.value}
+            onChange={field.onChange}
+            datePickerClassName="max-w-[150px]"
+          />
         )}
       />
       <Controller

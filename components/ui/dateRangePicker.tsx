@@ -16,6 +16,7 @@ interface DateRangePickerProps {
   placeholderTo?: string;
   disabled?: boolean;
   className?: string;
+  datePickerClassName?: string;
 }
 
 export const DateRangePicker = React.forwardRef<
@@ -29,7 +30,8 @@ export const DateRangePicker = React.forwardRef<
     placeholderFrom = "Start Date",
     placeholderTo = "End Date",
     disabled = false,
-    className = "",
+    className,
+    datePickerClassName,
   } = props;
 
   // Component is controlled if 'value' prop was provided
@@ -81,6 +83,7 @@ export const DateRangePicker = React.forwardRef<
         onChange={handleFromChange}
         placeholder={placeholderFrom}
         disabled={disabled}
+        className={datePickerClassName}
       />
       <span className="text-muted-foreground">to</span>
       <DatePicker
@@ -88,6 +91,7 @@ export const DateRangePicker = React.forwardRef<
         onChange={handleToChange}
         placeholder={placeholderTo}
         disabled={disabled}
+        className={datePickerClassName}
       />
     </div>
   );
