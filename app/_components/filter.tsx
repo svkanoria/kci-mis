@@ -76,12 +76,13 @@ export function Filter<T extends FilterFormValues = FilterFormValues>({
         render={({ field }) => (
           <Combobox
             options={[
-              { value: "Formaldehyde", label: "Formaldehyde" },
+              { value: "C:Formaldehyde", label: "Formaldehyde" },
               { value: "Formaldehyde-37%", label: "Formaldehyde-37%" },
               { value: "Formaldehyde-40%", label: "Formaldehyde-40%" },
               { value: "Formaldehyde-41%", label: "Formaldehyde-41%" },
               { value: "Formaldehyde-43%", label: "Formaldehyde-43%" },
               { value: "Formaldehyde-36.5%", label: "Formaldehyde-36.5%" },
+              { value: "Formaldehyde-37% in Drums", label: "FD-37% in Drums" },
             ]}
             placeholder="Select Product"
             value={field.value}

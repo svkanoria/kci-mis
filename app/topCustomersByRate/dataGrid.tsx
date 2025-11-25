@@ -31,6 +31,8 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
       type: "numericColumn",
       valueFormatter: (params) => formatIndianNumber(params.value),
     },
+    { field: "count", type: "numericColumn" },
+    { field: "gradeCount", type: "numericColumn" },
   ]);
 
   // Container: Defines the grid's theme & dimensions.

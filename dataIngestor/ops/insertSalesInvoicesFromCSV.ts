@@ -116,12 +116,14 @@ const columnTransformations: Partial<
   materialDescription: [
     normalizeStrings(["Steam", "Sodium Formate"]),
     replaceStrings([
+      [/Para.*Formal/i, "Paraformaldehyde"],
       [/Formaldehyde.*37.*Drums/i, "Formaldehyde-37% in Drums"],
       [/Formaldehyde.*37/i, "Formaldehyde-37%"],
       [/Formaldehyde.*43/i, "Formaldehyde-43%"],
       [/Formaldehyde.*41/i, "Formaldehyde-41%"],
       [/Formaldehyde.*40/i, "Formaldehyde-40%"],
       [/Formaldehyde.*36.5/i, "Formaldehyde-36.5%"],
+      [/Formaldehyde.*10/i, "Formaldehyde-10%"],
       [/Formaldehyde/i, "Formaldehyde-37%"],
       [/Anhydrous\s*Ammonia/i, "Andyhrous Ammonia"],
       [/Di.*Pentaerythritol/i, "Di-Pentaerythritol"],

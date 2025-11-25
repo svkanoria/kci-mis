@@ -14,7 +14,9 @@ function getDerivedValues(
 
   const desc = rawRecord.materialDescription.toLowerCase();
 
-  if (desc.includes("formaldehyde")) {
+  if (desc.includes("paraformaldehyde")) {
+    productCategory = "Paraformaldehyde";
+  } else if (desc.includes("formaldehyde")) {
     productCategory = "Formaldehyde";
     // Extract percentage if present, e.g., "Formaldehyde-43%"
     const match = desc.match(/formaldehyde.*?(\d+(\.\d+)?)%/);
