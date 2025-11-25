@@ -61,7 +61,9 @@ export function getTopCustomersByRevenue(filters: FilterParams, limit: number) {
   return db
     .select({
       consigneeName: salesInvoicesRawTable.consigneeName,
-      revenue: sum(salesInvoicesRawTable.netRealisation).as("revenue"),
+      revenue: sql<number>`sum(${salesInvoicesRawTable.netRealisation})`
+        .mapWith(Number)
+        .as("revenue"),
     })
     .from(salesInvoicesRawTable)
     .where(and(...getCommonConditions(filters)))
@@ -74,7 +76,9 @@ export function getTopCustomersByVolume(filters: FilterParams, limit: number) {
   return db
     .select({
       consigneeName: salesInvoicesRawTable.consigneeName,
-      qty: sum(salesInvoicesRawTable.qty).as("qty"),
+      qty: sql<number>`sum(${salesInvoicesRawTable.qty})`
+        .mapWith(Number)
+        .as("qty"),
     })
     .from(salesInvoicesRawTable)
     .where(and(...getCommonConditions(filters)))
