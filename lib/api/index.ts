@@ -1,6 +1,7 @@
 import { db } from "@/db/drizzle";
 import { salesInvoicesRawTable, salesInvoicesDerivedTable } from "@/db/schema";
-import { and, eq, gte, lte, min, sql } from "drizzle-orm";
+import { and, eq, gte, lte, sql } from "drizzle-orm";
+import { getAllPeriods, Period } from "@/lib/utils/date";
 
 export interface FilterParams {
   from?: Date;
@@ -42,6 +43,62 @@ function getDerivedCommonConditions(filters: FilterParams) {
     );
   }
   return conditions;
+}
+
+function determineDateRange<T>(rows: T[], getDate: (row: T) => Date) {
+  if (rows.length > 0) {
+    const dates = rows.map((r) => getDate(r).getTime());
+    const from = new Date(Math.min(...dates));
+    const to = new Date(Math.max(...dates));
+    return { from, to };
+  } else {
+    // No data, return null to indicate empty result
+    return null;
+  }
+}
+
+function determineAllPeriods<T>(
+  rows: T[],
+  period: Period,
+  getDate: (row: T) => Date,
+) {
+  const dateRange = determineDateRange(rows, getDate);
+
+  if (!dateRange) return [];
+
+  const { from, to } = dateRange;
+  return getAllPeriods(from, to, period);
+}
+
+function processTimeSeries<T>(
+  rows: T[],
+  period: Period,
+  getDate: (row: T) => Date,
+  getKey: (row: T) => string,
+  getValue: (row: T) => number,
+) {
+  const allPeriods = determineAllPeriods(rows, period, getDate);
+
+  const grouped = new Map<string, Map<number, number>>();
+  for (const row of rows) {
+    const key = getKey(row);
+    let entry = grouped.get(key);
+    if (!entry) {
+      entry = new Map(allPeriods.map((p) => [p.getTime(), 0]));
+      grouped.set(key, entry);
+    }
+    entry.set(getDate(row).getTime(), getValue(row));
+  }
+
+  return Array.from(grouped.entries()).map(([key, timeSeries]) => ({
+    key,
+    series: Array.from(timeSeries.entries())
+      .sort((a, b) => a[0] - b[0])
+      .map(([time, value]) => ({
+        period: new Date(time),
+        value,
+      })),
+  }));
 }
 
 export function getTopCustomersByRate(
@@ -129,17 +186,16 @@ export function getTopCustomersByVolume(filters: FilterParams, limit: number) {
     .limit(limit);
 }
 
-export type Period = "month" | "quarter" | "year";
-
-export function getQtyByConsigneeAndPeriod(
+export async function getQtyByConsigneeAndPeriod(
   filters: FilterParams,
   period: Period,
 ) {
-  const periodExpr = sql`date_trunc(${period}, ${salesInvoicesRawTable.invDate})`;
-  return db
+  const rows = await db
     .select({
       consigneeName: salesInvoicesRawTable.consigneeName,
-      period: periodExpr.as("period"),
+      period: sql`date_trunc(${period}, ${salesInvoicesRawTable.invDate})`
+        .mapWith((v) => new Date(v as string))
+        .as("period"),
       qty: sql<number>`sum(${salesInvoicesRawTable.qty})`
         .mapWith(Number)
         .as("qty"),
@@ -157,4 +213,12 @@ export function getQtyByConsigneeAndPeriod(
     )
     .groupBy(salesInvoicesRawTable.consigneeName, sql`period`)
     .orderBy(sql`period`, salesInvoicesRawTable.consigneeName);
+
+  return processTimeSeries(
+    rows,
+    period,
+    (r) => r.period,
+    (r) => r.consigneeName,
+    (r) => r.qty,
+  );
 }

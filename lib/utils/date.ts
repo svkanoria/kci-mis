@@ -10,7 +10,9 @@ import {
   getMonth,
   getYear,
   addMonths,
-  format,
+  eachMonthOfInterval,
+  eachQuarterOfInterval,
+  eachYearOfInterval,
 } from "date-fns";
 
 const DEFAULT_FY_START_MONTH = 3; // April
@@ -99,4 +101,17 @@ export function getEndOfPreviousQuarter(
   date: Date = new Date(),
 ): Date {
   return endOfQuarter(subQuarters(date, n));
+}
+
+export type Period = "month" | "quarter" | "year";
+
+export function getAllPeriods(from: Date, to: Date, period: Period): Date[] {
+  const interval = { start: from, end: to };
+  if (period === "year") {
+    return eachYearOfInterval(interval);
+  } else if (period === "quarter") {
+    return eachQuarterOfInterval(interval);
+  } else {
+    return eachMonthOfInterval(interval);
+  }
 }

@@ -1,9 +1,10 @@
 import { Heading } from "@/components/typography/heading";
-import { getQtyByConsigneeAndPeriod, Period } from "@/lib/api";
+import { getQtyByConsigneeAndPeriod } from "@/lib/api";
 import { extractFilterParams } from "../_utils/filter";
 import { ExtendedFilter } from "./extendedFilter";
 import { DataGrid } from "./dataGrid";
 import { Suspense } from "react";
+import { Period } from "@/lib/utils/date";
 
 export default async function Page({
   searchParams,
