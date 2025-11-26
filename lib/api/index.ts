@@ -128,3 +128,33 @@ export function getTopCustomersByVolume(filters: FilterParams, limit: number) {
     .orderBy(sql`"qty" DESC`)
     .limit(limit);
 }
+
+export type Period = "month" | "quarter" | "year";
+
+export function getQtyByConsigneeAndPeriod(
+  filters: FilterParams,
+  period: Period,
+) {
+  const periodExpr = sql`date_trunc(${period}, ${salesInvoicesRawTable.invDate})`;
+  return db
+    .select({
+      consigneeName: salesInvoicesRawTable.consigneeName,
+      period: periodExpr.as("period"),
+      qty: sql<number>`sum(${salesInvoicesRawTable.qty})`
+        .mapWith(Number)
+        .as("qty"),
+    })
+    .from(salesInvoicesRawTable)
+    .leftJoin(
+      salesInvoicesDerivedTable,
+      eq(salesInvoicesRawTable.id, salesInvoicesDerivedTable.rawId),
+    )
+    .where(
+      and(
+        ...getRawCommonConditions(filters),
+        ...getDerivedCommonConditions(filters),
+      ),
+    )
+    .groupBy(salesInvoicesRawTable.consigneeName, sql`period`)
+    .orderBy(sql`period`, salesInvoicesRawTable.consigneeName);
+}

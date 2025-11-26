@@ -15,6 +15,9 @@ export default async function Home() {
         <li>
           <Link href="/topCustomersByVolume">Top Customers By Volume</Link>
         </li>
+        <li>
+          <Link href="/mostConsistentCustomers">Most Consistent Customers</Link>
+        </li>
       </ul>
     </div>
   );
