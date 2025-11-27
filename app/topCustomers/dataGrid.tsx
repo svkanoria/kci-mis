@@ -64,8 +64,8 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
     const showQty = selectedGroups.includes("qty");
     const showRate = selectedGroups.includes("rate");
 
-    const qtyStyle = { backgroundColor: "#fffbf2" };
-    const rateStyle = { backgroundColor: "#fcf2ff" };
+    const qtyStyle = { backgroundColor: "rgba(255, 235, 205, 0.3)" };
+    const rateStyle = { backgroundColor: "rgba(240, 200, 255, 0.3)" };
 
     const defs: ColDef<GridRow>[] = [
       { field: "consigneeName", width: 250, pinned: "left", filter: true },
