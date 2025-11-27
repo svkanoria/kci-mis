@@ -140,18 +140,22 @@ function processTimeSeries<T, K extends string, V>(
 }
 
 export async function getTopCustomers(filters: FilterParams, period: Period) {
+  const isCategoryFilter = filters.product?.startsWith("C:");
+  const qtyCol = isCategoryFilter
+    ? salesInvoicesDerivedTable.normQty
+    : salesInvoicesRawTable.qty;
+  const rateCol = isCategoryFilter
+    ? salesInvoicesDerivedTable.normBasicRate
+    : salesInvoicesRawTable.basicRate;
+
   const rows = await db
     .select({
       consigneeName: salesInvoicesRawTable.consigneeName,
       period: sql`date_trunc(${period}, ${salesInvoicesRawTable.invDate})`
         .mapWith((v) => new Date(v as string))
         .as("period"),
-      qty: sql<number>`sum(${salesInvoicesRawTable.qty})`
-        .mapWith(Number)
-        .as("qty"),
-      rate: sql<number>`avg(${salesInvoicesRawTable.basicRate})`
-        .mapWith(Number)
-        .as("rate"),
+      qty: sql<number>`sum(${qtyCol})`.mapWith(Number).as("qty"),
+      rate: sql<number>`avg(${rateCol})`.mapWith(Number).as("rate"),
     })
     .from(salesInvoicesRawTable)
     .leftJoin(
