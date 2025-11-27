@@ -2,6 +2,21 @@
 
 import * as React from "react";
 import { DatePicker } from "@/components/ui/datePicker";
+import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { ChevronDown } from "lucide-react";
+import {
+  getStartOfPreviousFY,
+  getEndOfPreviousFY,
+  getStartOfPreviousQuarter,
+  getEndOfPreviousQuarter,
+  getStartOfPreviousMonth,
+  getEndOfPreviousMonth,
+} from "@/lib/utils/date";
 
 export interface DateRange {
   from: Date | undefined;
@@ -47,6 +62,8 @@ export const DateRangePicker = React.forwardRef<
     },
   );
 
+  const [open, setOpen] = React.useState(false);
+
   // Use controlled value if provided, otherwise use internal state
   const dateRange = isControlled ? controlledValue : internalDateRange;
 
@@ -59,6 +76,71 @@ export const DateRangePicker = React.forwardRef<
       setInternalDateRange(newDateRange);
     }
   };
+
+  const handlePresetSelect = (getRange: () => DateRange) => {
+    const newRange = getRange();
+    handleDateRangeChange(newRange);
+    setOpen(false);
+  };
+
+  const presets = [
+    {
+      label: "Last Financial Year",
+      getRange: () => ({
+        from: getStartOfPreviousFY(),
+        to: getEndOfPreviousFY(),
+      }),
+    },
+    {
+      label: "Last Quarter",
+      getRange: () => ({
+        from: getStartOfPreviousQuarter(),
+        to: getEndOfPreviousQuarter(),
+      }),
+    },
+    {
+      label: "Last 1 Month",
+      getRange: () => ({
+        from: getStartOfPreviousMonth(),
+        to: getEndOfPreviousMonth(),
+      }),
+    },
+    {
+      label: "Last 2 Months",
+      getRange: () => ({
+        from: getStartOfPreviousMonth(2),
+        to: getEndOfPreviousMonth(),
+      }),
+    },
+    {
+      label: "Last 3 Months",
+      getRange: () => ({
+        from: getStartOfPreviousMonth(3),
+        to: getEndOfPreviousMonth(),
+      }),
+    },
+    {
+      label: "Last 4 Months",
+      getRange: () => ({
+        from: getStartOfPreviousMonth(4),
+        to: getEndOfPreviousMonth(),
+      }),
+    },
+    {
+      label: "Last 5 Months",
+      getRange: () => ({
+        from: getStartOfPreviousMonth(5),
+        to: getEndOfPreviousMonth(),
+      }),
+    },
+    {
+      label: "Last 6 Months",
+      getRange: () => ({
+        from: getStartOfPreviousMonth(6),
+        to: getEndOfPreviousMonth(),
+      }),
+    },
+  ];
 
   const handleFromChange = (newFrom: Date | undefined) => {
     const newRange: DateRange = {
@@ -93,6 +175,27 @@ export const DateRangePicker = React.forwardRef<
         disabled={disabled}
         className={datePickerClassName}
       />
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button variant="outline" size="icon" disabled={disabled}>
+            <ChevronDown className="h-4 w-4" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent align="end" className="w-48 p-1">
+          <div className="grid gap-1">
+            {presets.map((preset) => (
+              <Button
+                key={preset.label}
+                variant="ghost"
+                className="justify-start font-normal"
+                onClick={() => handlePresetSelect(preset.getRange)}
+              >
+                {preset.label}
+              </Button>
+            ))}
+          </div>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 });

@@ -3,6 +3,7 @@ import {
   endOfQuarter,
   subQuarters,
   subYears,
+  subMonths,
   setMonth,
   setYear,
   startOfMonth,
@@ -101,6 +102,30 @@ export function getEndOfPreviousQuarter(
   date: Date = new Date(),
 ): Date {
   return endOfQuarter(subQuarters(date, n));
+}
+
+/**
+ * Returns the start of the month N months ago.
+ * @param n Number of months to go back (default: 1)
+ * @param date The reference date (default: now)
+ */
+export function getStartOfPreviousMonth(
+  n: number = 1,
+  date: Date = new Date(),
+): Date {
+  return startOfMonth(subMonths(date, n));
+}
+
+/**
+ * Returns the end of the month N months ago.
+ * @param n Number of months to go back (default: 1)
+ * @param date The reference date (default: now)
+ */
+export function getEndOfPreviousMonth(
+  n: number = 1,
+  date: Date = new Date(),
+): Date {
+  return endOfMonth(subMonths(date, n));
 }
 
 export type Period = "month" | "quarter" | "year";
