@@ -36,9 +36,9 @@ export function ExtendedFilter({
           render={({ field }) => (
             <Combobox
               options={[
-                { value: "month", label: "Month" },
-                { value: "quarter", label: "Quarter" },
-                { value: "year", label: "Year" },
+                { value: "month", label: "Monthly" },
+                { value: "quarter", label: "Quarterly" },
+                { value: "year", label: "Yearly" },
               ]}
               placeholder="Select Period"
               value={field.value}
