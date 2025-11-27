@@ -33,7 +33,7 @@ export default async function Page({
 
   return (
     <div className="flex h-full flex-col gap-4 p-4">
-      <Heading level="h1">Most Consistent Customers</Heading>
+      <Heading level="h1">Top Customers</Heading>
       <ExtendedFilter
         initialFrom={from}
         initialTo={to}

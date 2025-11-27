@@ -2,7 +2,7 @@
 
 import { use, useMemo, useState, useEffect } from "react";
 
-import type { ColDef, GridApi, GridReadyEvent } from "ag-grid-community";
+import type { ColDef, GridApi } from "ag-grid-community";
 import { AllCommunityModule, ModuleRegistry } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 import { getTopCustomers } from "@/lib/api";
