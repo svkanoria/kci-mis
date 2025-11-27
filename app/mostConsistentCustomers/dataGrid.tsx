@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState, useMemo } from "react";
+import { use, useMemo } from "react";
 
 import type { ColDef } from "ag-grid-community";
 import { AllCommunityModule, ModuleRegistry } from "ag-grid-community";
@@ -34,8 +34,10 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
   }, [groupedData]);
 
   const rowData = useMemo<GridRow[]>(() => {
-    return groupedData.map(({ consigneeName, series }) => {
-      const row: GridRow = { consigneeName };
+    return groupedData.map(({ series, ...rest }) => {
+      const row: GridRow = {
+        ...rest,
+      };
       series.forEach(({ periodStart, value: { qty } }) => {
         const p = periodStart.getTime().toString();
         row[p] = qty;
@@ -46,15 +48,48 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
 
   const colDefs = useMemo<ColDef<GridRow>[]>(() => {
     const defs: ColDef<GridRow>[] = [
-      { field: "consigneeName", filter: true, pinned: "left", width: 200 },
+      { field: "consigneeName", width: 250, pinned: "left", filter: true },
+      {
+        field: "cvQty",
+        headerName: "CV Qty",
+        valueFormatter: (params) =>
+          params.value != null ? params.value.toFixed(2) : "",
+        width: 110,
+        pinned: "left",
+        sort: "asc",
+      },
+      {
+        field: "averageQty",
+        headerName: "Avg Qty",
+        type: "numericColumn",
+        valueFormatter: (params) => formatIndianNumber(params.value),
+        width: 120,
+        pinned: "left",
+        filter: true,
+      },
+      {
+        field: "totalQty",
+        headerName: "Total Qty",
+        type: "numericColumn",
+        valueFormatter: (params) => formatIndianNumber(params.value),
+        width: 120,
+        filter: true,
+      },
+      {
+        field: "stdDevQty",
+        headerName: "SD Qty",
+        type: "numericColumn",
+        valueFormatter: (params) =>
+          params.value != null ? params.value.toFixed(2) : "",
+        width: 100,
+      },
     ];
 
     periods.forEach((period) => {
       const date = new Date(parseInt(period));
       const headerName = date.toLocaleDateString(undefined, {
-        year: "numeric",
+        year: "2-digit",
         month: "short",
-        day: "numeric",
       });
 
       defs.push({
@@ -62,7 +97,8 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         headerName: headerName,
         type: "numericColumn",
         valueFormatter: (params) => formatIndianNumber(params.value),
-        width: 120,
+        width: 90,
+        sortable: false,
       });
     });
     return defs;

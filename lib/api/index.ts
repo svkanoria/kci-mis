@@ -255,7 +255,7 @@ export async function getMostConsistentCustomers(
     .groupBy(salesInvoicesRawTable.consigneeName, sql`period`)
     .orderBy(sql`period`, salesInvoicesRawTable.consigneeName);
 
-  return processTimeSeries(
+  const data = processTimeSeries(
     rows,
     period,
     (r) => r.period,
@@ -264,4 +264,26 @@ export async function getMostConsistentCustomers(
     (r) => r.consigneeName,
     (r) => ({ qty: r.qty, rate: r.rate }),
   );
+
+  return data.map((item) => {
+    const quantities = item.series.map((s) => s.value.qty);
+    const n = quantities.length;
+    const totalQty = quantities.reduce((sum, q) => sum + q, 0);
+    const averageQty = n > 0 ? totalQty / n : 0;
+    const variance =
+      n > 0
+        ? quantities.reduce((sum, q) => sum + Math.pow(q - averageQty, 2), 0) /
+          n
+        : 0;
+    const stdDevQty = Math.sqrt(variance);
+    const cvQty = averageQty > 0 ? stdDevQty / averageQty : 0;
+
+    return {
+      ...item,
+      totalQty,
+      averageQty,
+      stdDevQty,
+      cvQty,
+    };
+  });
 }
