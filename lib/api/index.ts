@@ -144,9 +144,6 @@ export async function getTopCustomers(filters: FilterParams, period: Period) {
   const qtyCol = isCategoryFilter
     ? salesInvoicesDerivedTable.normQty
     : salesInvoicesRawTable.qty;
-  const rateCol = isCategoryFilter
-    ? salesInvoicesDerivedTable.normBasicRate
-    : salesInvoicesRawTable.basicRate;
 
   const rows = await db
     .select({
@@ -155,7 +152,9 @@ export async function getTopCustomers(filters: FilterParams, period: Period) {
         .mapWith((v) => new Date(v as string))
         .as("period"),
       qty: sql<number>`sum(${qtyCol})`.mapWith(Number).as("qty"),
-      rate: sql<number>`avg(${rateCol})`.mapWith(Number).as("rate"),
+      amount: sql<number>`sum(${salesInvoicesRawTable.basicAmount})`
+        .mapWith(Number)
+        .as("amount"),
     })
     .from(salesInvoicesRawTable)
     .leftJoin(
@@ -176,30 +175,53 @@ export async function getTopCustomers(filters: FilterParams, period: Period) {
     period,
     (r) => r.period,
     "consigneeName",
-    { qty: 0, rate: 0 },
+    { qty: 0, amount: 0, rate: 0 },
     (r) => r.consigneeName,
-    (r) => ({ qty: r.qty, rate: r.rate }),
+    (r) => ({
+      qty: r.qty,
+      amount: r.amount,
+      rate: r.qty > 0 ? r.amount / r.qty : 0,
+    }),
   );
 
   const result = data.map((item) => {
     const quantities = item.series.map((s) => s.value.qty);
-    const n = quantities.length;
+    const amounts = item.series.map((s) => s.value.amount);
+    const rates = item.series.map((s) => s.value.rate);
+    const n = item.series.length;
+
     const totalQty = quantities.reduce((sum, q) => sum + q, 0);
-    const averageQty = n > 0 ? totalQty / n : 0;
-    const variance =
+    const avgQty = n > 0 ? totalQty / n : 0;
+    const qtyVariance =
       n > 0
-        ? quantities.reduce((sum, q) => sum + Math.pow(q - averageQty, 2), 0) /
-          n
+        ? quantities.reduce((sum, q) => sum + Math.pow(q - avgQty, 2), 0) / n
         : 0;
-    const stdDevQty = Math.sqrt(variance);
-    const cvQty = averageQty > 0 ? stdDevQty / averageQty : 0;
+    const stdDevQty = Math.sqrt(qtyVariance);
+    const cvQty = avgQty > 0 ? stdDevQty / avgQty : 0;
+
+    const totalAmount = amounts.reduce((sum, a) => sum + a, 0);
+    const avgRate = totalQty > 0 ? totalAmount / totalQty : 0;
+    const rateVariance =
+      n > 0
+        ? rates.reduce((sum, r) => sum + Math.pow(r - avgRate, 2), 0) / n
+        : 0;
+    const stdDevRate = Math.sqrt(rateVariance);
+    const cvRate = avgRate > 0 ? stdDevRate / avgRate : 0;
 
     return {
       ...item,
+      // Qty related fields
       totalQty,
-      averageQty,
+      avgQty,
       stdDevQty,
       cvQty,
+      // Rate related fields
+      avgRate,
+      rateVariance,
+      stdDevRate,
+      cvRate,
+      // Other
+      totalAmount,
     };
   });
 

@@ -59,8 +59,25 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         pinned: "left",
       },
       {
-        field: "averageQty",
+        field: "avgQty",
         headerName: "Avg Qty",
+        type: "numericColumn",
+        valueFormatter: (params) => formatIndianNumber(params.value),
+        width: 120,
+        pinned: "left",
+        filter: true,
+      },
+      {
+        field: "cvRate",
+        headerName: "CV Rate",
+        valueFormatter: (params) =>
+          params.value != null ? params.value.toFixed(2) : "",
+        width: 110,
+        pinned: "left",
+      },
+      {
+        field: "avgRate",
+        headerName: "Avg Rate",
         type: "numericColumn",
         valueFormatter: (params) => formatIndianNumber(params.value),
         width: 120,
@@ -72,7 +89,7 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         headerName: "Total Qty",
         type: "numericColumn",
         valueFormatter: (params) => formatIndianNumber(params.value),
-        width: 120,
+        width: 140,
         filter: true,
       },
       {
@@ -82,6 +99,13 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         valueFormatter: (params) =>
           params.value != null ? params.value.toFixed(2) : "",
         width: 100,
+      },
+      {
+        field: "totalAmount",
+        headerName: "Total Amount",
+        type: "numericColumn",
+        valueFormatter: (params) => formatIndianNumber(params.value),
+        width: 140,
       },
     ];
 
