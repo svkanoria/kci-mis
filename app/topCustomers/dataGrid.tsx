@@ -66,89 +66,76 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
       { field: "consigneeName", width: 250, pinned: "left", filter: true },
     ];
 
-    if (showQty) {
-      defs.push(
-        {
-          field: "cvQty",
-          headerName: "CV Qty",
-          valueFormatter: (params) =>
-            params.value != null ? params.value.toFixed(2) : "",
-          width: 110,
-          pinned: "left",
-        },
-        {
-          field: "avgQty",
-          headerName: "Avg Qty",
-          type: "numericColumn",
-          valueFormatter: (params) => formatIndianNumber(params.value),
-          width: 120,
-          pinned: "left",
-          filter: true,
-        },
-      );
-    }
-
-    if (showRate) {
-      defs.push(
-        {
-          field: "cvRate",
-          headerName: "CV Rate",
-          valueFormatter: (params) =>
-            params.value != null ? params.value.toFixed(2) : "",
-          width: 110,
-          pinned: "left",
-        },
-        {
-          field: "avgRate",
-          headerName: "Avg Rate",
-          type: "numericColumn",
-          valueFormatter: (params) => formatIndianNumber(params.value),
-          width: 120,
-          pinned: "left",
-          filter: true,
-        },
-      );
-    }
-
-    if (showQty) {
-      defs.push(
-        {
-          field: "totalQty",
-          headerName: "Total Qty",
-          type: "numericColumn",
-          valueFormatter: (params) => formatIndianNumber(params.value),
-          width: 140,
-          filter: true,
-        },
-        {
-          field: "stdDevQty",
-          headerName: "SD Qty",
-          type: "numericColumn",
-          valueFormatter: (params) =>
-            params.value != null ? params.value.toFixed(2) : "",
-          width: 100,
-        },
-      );
-    }
-
-    defs.push({
-      field: "totalAmount",
-      headerName: "Total Amount",
-      type: "numericColumn",
-      valueFormatter: (params) => formatIndianNumber(params.value),
-      width: 140,
-    });
-
-    if (showRate) {
-      defs.push({
+    defs.push(
+      {
+        field: "cvQty",
+        headerName: "CV Qty",
+        valueFormatter: (params) =>
+          params.value != null ? params.value.toFixed(2) : "",
+        width: 110,
+        pinned: "left",
+      },
+      {
+        field: "avgQty",
+        headerName: "Avg Qty",
+        type: "numericColumn",
+        valueFormatter: (params) => formatIndianNumber(params.value),
+        width: 120,
+        pinned: "left",
+        filter: true,
+      },
+      {
+        field: "cvRate",
+        headerName: "CV Rate",
+        valueFormatter: (params) =>
+          params.value != null ? params.value.toFixed(2) : "",
+        width: 110,
+        pinned: "left",
+      },
+      {
+        field: "avgRate",
+        headerName: "Avg Rate",
+        type: "numericColumn",
+        valueFormatter: (params) => formatIndianNumber(params.value),
+        width: 120,
+        pinned: "left",
+        filter: true,
+      },
+      {
+        field: "totalAmount",
+        headerName: "Total Amount",
+        type: "numericColumn",
+        valueFormatter: (params) => formatIndianNumber(params.value),
+        width: 140,
+      },
+      {
+        field: "totalQty",
+        headerName: "Total Qty",
+        type: "numericColumn",
+        valueFormatter: (params) => formatIndianNumber(params.value),
+        width: 140,
+        filter: true,
+        hide: !showQty,
+      },
+      {
+        field: "stdDevQty",
+        headerName: "SD Qty",
+        type: "numericColumn",
+        valueFormatter: (params) =>
+          params.value != null ? params.value.toFixed(2) : "",
+        width: 100,
+        hide: !showQty,
+      },
+      {
         field: "stdDevRate",
         headerName: "SD Rate",
         type: "numericColumn",
         valueFormatter: (params) =>
           params.value != null ? params.value.toFixed(2) : "",
         width: 100,
-      });
-    }
+        hide: !showRate,
+      },
+    );
 
     periods.forEach((period) => {
       const date = new Date(parseInt(period));
@@ -157,27 +144,25 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         month: "short",
       });
 
-      if (showQty) {
-        defs.push({
-          field: period,
-          headerName: headerName,
-          type: "numericColumn",
-          valueFormatter: (params) => formatIndianNumber(params.value),
-          width: 90,
-          sortable: false,
-        });
-      }
+      defs.push({
+        field: period,
+        headerName: headerName,
+        type: "numericColumn",
+        valueFormatter: (params) => formatIndianNumber(params.value),
+        width: 90,
+        sortable: false,
+        hide: !showQty,
+      });
 
-      if (showRate) {
-        defs.push({
-          field: period + "-rate",
-          headerName: headerName,
-          type: "numericColumn",
-          valueFormatter: (params) => formatIndianNumber(params.value),
-          width: 90,
-          sortable: false,
-        });
-      }
+      defs.push({
+        field: period + "-rate",
+        headerName: headerName,
+        type: "numericColumn",
+        valueFormatter: (params) => formatIndianNumber(params.value),
+        width: 90,
+        sortable: false,
+        hide: !showRate,
+      });
     });
     return defs;
   }, [periods, selectedGroups]);
