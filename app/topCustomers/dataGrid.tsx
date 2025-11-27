@@ -25,6 +25,7 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
     "qty",
     "rate",
   ]);
+  const [showStats, setShowStats] = useState(true);
 
   const options = [
     { value: "qty", label: "Quantity" },
@@ -62,18 +63,32 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
     const showQty = selectedGroups.includes("qty");
     const showRate = selectedGroups.includes("rate");
 
+    const qtyStyle = { backgroundColor: "#fffbf2" };
+    const rateStyle = { backgroundColor: "#fcf2ff" };
+
     const defs: ColDef<GridRow>[] = [
       { field: "consigneeName", width: 250, pinned: "left", filter: true },
     ];
 
     defs.push(
       {
-        field: "cvQty",
-        headerName: "CV Qty",
-        valueFormatter: (params) =>
-          params.value != null ? params.value.toFixed(2) : "",
-        width: 110,
+        field: "totalAmount",
+        headerName: "Total Amount",
+        type: "numericColumn",
+        valueFormatter: (params) => formatIndianNumber(params.value),
+        width: 140,
         pinned: "left",
+        filter: true,
+      },
+      {
+        field: "totalQty",
+        headerName: "Total Qty",
+        type: "numericColumn",
+        valueFormatter: (params) => formatIndianNumber(params.value),
+        width: 140,
+        pinned: "left",
+        filter: true,
+        cellStyle: qtyStyle,
       },
       {
         field: "avgQty",
@@ -83,14 +98,7 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         width: 120,
         pinned: "left",
         filter: true,
-      },
-      {
-        field: "cvRate",
-        headerName: "CV Rate",
-        valueFormatter: (params) =>
-          params.value != null ? params.value.toFixed(2) : "",
-        width: 110,
-        pinned: "left",
+        cellStyle: qtyStyle,
       },
       {
         field: "avgRate",
@@ -100,22 +108,7 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         width: 120,
         pinned: "left",
         filter: true,
-      },
-      {
-        field: "totalAmount",
-        headerName: "Total Amount",
-        type: "numericColumn",
-        valueFormatter: (params) => formatIndianNumber(params.value),
-        width: 140,
-      },
-      {
-        field: "totalQty",
-        headerName: "Total Qty",
-        type: "numericColumn",
-        valueFormatter: (params) => formatIndianNumber(params.value),
-        width: 140,
-        filter: true,
-        hide: !showQty,
+        cellStyle: rateStyle,
       },
       {
         field: "stdDevQty",
@@ -124,7 +117,9 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         valueFormatter: (params) =>
           params.value != null ? params.value.toFixed(2) : "",
         width: 100,
-        hide: !showQty,
+        pinned: "left",
+        hide: !showQty || !showStats,
+        cellStyle: qtyStyle,
       },
       {
         field: "stdDevRate",
@@ -133,7 +128,29 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         valueFormatter: (params) =>
           params.value != null ? params.value.toFixed(2) : "",
         width: 100,
-        hide: !showRate,
+        pinned: "left",
+        hide: !showRate || !showStats,
+        cellStyle: rateStyle,
+      },
+      {
+        field: "cvQty",
+        headerName: "CV Qty",
+        valueFormatter: (params) =>
+          params.value != null ? params.value.toFixed(2) : "",
+        width: 110,
+        pinned: "left",
+        hide: !showQty || !showStats,
+        cellStyle: qtyStyle,
+      },
+      {
+        field: "cvRate",
+        headerName: "CV Rate",
+        valueFormatter: (params) =>
+          params.value != null ? params.value.toFixed(2) : "",
+        width: 110,
+        pinned: "left",
+        hide: !showRate || !showStats,
+        cellStyle: rateStyle,
       },
     );
 
@@ -152,6 +169,7 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         width: 90,
         sortable: false,
         hide: !showQty,
+        cellStyle: qtyStyle,
       });
 
       defs.push({
@@ -162,10 +180,11 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         width: 90,
         sortable: false,
         hide: !showRate,
+        cellStyle: rateStyle,
       });
     });
     return defs;
-  }, [periods, selectedGroups]);
+  }, [periods, selectedGroups, showStats]);
 
   useEffect(() => {
     if (gridApi) {
@@ -181,7 +200,16 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
 
   return (
     <div className="grow min-h-0 flex flex-col gap-2">
-      <div className="flex justify-end">
+      <div className="flex justify-end items-center gap-4">
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={showStats}
+            onChange={(e) => setShowStats(e.target.checked)}
+            className="rounded border-gray-300"
+          />
+          Show Stats
+        </label>
         <div className="w-[300px]">
           <Select
             isMulti
@@ -190,7 +218,7 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
             onChange={(selected) =>
               setSelectedGroups(selected.map((s) => s.value))
             }
-            placeholder="Select columns"
+            placeholder="Select view bias"
             classNames={{
               control: () => "!bg-background !border-input",
               menu: () => "!bg-popover !text-popover-foreground !z-[100]",
