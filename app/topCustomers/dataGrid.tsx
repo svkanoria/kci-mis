@@ -201,15 +201,17 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
   return (
     <div className="grow min-h-0 flex flex-col gap-2">
       <div className="flex justify-end items-center gap-4">
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={showStats}
-            onChange={(e) => setShowStats(e.target.checked)}
-            className="rounded border-gray-300"
-          />
-          Show Stats
-        </label>
+        {selectedGroups.length > 0 && (
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={showStats}
+              onChange={(e) => setShowStats(e.target.checked)}
+              className="rounded border-gray-300"
+            />
+            Show Stats
+          </label>
+        )}
         <div className="w-[300px]">
           <Select
             isMulti
@@ -218,20 +220,27 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
             onChange={(selected) =>
               setSelectedGroups(selected.map((s) => s.value))
             }
-            placeholder="Select view bias"
+            placeholder="Select columns"
             classNames={{
               control: () => "!bg-background !border-input",
               menu: () => "!bg-popover !text-popover-foreground !z-[100]",
-              option: ({ isFocused, isSelected }) =>
-                isFocused
+              option: ({ isFocused, isSelected, data }: any) => {
+                const color =
+                  data.value === "qty" ? "!bg-[#fffbf2]" : "!bg-[#fcf2ff]";
+                return isFocused
                   ? "!bg-accent !text-accent-foreground"
                   : isSelected
                     ? "!bg-primary !text-primary-foreground"
-                    : "!bg-transparent !text-foreground",
-              multiValue: () => "!bg-accent !text-accent-foreground",
-              multiValueLabel: () => "!text-accent-foreground",
+                    : `${color} !text-foreground`;
+              },
+              multiValue: ({ data }: any) => {
+                const color =
+                  data.value === "qty" ? "!bg-[#fffbf2]" : "!bg-[#fcf2ff]";
+                return `${color} !text-foreground`;
+              },
+              multiValueLabel: () => "!text-foreground",
               multiValueRemove: () =>
-                "!text-accent-foreground hover:!bg-destructive hover:!text-destructive-foreground",
+                "!text-foreground hover:!bg-destructive hover:!text-destructive-foreground",
             }}
           />
         </div>
