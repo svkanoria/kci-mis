@@ -73,10 +73,10 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
     defs.push(
       {
         field: "totalAmount",
-        headerName: "Total Amount",
+        headerName: "Total Amt",
         type: "numericColumn",
         valueFormatter: (params) => formatIndianNumber(params.value),
-        width: 140,
+        width: 125,
         pinned: "left",
         filter: true,
       },
@@ -85,7 +85,7 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         headerName: "Total Qty",
         type: "numericColumn",
         valueFormatter: (params) => formatIndianNumber(params.value),
-        width: 140,
+        width: 120,
         pinned: "left",
         filter: true,
         cellStyle: qtyStyle,
@@ -95,7 +95,7 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         headerName: "Avg Qty",
         type: "numericColumn",
         valueFormatter: (params) => formatIndianNumber(params.value),
-        width: 120,
+        width: 110,
         pinned: "left",
         filter: true,
         cellStyle: qtyStyle,
@@ -105,7 +105,7 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         headerName: "Avg Rate",
         type: "numericColumn",
         valueFormatter: (params) => formatIndianNumber(params.value),
-        width: 120,
+        width: 110,
         pinned: "left",
         filter: true,
         cellStyle: rateStyle,
@@ -116,7 +116,7 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         type: "numericColumn",
         valueFormatter: (params) =>
           params.value != null ? params.value.toFixed(2) : "",
-        width: 100,
+        width: 90,
         pinned: "left",
         hide: !showQty || !showStats,
         cellStyle: qtyStyle,
@@ -127,7 +127,7 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         type: "numericColumn",
         valueFormatter: (params) =>
           params.value != null ? params.value.toFixed(2) : "",
-        width: 100,
+        width: 90,
         pinned: "left",
         hide: !showRate || !showStats,
         cellStyle: rateStyle,
@@ -137,7 +137,7 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         headerName: "CV Qty",
         valueFormatter: (params) =>
           params.value != null ? params.value.toFixed(2) : "",
-        width: 110,
+        width: 85,
         pinned: "left",
         hide: !showQty || !showStats,
         cellStyle: qtyStyle,
@@ -147,7 +147,7 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         headerName: "CV Rate",
         valueFormatter: (params) =>
           params.value != null ? params.value.toFixed(2) : "",
-        width: 110,
+        width: 85,
         pinned: "left",
         hide: !showRate || !showStats,
         cellStyle: rateStyle,
@@ -166,7 +166,7 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         headerName: headerName,
         type: "numericColumn",
         valueFormatter: (params) => formatIndianNumber(params.value),
-        width: 90,
+        width: 80,
         sortable: false,
         hide: !showQty,
         cellStyle: qtyStyle,
@@ -177,7 +177,7 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         headerName: headerName,
         type: "numericColumn",
         valueFormatter: (params) => formatIndianNumber(params.value),
-        width: 90,
+        width: 85,
         sortable: false,
         hide: !showRate,
         cellStyle: rateStyle,
@@ -245,7 +245,10 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
           />
         </div>
       </div>
-      <div className="grow min-h-0">
+      <div
+        className="grow min-h-0 text-sm"
+        style={{ "--ag-spacing": "4px" } as React.CSSProperties}
+      >
         <AgGridReact
           rowData={rowData}
           columnDefs={colDefs}
