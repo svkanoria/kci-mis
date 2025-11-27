@@ -107,6 +107,14 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         valueFormatter: (params) => formatIndianNumber(params.value),
         width: 140,
       },
+      {
+        field: "stdDevRate",
+        headerName: "SD Rate",
+        type: "numericColumn",
+        valueFormatter: (params) =>
+          params.value != null ? params.value.toFixed(2) : "",
+        width: 100,
+      },
     ];
 
     periods.forEach((period) => {

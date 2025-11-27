@@ -203,7 +203,9 @@ export async function getTopCustomers(filters: FilterParams, period: Period) {
     const avgRate = totalQty > 0 ? totalAmount / totalQty : 0;
     const rateVariance =
       n > 0
-        ? rates.reduce((sum, r) => sum + Math.pow(r - avgRate, 2), 0) / n
+        ? rates
+            .filter((r) => r > 0)
+            .reduce((sum, r) => sum + Math.pow(r - avgRate, 2), 0) / n
         : 0;
     const stdDevRate = Math.sqrt(rateVariance);
     const cvRate = avgRate > 0 ? stdDevRate / avgRate : 0;
