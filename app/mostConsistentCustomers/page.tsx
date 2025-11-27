@@ -1,5 +1,5 @@
 import { Heading } from "@/components/typography/heading";
-import { getMostConsistentCustomers } from "@/lib/api";
+import { getTopCustomers } from "@/lib/api";
 import { extractFilterParams } from "../_utils/filter";
 import { ExtendedFilter } from "./extendedFilter";
 import { DataGrid } from "./dataGrid";
@@ -22,7 +22,7 @@ export default async function Page({
       : "month"
   ) as Period;
 
-  const data = getMostConsistentCustomers(
+  const data = getTopCustomers(
     {
       from,
       to,

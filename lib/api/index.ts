@@ -224,10 +224,7 @@ export function getTopCustomersByVolume(filters: FilterParams, limit: number) {
     .limit(limit);
 }
 
-export async function getMostConsistentCustomers(
-  filters: FilterParams,
-  period: Period,
-) {
+export async function getTopCustomers(filters: FilterParams, period: Period) {
   const rows = await db
     .select({
       consigneeName: salesInvoicesRawTable.consigneeName,
@@ -265,7 +262,7 @@ export async function getMostConsistentCustomers(
     (r) => ({ qty: r.qty, rate: r.rate }),
   );
 
-  return data.map((item) => {
+  const result = data.map((item) => {
     const quantities = item.series.map((s) => s.value.qty);
     const n = quantities.length;
     const totalQty = quantities.reduce((sum, q) => sum + q, 0);
@@ -286,4 +283,6 @@ export async function getMostConsistentCustomers(
       cvQty,
     };
   });
+
+  return result.sort((a, b) => a.totalQty - b.totalQty).reverse();
 }

@@ -1,16 +1,16 @@
 "use client";
 
-import { use, useMemo } from "react";
+import { use, useMemo, useState, useEffect } from "react";
 
-import type { ColDef } from "ag-grid-community";
+import type { ColDef, GridApi, GridReadyEvent } from "ag-grid-community";
 import { AllCommunityModule, ModuleRegistry } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
-import { getMostConsistentCustomers } from "@/lib/api";
+import { getTopCustomers } from "@/lib/api";
 import { formatIndianNumber } from "@/lib/utils/format";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
-type IRow = Awaited<ReturnType<typeof getMostConsistentCustomers>>[number];
+type IRow = Awaited<ReturnType<typeof getTopCustomers>>[number];
 
 interface GridRow {
   consigneeName: string | null;
@@ -19,6 +19,7 @@ interface GridRow {
 
 export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
   const groupedData = use(data);
+  const [gridApi, setGridApi] = useState<GridApi | null>(null);
 
   const periods = useMemo(() => {
     const allPeriods = new Set<string>();
@@ -56,7 +57,6 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
           params.value != null ? params.value.toFixed(2) : "",
         width: 110,
         pinned: "left",
-        sort: "asc",
       },
       {
         field: "averageQty",
@@ -104,9 +104,26 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
     return defs;
   }, [periods]);
 
+  useEffect(() => {
+    if (gridApi) {
+      const sortState = gridApi.getColumnState();
+      const isSorted = sortState.some((col) => col.sort !== null);
+      if (!isSorted) {
+        gridApi.applyColumnState({
+          state: [{ colId: "totalQty", sort: "desc" }],
+        });
+      }
+    }
+  }, [rowData, gridApi]);
+
   return (
     <div className="grow min-h-0">
-      <AgGridReact rowData={rowData} columnDefs={colDefs} pagination />
+      <AgGridReact
+        rowData={rowData}
+        columnDefs={colDefs}
+        pagination
+        onGridReady={(params) => setGridApi(params.api)}
+      />
     </div>
   );
 };
