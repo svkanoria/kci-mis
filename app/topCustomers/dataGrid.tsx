@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useMemo, useState, useEffect } from "react";
+import { use, useMemo, useState, useEffect, useId } from "react";
 
 import type { ColDef, GridApi } from "ag-grid-community";
 import { AllCommunityModule, ModuleRegistry } from "ag-grid-community";
@@ -26,6 +26,7 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
     "rate",
   ]);
   const [showStats, setShowStats] = useState(true);
+  const instanceId = useId();
 
   const options = [
     { value: "qty", label: "Quantity" },
@@ -214,6 +215,7 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         )}
         <div className="w-[300px]">
           <Select
+            instanceId={instanceId}
             isMulti
             options={options}
             value={options.filter((o) => selectedGroups.includes(o.value))}
