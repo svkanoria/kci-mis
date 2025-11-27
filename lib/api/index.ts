@@ -70,35 +70,73 @@ function determineAllPeriods<T>(
   return getAllPeriods(from, to, period);
 }
 
-function processTimeSeries<T>(
+/**
+ * Processes raw data rows into a structured time-series format, grouping data
+ * by a specific key and filling in missing periods with a default value.
+ *
+ * This function ensures that every group contains a data point for every
+ * period within the range found in the input data.
+ *
+ * @template T - The type of the input row object.
+ * @template K - The string literal type for the key name property in the
+ * output.
+ * @template V - The type of the value in the time series (e.g., number,
+ * string).
+ *
+ * @param rows - An array of raw data objects to process.
+ * @param period - The duration of each time bucket. Used to determine the
+ * full range of periods.
+ * @param getPeriodStart - A function that extracts the start date of the
+ * period from a raw row.
+ * @param keyName - The name of the property in the output object that will
+ * hold the grouping key (e.g., 'userId', 'category').
+ * @param defaultValue - The value to use for periods where no data exists in
+ * the source rows.
+ * @param getValueForKey - A function that extracts the unique grouping key
+ * from a raw row.
+ * @param getValueForSeries - A function that extracts the value for the time
+ * series from a raw row.
+ *
+ * @returns An array of objects, where each object represents a group
+ * containing the grouping key and a `series` array. The `series` array
+ * contains objects with `periodStart` and `value`, sorted chronologically.
+ */
+function processTimeSeries<T, K extends string, V>(
   rows: T[],
   period: Period,
-  getDate: (row: T) => Date,
-  getKey: (row: T) => string,
-  getValue: (row: T) => number,
-) {
-  const allPeriods = determineAllPeriods(rows, period, getDate);
+  getPeriodStart: (row: T) => Date,
+  keyName: K,
+  defaultValue: V,
+  getValueForKey: (row: T) => string,
+  getValueForSeries: (row: T) => V,
+): ({ [P in K]: string } & { series: { periodStart: Date; value: V }[] })[] {
+  const allPeriods = determineAllPeriods(rows, period, getPeriodStart);
 
-  const grouped = new Map<string, Map<number, number>>();
+  const grouped = new Map<string, Map<number, V>>();
   for (const row of rows) {
-    const key = getKey(row);
-    let entry = grouped.get(key);
-    if (!entry) {
-      entry = new Map(allPeriods.map((p) => [p.getTime(), 0]));
-      grouped.set(key, entry);
+    const key = getValueForKey(row);
+    let series = grouped.get(key);
+    if (!series) {
+      series = new Map(allPeriods.map((p) => [p.getTime(), defaultValue]));
+      grouped.set(key, series);
     }
-    entry.set(getDate(row).getTime(), getValue(row));
+    series.set(getPeriodStart(row).getTime(), getValueForSeries(row));
   }
 
-  return Array.from(grouped.entries()).map(([key, timeSeries]) => ({
-    key,
-    series: Array.from(timeSeries.entries())
-      .sort((a, b) => a[0] - b[0])
-      .map(([time, value]) => ({
-        period: new Date(time),
-        value,
-      })),
-  }));
+  return Array.from(grouped.entries()).map(
+    ([key, series]) =>
+      ({
+        [keyName]: key,
+        series: Array.from(series.entries())
+          .sort((a, b) => a[0] - b[0])
+          .map(([time, value]) => ({
+            periodStart: new Date(time),
+            value,
+          })),
+      }) as { [P in K]: string } & {
+        series: { periodStart: Date; value: V }[];
+      },
+  );
 }
 
 export function getTopCustomersByRate(
@@ -186,7 +224,7 @@ export function getTopCustomersByVolume(filters: FilterParams, limit: number) {
     .limit(limit);
 }
 
-export async function getQtyByConsigneeAndPeriod(
+export async function getMostConsistentCustomers(
   filters: FilterParams,
   period: Period,
 ) {
@@ -199,6 +237,9 @@ export async function getQtyByConsigneeAndPeriod(
       qty: sql<number>`sum(${salesInvoicesRawTable.qty})`
         .mapWith(Number)
         .as("qty"),
+      rate: sql<number>`avg(${salesInvoicesRawTable.basicRate})`
+        .mapWith(Number)
+        .as("rate"),
     })
     .from(salesInvoicesRawTable)
     .leftJoin(
@@ -218,7 +259,9 @@ export async function getQtyByConsigneeAndPeriod(
     rows,
     period,
     (r) => r.period,
+    "consigneeName",
+    { qty: 0, rate: 0 },
     (r) => r.consigneeName,
-    (r) => r.qty,
+    (r) => ({ qty: r.qty, rate: r.rate }),
   );
 }

@@ -5,12 +5,12 @@ import { use, useState, useMemo } from "react";
 import type { ColDef } from "ag-grid-community";
 import { AllCommunityModule, ModuleRegistry } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
-import { getQtyByConsigneeAndPeriod } from "@/lib/api";
+import { getMostConsistentCustomers } from "@/lib/api";
 import { formatIndianNumber } from "@/lib/utils/format";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
-type IRow = Awaited<ReturnType<typeof getQtyByConsigneeAndPeriod>>[number];
+type IRow = Awaited<ReturnType<typeof getMostConsistentCustomers>>[number];
 
 interface GridRow {
   consigneeName: string | null;
@@ -23,8 +23,8 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
   const periods = useMemo(() => {
     const allPeriods = new Set<string>();
     groupedData.forEach((group) => {
-      group.series.forEach((item) => {
-        const p = item.period.getTime().toString();
+      group.series.forEach(({ periodStart }) => {
+        const p = periodStart.getTime().toString();
         allPeriods.add(p);
       });
     });
@@ -34,11 +34,11 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
   }, [groupedData]);
 
   const rowData = useMemo<GridRow[]>(() => {
-    return groupedData.map((group) => {
-      const row: GridRow = { consigneeName: group.key };
-      group.series.forEach((item) => {
-        const p = item.period.getTime().toString();
-        row[p] = item.value;
+    return groupedData.map(({ consigneeName, series }) => {
+      const row: GridRow = { consigneeName };
+      series.forEach(({ periodStart, value: { qty } }) => {
+        const p = periodStart.getTime().toString();
+        row[p] = qty;
       });
       return row;
     });
