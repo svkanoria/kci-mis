@@ -85,10 +85,10 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
     const defs: ColDef<GridRow>[] = [
       {
         field: "plant",
+        width: 70,
         pinned: "left",
         filter: true,
         sortable: false,
-        width: 70,
         enableRowGroup: true,
       },
       {
@@ -100,85 +100,85 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
       {
         field: "totalAmount",
         headerName: "Total Amt",
+        width: 110,
         type: "numericColumn",
         valueFormatter: (params) => formatIndianNumber(params.value),
-        width: 110,
         pinned: "left",
         filter: true,
       },
       {
         field: "totalQty",
         headerName: "Total Qty",
+        width: 90,
         type: "numericColumn",
         valueFormatter: (params) => formatIndianNumber(params.value),
-        width: 90,
+        cellStyle: qtyStyle,
         pinned: "left",
         filter: true,
-        cellStyle: qtyStyle,
       },
       {
         field: "avgQty",
         headerName: "Avg Qty",
+        width: 90,
         type: "numericColumn",
         valueFormatter: (params) => formatIndianNumber(params.value),
-        width: 90,
+        cellStyle: qtyStyle,
         pinned: "left",
         filter: true,
-        cellStyle: qtyStyle,
       },
       {
         field: "avgRate",
         headerName: "Avg Rate",
+        width: 90,
         type: "numericColumn",
         valueFormatter: (params) => formatIndianNumber(params.value),
-        width: 90,
+        cellStyle: rateStyle,
         pinned: "left",
         filter: true,
-        cellStyle: rateStyle,
       },
       {
         field: "stdDevQty",
         headerName: "SD Qty",
+        width: 80,
         type: "numericColumn",
         valueFormatter: (params) =>
           params.value != null ? params.value.toFixed(2) : "",
-        width: 80,
+        cellStyle: qtyStyle,
         pinned: "left",
         hide: !showQty || !showStats,
-        cellStyle: qtyStyle,
       },
       {
         field: "stdDevRate",
         headerName: "SD Rate",
+        width: 80,
         type: "numericColumn",
         valueFormatter: (params) =>
           params.value != null ? params.value.toFixed(2) : "",
-        width: 80,
+        cellStyle: rateStyle,
         pinned: "left",
         hide: !showRate || !showStats,
-        cellStyle: rateStyle,
       },
       {
         field: "cvQty",
         headerName: "CV Qty",
+        width: 70,
+        type: "numericColumn",
         valueFormatter: (params) =>
           params.value != null ? params.value.toFixed(2) : "",
-        type: "numericColumn",
-        width: 70,
+        cellStyle: qtyStyle,
         pinned: "left",
         hide: !showQty || !showStats,
-        cellStyle: qtyStyle,
       },
       {
         field: "cvRate",
         headerName: "CV Rate",
+        width: 70,
+        type: "numericColumn",
         valueFormatter: (params) =>
           params.value != null ? params.value.toFixed(2) : "",
-        type: "numericColumn",
-        width: 70,
+        cellStyle: rateStyle,
         pinned: "left",
         hide: !showRate || !showStats,
-        cellStyle: rateStyle,
       },
     ];
 
@@ -192,23 +192,23 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
       defs.push({
         field: period,
         headerName: headerName,
+        width: 80,
         type: "numericColumn",
         valueFormatter: (params) => formatIndianNumber(params.value),
-        width: 80,
+        cellStyle: qtyStyle,
         sortable: false,
         hide: !showQty,
-        cellStyle: qtyStyle,
       });
 
       defs.push({
         field: period + "-rate",
         headerName: headerName,
+        width: 80,
         type: "numericColumn",
         valueFormatter: (params) => formatIndianNumber(params.value),
-        width: 80,
+        cellStyle: rateStyle,
         sortable: false,
         hide: !showRate,
-        cellStyle: rateStyle,
       });
     });
     return defs;
@@ -287,14 +287,14 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
           rowData={rowData}
           columnDefs={colDefs}
           defaultColDef={defaultColDef}
+          groupDisplayType="groupRows"
+          rowGroupPanelShow="always"
+          isGroupOpenByDefault={() => true}
           headerHeight={60}
           pagination
           suppressMovableColumns
           processUnpinnedColumns={() => []}
           onGridReady={(params) => setGridApi(params.api)}
-          groupDisplayType="groupRows"
-          isGroupOpenByDefault={() => true}
-          rowGroupPanelShow="always"
         />
       </div>
     </div>
