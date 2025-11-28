@@ -58,7 +58,7 @@ export function Filter<T extends FilterFormValues = FilterFormValues>({
   };
 
   return (
-    <form className="p-4 border flex gap-4 items-center shrink-0">
+    <form className="p-2 border flex gap-4 items-center shrink-0 rounded-md">
       <Controller
         control={control as unknown as Control<FilterFormValues>}
         name="range"

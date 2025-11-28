@@ -14,12 +14,12 @@ export const Heading: React.FC<HeadingProps> = ({
   const Tag = level;
 
   const baseClasses: Record<HeadingProps["level"], string> = {
-    h1: "text-4xl font-bold mb-4",
-    h2: "text-3xl font-semibold mb-3",
-    h3: "text-2xl font-medium mb-2",
-    h4: "text-xl font-medium mb-1",
-    h5: "text-lg font-normal mb-1",
-    h6: "text-base font-normal mb-1",
+    h1: "text-3xl font-bold mb-4",
+    h2: "text-2xl font-semibold mb-3",
+    h3: "text-xl font-medium mb-2",
+    h4: "text-lg font-medium mb-1",
+    h5: "text-base font-medium mb-1",
+    h6: "text-sm font-medium mb-1",
   };
 
   return (

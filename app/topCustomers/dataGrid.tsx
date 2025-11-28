@@ -83,7 +83,20 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
     const rateStyle = { backgroundColor: "rgba(240, 200, 255, 0.3)" };
 
     const defs: ColDef<GridRow>[] = [
-      { field: "consigneeName", width: 200, pinned: "left", filter: true },
+      {
+        field: "plant",
+        pinned: "left",
+        filter: true,
+        sortable: false,
+        width: 70,
+        enableRowGroup: true,
+      },
+      {
+        field: "consigneeName",
+        width: 200,
+        pinned: "left",
+        filter: true,
+      },
       {
         field: "totalAmount",
         headerName: "Total Amt",
@@ -192,7 +205,7 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         headerName: headerName,
         type: "numericColumn",
         valueFormatter: (params) => formatIndianNumber(params.value),
-        width: 85,
+        width: 80,
         sortable: false,
         hide: !showRate,
         cellStyle: rateStyle,
@@ -279,6 +292,9 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
           suppressMovableColumns
           processUnpinnedColumns={() => []}
           onGridReady={(params) => setGridApi(params.api)}
+          groupDisplayType="groupRows"
+          isGroupOpenByDefault={() => true}
+          rowGroupPanelShow="always"
         />
       </div>
     </div>

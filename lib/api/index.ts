@@ -86,7 +86,7 @@ function determineAllPeriods<T>(
  * @param rows - An array of raw data objects to process.
  * @param period - The duration of each time bucket. Used to determine the
  * full range of periods.
- * @param getPeriodStart - A function that extracts the start date of the
+ * @param getDate - A function that extracts the start date of the
  * period from a raw row.
  * @param keyName - The name of the property in the output object that will
  * hold the grouping key (e.g., 'userId', 'category').
@@ -104,13 +104,13 @@ function determineAllPeriods<T>(
 function processTimeSeries<T, K extends string, V>(
   rows: T[],
   period: Period,
-  getPeriodStart: (row: T) => Date,
+  getDate: (row: T) => Date,
   keyName: K,
   defaultValue: V,
   getValueForKey: (row: T) => string,
   getValueForSeries: (row: T) => V,
 ): ({ [P in K]: string } & { series: { periodStart: Date; value: V }[] })[] {
-  const allPeriods = determineAllPeriods(rows, period, getPeriodStart);
+  const allPeriods = determineAllPeriods(rows, period, getDate);
 
   const grouped = new Map<string, Map<number, V>>();
   for (const row of rows) {
@@ -120,7 +120,7 @@ function processTimeSeries<T, K extends string, V>(
       series = new Map(allPeriods.map((p) => [p.getTime(), defaultValue]));
       grouped.set(key, series);
     }
-    series.set(getPeriodStart(row).getTime(), getValueForSeries(row));
+    series.set(getDate(row).getTime(), getValueForSeries(row));
   }
 
   return Array.from(grouped.entries()).map(
@@ -183,9 +183,9 @@ export async function getTopCustomers(filters: FilterParams, period: Period) {
     rows,
     period,
     (r) => r.period,
-    "consigneeName",
+    "key",
     { qty: 0, amount: 0, rate: 0 },
-    (r) => r.consigneeName,
+    (r) => JSON.stringify({ c: r.consigneeName, p: r.plant }),
     (r) => ({
       qty: r.qty,
       amount: r.amount,
@@ -219,8 +219,12 @@ export async function getTopCustomers(filters: FilterParams, period: Period) {
     const stdDevRate = Math.sqrt(rateVariance);
     const cvRate = avgRate > 0 ? stdDevRate / avgRate : 0;
 
+    const { c, p } = JSON.parse(item.key);
+
     return {
       ...item,
+      consigneeName: c,
+      plant: parseInt(p),
       // Qty related fields
       totalQty,
       avgQty,

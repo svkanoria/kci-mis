@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export default async function Home() {
   return (
-    <div className="p-4">
+    <div className="p-3">
       <Heading level="h1">KCI MIS</Heading>
       <ul>
         <li>
