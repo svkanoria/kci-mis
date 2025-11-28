@@ -2,14 +2,22 @@
 
 import { use, useMemo, useState, useEffect, useId } from "react";
 
-import type { ColDef, GridApi } from "ag-grid-community";
-import { AllCommunityModule, ModuleRegistry } from "ag-grid-community";
+import { ModuleRegistry } from "ag-grid-community";
+import {
+  AllEnterpriseModule,
+  LicenseManager,
+  ColDef,
+  GridApi,
+} from "ag-grid-enterprise";
 import { AgGridReact } from "ag-grid-react";
 import { getTopCustomers } from "@/lib/api";
 import { formatIndianNumber } from "@/lib/utils/format";
 import Select from "react-select";
 
-ModuleRegistry.registerModules([AllCommunityModule]);
+// Register License Key with LicenseManager
+LicenseManager.setLicenseKey(process.env.NEXT_PUBLIC_AG_GRID_LICENSE || "");
+
+ModuleRegistry.registerModules([AllEnterpriseModule]);
 
 type IRow = Awaited<ReturnType<typeof getTopCustomers>>[number];
 
@@ -248,7 +256,7 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         </div>
       </div>
       <div
-        className="grow min-h-0 text-sm"
+        className="grow min-h-0"
         style={{ "--ag-spacing": "4px" } as React.CSSProperties}
       >
         <AgGridReact

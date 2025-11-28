@@ -19,6 +19,8 @@
     "@radix-ui/react-popover": "^1.1.15",
     "@radix-ui/react-slot": "^1.2.4",
     "@types/lodash": "^4.17.20",
+    "ag-charts-enterprise": "^12.3.1",
+    "ag-grid-enterprise": "^34.3.1",
     "ag-grid-react": "^34.3.1",
     "chalk": "^4.1.2",
     "chrono-node": "^2.9.0",

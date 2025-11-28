@@ -148,6 +148,7 @@ export async function getTopCustomers(filters: FilterParams, period: Period) {
   const rows = await db
     .select({
       consigneeName: salesInvoicesRawTable.consigneeName,
+      plant: salesInvoicesRawTable.plant,
       period: sql`date_trunc(${period}, ${salesInvoicesRawTable.invDate})`
         .mapWith((v) => new Date(v as string))
         .as("period"),
@@ -167,8 +168,16 @@ export async function getTopCustomers(filters: FilterParams, period: Period) {
         ...getDerivedCommonConditions(filters),
       ),
     )
-    .groupBy(salesInvoicesRawTable.consigneeName, sql`period`)
-    .orderBy(sql`period`, salesInvoicesRawTable.consigneeName);
+    .groupBy(
+      salesInvoicesRawTable.consigneeName,
+      salesInvoicesRawTable.plant,
+      sql`period`,
+    )
+    .orderBy(
+      sql`period`,
+      salesInvoicesRawTable.consigneeName,
+      salesInvoicesRawTable.plant,
+    );
 
   const data = processTimeSeries(
     rows,
