@@ -147,6 +147,7 @@ export async function getTopCustomers(filters: FilterParams, period: Period) {
 
   const rows = await db
     .select({
+      recipientName: salesInvoicesRawTable.recipientName,
       consigneeName: salesInvoicesRawTable.consigneeName,
       plant: salesInvoicesRawTable.plant,
       period: sql`date_trunc(${period}, ${salesInvoicesRawTable.invDate})`
@@ -169,13 +170,15 @@ export async function getTopCustomers(filters: FilterParams, period: Period) {
       ),
     )
     .groupBy(
-      salesInvoicesRawTable.consigneeName,
       salesInvoicesRawTable.plant,
+      salesInvoicesRawTable.recipientName,
+      salesInvoicesRawTable.consigneeName,
       sql`period`,
     )
     .orderBy(
       sql`period`,
       salesInvoicesRawTable.consigneeName,
+      salesInvoicesRawTable.recipientName,
       salesInvoicesRawTable.plant,
     );
 
@@ -185,7 +188,8 @@ export async function getTopCustomers(filters: FilterParams, period: Period) {
     (r) => r.period,
     "key",
     { qty: 0, amount: 0, rate: 0 },
-    (r) => JSON.stringify({ c: r.consigneeName, p: r.plant }),
+    (r) =>
+      JSON.stringify({ p: r.plant, r: r.recipientName, c: r.consigneeName }),
     (r) => ({
       qty: r.qty,
       amount: r.amount,
@@ -219,12 +223,13 @@ export async function getTopCustomers(filters: FilterParams, period: Period) {
     const stdDevRate = Math.sqrt(rateVariance);
     const cvRate = avgRate > 0 ? stdDevRate / avgRate : 0;
 
-    const { c, p } = JSON.parse(item.key);
+    const { p, r, c } = JSON.parse(item.key);
 
     return {
       ...item,
-      consigneeName: c,
       plant: parseInt(p),
+      recipientName: r,
+      consigneeName: c,
       // Qty related fields
       totalQty,
       avgQty,

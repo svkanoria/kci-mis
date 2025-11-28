@@ -99,6 +99,13 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         enableRowGroup: true,
       },
       {
+        field: "recipientName",
+        width: 150,
+        pinned: "left",
+        filter: true,
+        enableRowGroup: true,
+      },
+      {
         field: "consigneeName",
         width: 200,
         pinned: "left",
