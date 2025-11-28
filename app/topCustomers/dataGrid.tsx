@@ -54,6 +54,13 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
       .reverse();
   }, [groupedData]);
 
+  const defaultColDef = useMemo<ColDef>(() => {
+    return {
+      suppressHeaderMenuButton: true,
+      wrapHeaderText: true,
+    };
+  }, []);
+
   const rowData = useMemo<GridRow[]>(() => {
     return groupedData.map(({ series, ...rest }) => {
       const row: GridRow = {
@@ -76,13 +83,13 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
     const rateStyle = { backgroundColor: "rgba(240, 200, 255, 0.3)" };
 
     const defs: ColDef<GridRow>[] = [
-      { field: "consigneeName", width: 250, pinned: "left", filter: true },
+      { field: "consigneeName", width: 200, pinned: "left", filter: true },
       {
         field: "totalAmount",
         headerName: "Total Amt",
         type: "numericColumn",
         valueFormatter: (params) => formatIndianNumber(params.value),
-        width: 125,
+        width: 110,
         pinned: "left",
         filter: true,
       },
@@ -91,7 +98,7 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         headerName: "Total Qty",
         type: "numericColumn",
         valueFormatter: (params) => formatIndianNumber(params.value),
-        width: 120,
+        width: 90,
         pinned: "left",
         filter: true,
         cellStyle: qtyStyle,
@@ -101,7 +108,7 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         headerName: "Avg Qty",
         type: "numericColumn",
         valueFormatter: (params) => formatIndianNumber(params.value),
-        width: 110,
+        width: 90,
         pinned: "left",
         filter: true,
         cellStyle: qtyStyle,
@@ -111,7 +118,7 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         headerName: "Avg Rate",
         type: "numericColumn",
         valueFormatter: (params) => formatIndianNumber(params.value),
-        width: 110,
+        width: 90,
         pinned: "left",
         filter: true,
         cellStyle: rateStyle,
@@ -122,7 +129,7 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         type: "numericColumn",
         valueFormatter: (params) =>
           params.value != null ? params.value.toFixed(2) : "",
-        width: 90,
+        width: 80,
         pinned: "left",
         hide: !showQty || !showStats,
         cellStyle: qtyStyle,
@@ -133,7 +140,7 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         type: "numericColumn",
         valueFormatter: (params) =>
           params.value != null ? params.value.toFixed(2) : "",
-        width: 90,
+        width: 80,
         pinned: "left",
         hide: !showRate || !showStats,
         cellStyle: rateStyle,
@@ -143,7 +150,8 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         headerName: "CV Qty",
         valueFormatter: (params) =>
           params.value != null ? params.value.toFixed(2) : "",
-        width: 85,
+        type: "numericColumn",
+        width: 70,
         pinned: "left",
         hide: !showQty || !showStats,
         cellStyle: qtyStyle,
@@ -153,7 +161,8 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         headerName: "CV Rate",
         valueFormatter: (params) =>
           params.value != null ? params.value.toFixed(2) : "",
-        width: 85,
+        type: "numericColumn",
+        width: 70,
         pinned: "left",
         hide: !showRate || !showStats,
         cellStyle: rateStyle,
@@ -254,11 +263,18 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
       </div>
       <div
         className="grow min-h-0"
-        style={{ "--ag-spacing": "4px" } as React.CSSProperties}
+        style={
+          {
+            "--ag-spacing": "4px",
+            "--ag-font-size": "12px",
+          } as React.CSSProperties
+        }
       >
         <AgGridReact
           rowData={rowData}
           columnDefs={colDefs}
+          defaultColDef={defaultColDef}
+          headerHeight={60}
           pagination
           suppressMovableColumns
           processUnpinnedColumns={() => []}
