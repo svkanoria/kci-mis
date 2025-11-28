@@ -145,6 +145,18 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         cellStyle: rateStyle,
         pinned: "left",
         filter: true,
+        valueGetter: (params) => {
+          if (params.node && params.node.group) {
+            const totalAmount = params.node.aggData
+              ? params.node.aggData.totalAmount
+              : 0;
+            const totalQty = params.node.aggData
+              ? params.node.aggData.totalQty
+              : 0;
+            return totalQty ? totalAmount / totalQty : 0;
+          }
+          return params.data ? params.data.avgRate : null;
+        },
       },
       {
         field: "stdDevQty",
