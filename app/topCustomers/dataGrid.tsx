@@ -97,8 +97,6 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         filter: true,
         sortable: false,
         enableRowGroup: true,
-        rowGroup: true,
-        hide: true,
       },
       {
         field: "consigneeName",
