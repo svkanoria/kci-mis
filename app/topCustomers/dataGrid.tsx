@@ -61,6 +61,13 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
     };
   }, []);
 
+  const autoGroupColumnDef = useMemo<ColDef>(() => {
+    return {
+      width: 130,
+      pinned: "left",
+    };
+  }, []);
+
   const rowData = useMemo<GridRow[]>(() => {
     return groupedData.map(({ series, ...rest }) => {
       const row: GridRow = {
@@ -90,6 +97,8 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         filter: true,
         sortable: false,
         enableRowGroup: true,
+        rowGroup: true,
+        hide: true,
       },
       {
         field: "consigneeName",
@@ -105,6 +114,7 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         valueFormatter: (params) => formatIndianNumber(params.value),
         pinned: "left",
         filter: true,
+        aggFunc: "sum",
       },
       {
         field: "totalQty",
@@ -115,6 +125,7 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         cellStyle: qtyStyle,
         pinned: "left",
         filter: true,
+        aggFunc: "sum",
       },
       {
         field: "avgQty",
@@ -125,6 +136,7 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         cellStyle: qtyStyle,
         pinned: "left",
         filter: true,
+        aggFunc: "avg",
       },
       {
         field: "avgRate",
@@ -198,6 +210,7 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         cellStyle: qtyStyle,
         sortable: false,
         hide: !showQty,
+        aggFunc: "sum",
       });
 
       defs.push({
@@ -287,14 +300,14 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
           rowData={rowData}
           columnDefs={colDefs}
           defaultColDef={defaultColDef}
-          groupDisplayType="groupRows"
-          rowGroupPanelShow="always"
-          isGroupOpenByDefault={() => true}
+          autoGroupColumnDef={autoGroupColumnDef}
           headerHeight={60}
           pagination
           suppressMovableColumns
           processUnpinnedColumns={() => []}
           onGridReady={(params) => setGridApi(params.api)}
+          rowGroupPanelShow="always"
+          suppressAggFuncInHeader
         />
       </div>
     </div>
