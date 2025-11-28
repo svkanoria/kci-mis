@@ -77,9 +77,6 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
 
     const defs: ColDef<GridRow>[] = [
       { field: "consigneeName", width: 250, pinned: "left", filter: true },
-    ];
-
-    defs.push(
       {
         field: "totalAmount",
         headerName: "Total Amt",
@@ -161,7 +158,7 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         hide: !showRate || !showStats,
         cellStyle: rateStyle,
       },
-    );
+    ];
 
     periods.forEach((period) => {
       const date = new Date(parseInt(period));
@@ -263,6 +260,8 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
           rowData={rowData}
           columnDefs={colDefs}
           pagination
+          suppressMovableColumns
+          processUnpinnedColumns={() => []}
           onGridReady={(params) => setGridApi(params.api)}
         />
       </div>
