@@ -43,6 +43,8 @@ export function ExtendedFilter({
               placeholder="Select Period"
               value={field.value}
               onChange={field.onChange}
+              className="w-[150px]"
+              dropdownClassName="w-[150px]"
             />
           )}
         />

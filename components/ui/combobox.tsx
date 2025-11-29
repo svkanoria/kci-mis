@@ -26,14 +26,18 @@ export function Combobox(props: {
   searchMessage?: string;
   value?: string;
   onChange?: (value: string | undefined) => void;
+  className?: string;
+  dropdownClassName?: string;
 }) {
   const {
     options,
     placeholder = "Select an option...",
     emptyMessage = "No results.",
-    searchMessage = "Search for option...",
+    searchMessage = "Search...",
     value: propValue,
     onChange,
+    className,
+    dropdownClassName,
   } = props;
 
   const [open, setOpen] = React.useState(false);
@@ -51,16 +55,16 @@ export function Combobox(props: {
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-[200px] justify-between"
+          className={cn("w-[200px] justify-between", className)}
         >
           {value
             ? (options.find((option) => option.value === value)?.label ??
-              "Invalid value")
+              "Bad value")
             : placeholder}
           <ChevronsUpDown className="opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[200px] p-0">
+      <PopoverContent className={cn("w-[200px] p-0", dropdownClassName)}>
         <Command>
           <CommandInput placeholder={searchMessage} className="h-9" />
           <CommandList>
