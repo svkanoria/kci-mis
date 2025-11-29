@@ -110,6 +110,7 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         width: 200,
         pinned: "left",
         filter: true,
+        enableRowGroup: true,
       },
       {
         field: "totalAmount",
@@ -118,7 +119,7 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         type: "numericColumn",
         valueFormatter: (params) => formatIndianNumber(params.value),
         pinned: "left",
-        filter: true,
+        filter: "agMultiColumnFilter",
         aggFunc: "sum",
       },
       {
@@ -129,7 +130,7 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         valueFormatter: (params) => formatIndianNumber(params.value),
         cellStyle: qtyStyle,
         pinned: "left",
-        filter: true,
+        filter: "agMultiColumnFilter",
         aggFunc: "sum",
       },
       {
@@ -140,7 +141,7 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         valueFormatter: (params) => formatIndianNumber(params.value),
         cellStyle: qtyStyle,
         pinned: "left",
-        filter: true,
+        filter: "agMultiColumnFilter",
         aggFunc: "avg",
       },
       {
@@ -151,7 +152,7 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         valueFormatter: (params) => formatIndianNumber(params.value),
         cellStyle: rateStyle,
         pinned: "left",
-        filter: true,
+        filter: "agMultiColumnFilter",
         valueGetter: (params) => {
           if (params.node && params.node.group) {
             const totalAmount = params.node.aggData
