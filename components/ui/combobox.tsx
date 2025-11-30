@@ -25,9 +25,10 @@ export function Combobox(props: {
   emptyMessage?: string;
   searchMessage?: string;
   value?: string;
-  onChange?: (value: string | undefined) => void;
+  onValueChange?: (value: string | undefined) => void;
   className?: string;
   dropdownClassName?: string;
+  allowDeselect?: boolean;
 }) {
   const {
     options,
@@ -35,9 +36,10 @@ export function Combobox(props: {
     emptyMessage = "No results.",
     searchMessage = "Search...",
     value: propValue,
-    onChange,
+    onValueChange,
     className,
     dropdownClassName,
+    allowDeselect = true,
   } = props;
 
   const [open, setOpen] = React.useState(false);
@@ -79,11 +81,14 @@ export function Combobox(props: {
                     // Note that to deselect it, we set the value to "", and not
                     // to undefined. Setting to undefined leads to problems with
                     // react-hook-form's default value handling.
-                    const newValue = currentValue === value ? "" : currentValue;
+                    const newValue =
+                      currentValue === value && allowDeselect
+                        ? ""
+                        : currentValue;
                     if (!isControlled) {
                       setInternalValue(newValue);
                     }
-                    onChange?.(newValue);
+                    onValueChange?.(newValue);
                     setOpen(false);
                   }}
                 >

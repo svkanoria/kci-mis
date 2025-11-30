@@ -26,7 +26,7 @@ export interface DateRange {
 interface DateRangePickerProps {
   value?: DateRange;
   defaultValue?: DateRange;
-  onChange?: (dateRange: DateRange | undefined) => void;
+  onValueChange?: (dateRange: DateRange | undefined) => void;
   placeholderFrom?: string;
   placeholderTo?: string;
   disabled?: boolean;
@@ -41,7 +41,7 @@ export const DateRangePicker = React.forwardRef<
   const {
     value: controlledValue,
     defaultValue,
-    onChange,
+    onValueChange,
     placeholderFrom = "Start Date",
     placeholderTo = "End Date",
     disabled = false,
@@ -69,7 +69,7 @@ export const DateRangePicker = React.forwardRef<
 
   const handleDateRangeChange = (newDateRange: DateRange | undefined) => {
     // Always call onChange if provided
-    onChange?.(newDateRange);
+    onValueChange?.(newDateRange);
 
     // In uncontrolled mode, also update internal state
     if (!isControlled) {
@@ -162,7 +162,7 @@ export const DateRangePicker = React.forwardRef<
     <div ref={ref} className={`flex gap-2 items-center ${className}`}>
       <DatePicker
         value={dateRange?.from}
-        onChange={handleFromChange}
+        onValueChange={handleFromChange}
         placeholder={placeholderFrom}
         disabled={disabled}
         className={datePickerClassName}
@@ -170,7 +170,7 @@ export const DateRangePicker = React.forwardRef<
       <span className="text-muted-foreground">to</span>
       <DatePicker
         value={dateRange?.to}
-        onChange={handleToChange}
+        onValueChange={handleToChange}
         placeholder={placeholderTo}
         disabled={disabled}
         className={datePickerClassName}

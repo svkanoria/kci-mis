@@ -55,7 +55,7 @@ function isValidDate(date: Date | undefined) {
 interface DatePickerProps {
   value?: Date;
   defaultValue?: Date;
-  onChange?: (date: Date | undefined) => void;
+  onValueChange?: (date: Date | undefined) => void;
   placeholder?: string;
   disabled?: boolean;
   className?: string;
@@ -66,7 +66,7 @@ export const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(
     const {
       value: controlledValue,
       defaultValue,
-      onChange,
+      onValueChange,
       placeholder = "Select Date",
       disabled = false,
       className,
@@ -114,7 +114,7 @@ export const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(
     const handleDateChange = (newDate: Date | undefined) => {
       lastEmittedDate.current = newDate;
       // Always call onChange if provided
-      onChange?.(newDate);
+      onValueChange?.(newDate);
 
       // In uncontrolled mode, also update internal state
       if (!isControlled) {

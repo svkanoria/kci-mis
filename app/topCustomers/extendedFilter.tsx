@@ -5,7 +5,13 @@ import {
   FilterFormValues,
   FilterProps,
 } from "@/app/_components/filter";
-import { Combobox } from "@/components/ui/combobox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Controller } from "react-hook-form";
 
 interface ExtendedFilterFormValues extends FilterFormValues {
@@ -34,18 +40,16 @@ export function ExtendedFilter({
           control={control}
           name="period"
           render={({ field }) => (
-            <Combobox
-              options={[
-                { value: "month", label: "Monthly" },
-                { value: "quarter", label: "Quarterly" },
-                { value: "year", label: "Yearly" },
-              ]}
-              placeholder="Select Period"
-              value={field.value}
-              onChange={field.onChange}
-              className="w-[150px]"
-              dropdownClassName="w-[150px]"
-            />
+            <Select onValueChange={field.onChange} value={field.value}>
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Select Period" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="month">Monthly</SelectItem>
+                <SelectItem value="quarter">Quarterly</SelectItem>
+                <SelectItem value="year">Yearly</SelectItem>
+              </SelectContent>
+            </Select>
           )}
         />
       )}

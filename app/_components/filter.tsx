@@ -35,7 +35,7 @@ export function Filter<T extends FilterFormValues = FilterFormValues>({
   const { control, handleSubmit } = useForm<T>({
     defaultValues: {
       range: { from: initialFrom, to: initialTo },
-      product: initialProduct ?? "",
+      product: initialProduct ?? "C:Formaldehyde",
       ...extraDefaultValues,
     } as DefaultValues<T>,
   });
@@ -65,7 +65,7 @@ export function Filter<T extends FilterFormValues = FilterFormValues>({
         render={({ field }) => (
           <DateRangePicker
             value={field.value}
-            onChange={field.onChange}
+            onValueChange={field.onChange}
             datePickerClassName="max-w-[150px]"
           />
         )}
@@ -86,7 +86,8 @@ export function Filter<T extends FilterFormValues = FilterFormValues>({
             ]}
             placeholder="Select Product"
             value={field.value}
-            onChange={field.onChange}
+            onValueChange={field.onChange}
+            allowDeselect={false}
           />
         )}
       />
