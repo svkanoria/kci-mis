@@ -41,7 +41,7 @@ export function ExtendedFilter({
           name="period"
           render={({ field }) => (
             <Select onValueChange={field.onChange} value={field.value}>
-              <SelectTrigger className="w-[150px]">
+              <SelectTrigger className="w-[130px]">
                 <SelectValue placeholder="Select Period" />
               </SelectTrigger>
               <SelectContent>

@@ -34,7 +34,7 @@ export default async function Page({
   return (
     <div className="flex h-full flex-col gap-4 p-3">
       <Heading level="h1" className="mb-0!">
-        Top Customers
+        Top Customers - Formaldehyde
       </Heading>
       <ExtendedFilter
         initialFrom={from}
