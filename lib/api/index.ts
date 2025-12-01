@@ -3,13 +3,24 @@ import { salesInvoicesRawTable, salesInvoicesDerivedTable } from "@/db/schema";
 import { and, eq, gte, lte, sql } from "drizzle-orm";
 import { getAllPeriods, Period } from "@/lib/utils/date";
 
-export interface FilterParams {
+/**
+ * Represents common parameters used for filtering data in API requests.
+ * You can extend this type to add or exclude params as per your requirements.
+ *
+ * @interface CommonFilterParams
+ * @property {Date} [from] - The start date for the filter range.
+ * @property {Date} [to] - The end date for the filter range.
+ * @property {Period} [period] - The periodicity to group results by.
+ * @property {string} [product] - The product identifier or name to filter by.
+ */
+export interface CommonFilterParams {
   from?: Date;
   to?: Date;
+  period?: Period;
   product?: string;
 }
 
-function getRawCommonConditions(filters: FilterParams) {
+function getRawCommonConditions(filters: CommonFilterParams) {
   const conditions = [];
   if (filters.from) {
     conditions.push(
@@ -35,7 +46,7 @@ function getRawCommonConditions(filters: FilterParams) {
   return conditions;
 }
 
-function getDerivedCommonConditions(filters: FilterParams) {
+function getDerivedCommonConditions(filters: CommonFilterParams) {
   const conditions = [];
   if (filters.product && filters.product.startsWith("C:")) {
     conditions.push(
@@ -139,7 +150,9 @@ function processTimeSeries<T, K extends string, V>(
   );
 }
 
-export async function getTopCustomers(filters: FilterParams, period: Period) {
+export async function getTopCustomers(
+  filters: Required<Pick<CommonFilterParams, "period">> & CommonFilterParams,
+) {
   const isCategoryFilter = filters.product?.startsWith("C:");
   const qtyCol = isCategoryFilter
     ? salesInvoicesDerivedTable.normQty
@@ -150,9 +163,10 @@ export async function getTopCustomers(filters: FilterParams, period: Period) {
       recipientName: salesInvoicesRawTable.recipientName,
       consigneeName: salesInvoicesRawTable.consigneeName,
       plant: salesInvoicesRawTable.plant,
-      period: sql`date_trunc(${period}, ${salesInvoicesRawTable.invDate})`
-        .mapWith((v) => new Date(v as string))
-        .as("period"),
+      period:
+        sql`date_trunc(${filters.period}, ${salesInvoicesRawTable.invDate})`
+          .mapWith((v) => new Date(v as string))
+          .as("period"),
       qty: sql<number>`sum(${qtyCol})`.mapWith(Number).as("qty"),
       amount: sql<number>`sum(${salesInvoicesRawTable.basicAmount})`
         .mapWith(Number)
@@ -184,7 +198,7 @@ export async function getTopCustomers(filters: FilterParams, period: Period) {
 
   const data = processTimeSeries(
     rows,
-    period,
+    filters.period,
     (r) => r.period,
     "key",
     { qty: 0, amount: 0, rate: 0 },

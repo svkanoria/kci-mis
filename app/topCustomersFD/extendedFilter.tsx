@@ -15,39 +15,38 @@ import {
 import { Controller } from "react-hook-form";
 
 interface ExtendedFilterFormValues extends FilterFormValues {
-  period: string;
+  customerLevel: string;
 }
 
 export function ExtendedFilter({
-  initialPeriod,
+  initialCustomerLevel,
   ...props
 }: FilterProps<ExtendedFilterFormValues> & {
-  initialPeriod?: string;
+  initialCustomerLevel?: string;
 }) {
   return (
     <Filter<ExtendedFilterFormValues>
       {...props}
       extraDefaultValues={{
-        period: initialPeriod ?? "month",
+        customerLevel: initialCustomerLevel ?? "",
       }}
       onExtraSubmit={(data, params) => {
-        if (data.period !== "") {
-          params.set("period", data.period);
+        if (data.customerLevel !== "") {
+          params.set("customerLevel", data.customerLevel);
         }
       }}
       renderExtraFields={(control) => (
         <Controller
           control={control}
-          name="period"
+          name="customerLevel"
           render={({ field }) => (
             <Select onValueChange={field.onChange} value={field.value}>
-              <SelectTrigger className="w-[130px]">
-                <SelectValue placeholder="Select Period" />
+              <SelectTrigger className="w-[190px]">
+                <SelectValue placeholder="Select Customer Level" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="month">Monthly</SelectItem>
-                <SelectItem value="quarter">Quarterly</SelectItem>
-                <SelectItem value="year">Yearly</SelectItem>
+                <SelectItem value="consignee">Consignee</SelectItem>
+                <SelectItem value="trader-agent">Trader/Agent</SelectItem>
               </SelectContent>
             </Select>
           )}

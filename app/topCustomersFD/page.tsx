@@ -12,24 +12,22 @@ export default async function Page({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const resolvedSearchParams = await searchParams;
-  const { from, to, product } = extractFilterParams(resolvedSearchParams);
-
-  const periodParam = resolvedSearchParams.period;
-  const period = (
-    typeof periodParam === "string" &&
-    ["month", "quarter", "year"].includes(periodParam)
-      ? periodParam
-      : "month"
-  ) as Period;
-
-  const data = getTopCustomers(
-    {
-      from,
-      to,
-      product,
-    },
-    period,
+  const { from, to, period, product } = extractFilterParams(
+    resolvedSearchParams,
+    { period: "month" as Period, product: "C:Formaldehyde" },
   );
+
+  const customerLevel =
+    typeof resolvedSearchParams.customerLevel === "string"
+      ? resolvedSearchParams.customerLevel
+      : "consignee";
+
+  const data = getTopCustomers({
+    from,
+    to,
+    period,
+    product,
+  });
 
   return (
     <div className="flex h-full flex-col gap-4 p-3">
@@ -39,9 +37,10 @@ export default async function Page({
       <ExtendedFilter
         initialFrom={from}
         initialTo={to}
-        initialProduct={product}
         initialPeriod={period}
-        key={`${from}-${to}-${product}-${period}`}
+        initialProduct={product}
+        initialCustomerLevel={customerLevel}
+        key={`${from}-${to}-${product}-${period}-${customerLevel}`}
       />
       <Suspense fallback={<div>Loading...</div>}>
         <DataGrid data={data} />

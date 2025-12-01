@@ -1,6 +1,13 @@
 "use client";
 
 import { Combobox } from "@/components/ui/combobox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { DateRange, DateRangePicker } from "@/components/ui/dateRangePicker";
 import { Button } from "@/components/ui/button";
 import { useRouter, usePathname } from "next/navigation";
@@ -10,6 +17,7 @@ import { format } from "date-fns";
 export interface FilterProps<T extends FilterFormValues> {
   initialFrom?: Date;
   initialTo?: Date;
+  initialPeriod?: string;
   initialProduct?: string;
   renderExtraFields?: (control: Control<T>) => React.ReactNode;
   onExtraSubmit?: (data: T, params: URLSearchParams) => void;
@@ -18,12 +26,14 @@ export interface FilterProps<T extends FilterFormValues> {
 
 export interface FilterFormValues {
   range: DateRange;
+  period: string;
   product: string;
 }
 
 export function Filter<T extends FilterFormValues = FilterFormValues>({
   initialFrom,
   initialTo,
+  initialPeriod,
   initialProduct,
   renderExtraFields,
   onExtraSubmit,
@@ -35,7 +45,8 @@ export function Filter<T extends FilterFormValues = FilterFormValues>({
   const { control, handleSubmit } = useForm<T>({
     defaultValues: {
       range: { from: initialFrom, to: initialTo },
-      product: initialProduct ?? "C:Formaldehyde",
+      period: initialPeriod ?? "",
+      product: initialProduct ?? "",
       ...extraDefaultValues,
     } as DefaultValues<T>,
   });
@@ -47,6 +58,9 @@ export function Filter<T extends FilterFormValues = FilterFormValues>({
     }
     if (data.range?.to) {
       params.set("to", format(data.range.to, "yyyy-MM-dd"));
+    }
+    if (data.period !== "") {
+      params.set("period", data.period);
     }
     if (data.product !== "") {
       params.set("product", data.product);
@@ -68,6 +82,22 @@ export function Filter<T extends FilterFormValues = FilterFormValues>({
             onValueChange={field.onChange}
             datePickerClassName="max-w-[150px]"
           />
+        )}
+      />
+      <Controller
+        control={control as unknown as Control<FilterFormValues>}
+        name="period"
+        render={({ field }) => (
+          <Select onValueChange={field.onChange} value={field.value}>
+            <SelectTrigger className="w-[130px]">
+              <SelectValue placeholder="Select Period" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="month">Monthly</SelectItem>
+              <SelectItem value="quarter">Quarterly</SelectItem>
+              <SelectItem value="year">Yearly</SelectItem>
+            </SelectContent>
+          </Select>
         )}
       />
       <Controller
