@@ -22,6 +22,7 @@ export interface FilterProps<T extends FilterFormValues> {
   renderExtraFields?: (control: Control<T>) => React.ReactNode;
   onExtraSubmit?: (data: T, params: URLSearchParams) => void;
   extraDefaultValues?: Partial<T>;
+  productFilter?: (option: { value: string; label: string }) => boolean;
 }
 
 export interface FilterFormValues {
@@ -38,6 +39,7 @@ export function Filter<T extends FilterFormValues = FilterFormValues>({
   renderExtraFields,
   onExtraSubmit,
   extraDefaultValues,
+  productFilter,
 }: FilterProps<T>) {
   const router = useRouter();
   const pathname = usePathname();
@@ -103,23 +105,35 @@ export function Filter<T extends FilterFormValues = FilterFormValues>({
       <Controller
         control={control as unknown as Control<FilterFormValues>}
         name="product"
-        render={({ field }) => (
-          <Combobox
-            options={[
-              { value: "C:Formaldehyde", label: "Formaldehyde" },
-              { value: "Formaldehyde-37%", label: "Formaldehyde-37%" },
-              { value: "Formaldehyde-40%", label: "Formaldehyde-40%" },
-              { value: "Formaldehyde-41%", label: "Formaldehyde-41%" },
-              { value: "Formaldehyde-43%", label: "Formaldehyde-43%" },
-              { value: "Formaldehyde-36.5%", label: "Formaldehyde-36.5%" },
-              { value: "Formaldehyde-37% in Drums", label: "FD-37% in Drums" },
-            ]}
-            placeholder="Select Product"
-            value={field.value}
-            onValueChange={field.onChange}
-            allowDeselect={false}
-          />
-        )}
+        render={({ field }) => {
+          const options = [
+            { value: "C:Formaldehyde", label: "Formaldehyde (All)" },
+            { value: "Formaldehyde-37%", label: "Formaldehyde-37%" },
+            { value: "Formaldehyde-40%", label: "Formaldehyde-40%" },
+            { value: "Formaldehyde-41%", label: "Formaldehyde-41%" },
+            { value: "Formaldehyde-43%", label: "Formaldehyde-43%" },
+            { value: "Formaldehyde-36.5%", label: "Formaldehyde-36.5%" },
+            { value: "Formaldehyde-37% in Drums", label: "FD-37% in Drums" },
+            { value: "C:Hexamine", label: "Hexamine" },
+            { value: "C:Penta", label: "Penta (All)" },
+            { value: "Penta-TG", label: "Penta-TG" },
+            { value: "Penta-NG", label: "Penta-NG" },
+            { value: "DiPenta", label: "DiPenta" },
+          ];
+          const filteredOptions = productFilter
+            ? options.filter(productFilter)
+            : options;
+
+          return (
+            <Combobox
+              options={filteredOptions}
+              placeholder="Select Product"
+              value={field.value}
+              onValueChange={field.onChange}
+              allowDeselect={false}
+            />
+          );
+        }}
       />
       {renderExtraFields && renderExtraFields(control)}
       <Button onClick={handleSubmit(onSubmit)}>Go</Button>
