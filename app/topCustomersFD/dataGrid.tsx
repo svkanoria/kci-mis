@@ -26,7 +26,13 @@ interface GridRow {
   [key: string]: string | number | null;
 }
 
-export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
+export const DataGrid = ({
+  data,
+  initialGrouping,
+}: {
+  data: Promise<IRow[]>;
+  initialGrouping?: string;
+}) => {
   const groupedData = use(data);
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
   const [selectedGroups, setSelectedGroups] = useState<string[]>([
@@ -97,6 +103,8 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         filter: true,
         sortable: false,
         enableRowGroup: true,
+        rowGroup: ["plant", "all"].includes(initialGrouping ?? ""),
+        hide: true,
       },
       {
         field: "recipientName",
@@ -104,6 +112,8 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         pinned: "left",
         filter: true,
         enableRowGroup: true,
+        rowGroup: ["recipientName", "all"].includes(initialGrouping ?? ""),
+        hide: true,
       },
       {
         field: "consigneeName",
@@ -243,7 +253,7 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
       });
     });
     return defs;
-  }, [periods, selectedGroups, showStats]);
+  }, [periods, selectedGroups, showStats, initialGrouping]);
 
   useEffect(() => {
     if (gridApi) {
