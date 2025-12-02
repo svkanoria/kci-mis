@@ -15,38 +15,40 @@ import {
 import { Controller } from "react-hook-form";
 
 interface ExtendedFilterFormValues extends FilterFormValues {
-  customerLevel: string;
+  grouping: string;
 }
 
 export function ExtendedFilter({
-  initialCustomerLevel,
+  initialGrouping,
   ...props
 }: FilterProps<ExtendedFilterFormValues> & {
-  initialCustomerLevel?: string;
+  initialGrouping?: string;
 }) {
   return (
     <Filter<ExtendedFilterFormValues>
       {...props}
       extraDefaultValues={{
-        customerLevel: initialCustomerLevel ?? "",
+        grouping: initialGrouping ?? "",
       }}
       onExtraSubmit={(data, params) => {
-        if (data.customerLevel !== "") {
-          params.set("customerLevel", data.customerLevel);
+        if (data.grouping !== "") {
+          params.set("grouping", data.grouping);
         }
       }}
       renderExtraFields={(control) => (
         <Controller
           control={control}
-          name="customerLevel"
+          name="grouping"
           render={({ field }) => (
             <Select onValueChange={field.onChange} value={field.value}>
-              <SelectTrigger className="w-[190px]">
-                <SelectValue placeholder="Select Customer Level" />
+              <SelectTrigger className="w-[170px]">
+                <SelectValue placeholder="Select Grouping" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="consignee">Consignee</SelectItem>
-                <SelectItem value="trader-agent">Trader/Agent</SelectItem>
+                <SelectItem value="none">No Grouping</SelectItem>
+                <SelectItem value="plant">By Plant</SelectItem>
+                <SelectItem value="recipientName">By Trader/Agent</SelectItem>
+                <SelectItem value="all">Full Grouping</SelectItem>
               </SelectContent>
             </Select>
           )}

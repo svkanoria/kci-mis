@@ -17,16 +17,17 @@ export default async function Page({
     { period: "month" as Period, product: "C:Formaldehyde" },
   );
 
-  const customerLevel =
-    typeof resolvedSearchParams.customerLevel === "string"
-      ? resolvedSearchParams.customerLevel
-      : "consignee";
+  const grouping =
+    typeof resolvedSearchParams.grouping === "string"
+      ? resolvedSearchParams.grouping
+      : "none";
 
   const data = getTopCustomers({
     from,
     to,
     period,
     product,
+    grouping,
   });
 
   return (
@@ -39,8 +40,8 @@ export default async function Page({
         initialTo={to}
         initialPeriod={period}
         initialProduct={product}
-        initialCustomerLevel={customerLevel}
-        key={`${from}-${to}-${product}-${period}-${customerLevel}`}
+        initialGrouping={grouping}
+        key={`${from}-${to}-${product}-${period}-${grouping}`}
       />
       <Suspense fallback={<div>Loading...</div>}>
         <DataGrid data={data} />

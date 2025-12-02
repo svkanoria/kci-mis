@@ -151,18 +151,24 @@ function processTimeSeries<T, K extends string, V>(
 }
 
 export async function getTopCustomers(
-  filters: Required<Pick<CommonFilterParams, "period">> & CommonFilterParams,
+  filters: CommonFilterParams &
+    Required<Pick<CommonFilterParams, "period">> & { grouping: string },
 ) {
   const isCategoryFilter = filters.product?.startsWith("C:");
   const qtyCol = isCategoryFilter
     ? salesInvoicesDerivedTable.normQty
     : salesInvoicesRawTable.qty;
 
+  const groupPlant = ["plant", "all"].includes(filters.grouping);
+  const groupRecipient = ["recipientName", "all"].includes(filters.grouping);
+
   const rows = await db
     .select({
-      recipientName: salesInvoicesRawTable.recipientName,
+      recipientName: groupRecipient
+        ? salesInvoicesRawTable.recipientName
+        : sql<string>`''`,
       consigneeName: salesInvoicesRawTable.consigneeName,
-      plant: salesInvoicesRawTable.plant,
+      plant: groupPlant ? salesInvoicesRawTable.plant : sql<number>`0`,
       period:
         sql`date_trunc(${filters.period}, ${salesInvoicesRawTable.invDate})`
           .mapWith((v) => new Date(v as string))
@@ -184,16 +190,16 @@ export async function getTopCustomers(
       ),
     )
     .groupBy(
-      salesInvoicesRawTable.plant,
-      salesInvoicesRawTable.recipientName,
+      ...(groupPlant ? [salesInvoicesRawTable.plant] : []),
+      ...(groupRecipient ? [salesInvoicesRawTable.recipientName] : []),
       salesInvoicesRawTable.consigneeName,
       sql`period`,
     )
     .orderBy(
       sql`period`,
       salesInvoicesRawTable.consigneeName,
-      salesInvoicesRawTable.recipientName,
-      salesInvoicesRawTable.plant,
+      ...(groupRecipient ? [salesInvoicesRawTable.recipientName] : []),
+      ...(groupPlant ? [salesInvoicesRawTable.plant] : []),
     );
 
   const data = processTimeSeries(
