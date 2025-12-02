@@ -68,11 +68,17 @@ export const DataGrid = ({
   }, []);
 
   const autoGroupColumnDef = useMemo<ColDef>(() => {
+    const width =
+      initialGrouping === "plant"
+        ? 110
+        : ["recipientName", "all"].includes(initialGrouping ?? "")
+          ? 200
+          : 130;
     return {
-      width: 130,
+      width,
       pinned: "left",
     };
-  }, []);
+  }, [initialGrouping]);
 
   const rowData = useMemo<GridRow[]>(() => {
     return groupedData.map(({ series, ...rest }) => {
