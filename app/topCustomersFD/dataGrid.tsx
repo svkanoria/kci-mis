@@ -85,9 +85,10 @@ export const DataGrid = ({
       const row: GridRow = {
         ...rest,
       };
-      series.forEach(({ periodStart, value: { qty, rate } }) => {
+      series.forEach(({ periodStart, value: { qty, amount, rate } }) => {
         const p = periodStart.getTime().toString();
         row[p] = qty;
+        row[p + "-amount"] = amount;
         row[p + "-rate"] = rate;
       });
       return row;
@@ -186,7 +187,7 @@ export const DataGrid = ({
             const totalQty = params.node.aggData
               ? params.node.aggData.totalQty
               : 0;
-            return totalQty ? totalAmount / totalQty : 0;
+            return totalQty > 0 ? totalAmount / totalQty : 0;
           }
           return params.data ? params.data.avgRate : null;
         },
@@ -256,6 +257,20 @@ export const DataGrid = ({
         aggFunc: "sum",
       });
 
+      // Hidden, used only for weighted avg rate calculation
+      defs.push({
+        field: period + "-amount",
+        headerName: headerName,
+        width: 120,
+        type: "numericColumn",
+        valueFormatter: (params) => formatIndianNumber(params.value),
+        sortable: false,
+        hide: true,
+        lockVisible: true,
+        suppressColumnsToolPanel: true,
+        aggFunc: "sum",
+      });
+
       defs.push({
         field: period + "-rate",
         headerName: headerName,
@@ -265,6 +280,18 @@ export const DataGrid = ({
         cellStyle: rateStyle,
         sortable: false,
         hide: !showRate,
+        valueGetter: (params) => {
+          if (params.node && params.node.group) {
+            const totalAmount = params.node.aggData
+              ? params.node.aggData[period + "-amount"]
+              : 0;
+            const totalQty = params.node.aggData
+              ? params.node.aggData[period]
+              : 0;
+            return totalQty > 0 ? totalAmount / totalQty : 0;
+          }
+          return params.data ? params.data[period + "-rate"] : null;
+        },
       });
     });
     return defs;
