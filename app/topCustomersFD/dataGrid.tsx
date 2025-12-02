@@ -104,6 +104,9 @@ export const DataGrid = ({
         sortable: false,
         enableRowGroup: true,
         rowGroup: ["plant", "all"].includes(initialGrouping ?? ""),
+        rowGroupIndex: ["plant", "all"].includes(initialGrouping ?? "")
+          ? 0
+          : null,
         hide: true,
       },
       {
@@ -113,6 +116,12 @@ export const DataGrid = ({
         filter: true,
         enableRowGroup: true,
         rowGroup: ["recipientName", "all"].includes(initialGrouping ?? ""),
+        rowGroupIndex:
+          initialGrouping === "all"
+            ? 1
+            : initialGrouping === "recipientName"
+              ? 0
+              : null,
         hide: true,
       },
       {
