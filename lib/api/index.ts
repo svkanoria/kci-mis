@@ -159,16 +159,22 @@ export async function getTopCustomers(
     ? salesInvoicesDerivedTable.normQty
     : salesInvoicesRawTable.qty;
 
-  const groupPlant = ["plant", "all"].includes(filters.grouping);
-  const groupRecipient = ["recipientName", "all"].includes(filters.grouping);
+  const groupRecipient = ["recipient", "distChannel", "plant"].includes(
+    filters.grouping,
+  );
+  const groupDistChannel = ["distChannel", "plant"].includes(filters.grouping);
+  const groupPlant = ["plant"].includes(filters.grouping);
 
   const rows = await db
     .select({
+      plant: groupPlant ? salesInvoicesRawTable.plant : sql<number>`0`,
+      distChannelDescription: groupDistChannel
+        ? salesInvoicesRawTable.distChannelDescription
+        : sql<string>`''`,
       recipientName: groupRecipient
         ? salesInvoicesRawTable.recipientName
         : sql<string>`''`,
       consigneeName: salesInvoicesRawTable.consigneeName,
-      plant: groupPlant ? salesInvoicesRawTable.plant : sql<number>`0`,
       period:
         sql`date_trunc(${filters.period}, ${salesInvoicesRawTable.invDate})`
           .mapWith((v) => new Date(v as string))
@@ -191,6 +197,9 @@ export async function getTopCustomers(
     )
     .groupBy(
       ...(groupPlant ? [salesInvoicesRawTable.plant] : []),
+      ...(groupDistChannel
+        ? [salesInvoicesRawTable.distChannelDescription]
+        : []),
       ...(groupRecipient ? [salesInvoicesRawTable.recipientName] : []),
       salesInvoicesRawTable.consigneeName,
       sql`period`,
@@ -199,6 +208,9 @@ export async function getTopCustomers(
       sql`period`,
       salesInvoicesRawTable.consigneeName,
       ...(groupRecipient ? [salesInvoicesRawTable.recipientName] : []),
+      ...(groupDistChannel
+        ? [salesInvoicesRawTable.distChannelDescription]
+        : []),
       ...(groupPlant ? [salesInvoicesRawTable.plant] : []),
     );
 
@@ -209,7 +221,12 @@ export async function getTopCustomers(
     "key",
     { qty: 0, amount: 0, rate: 0 },
     (r) =>
-      JSON.stringify({ p: r.plant, r: r.recipientName, c: r.consigneeName }),
+      JSON.stringify({
+        p: r.plant,
+        d: r.distChannelDescription,
+        r: r.recipientName,
+        c: r.consigneeName,
+      }),
     (r) => ({
       qty: r.qty,
       amount: r.amount,
@@ -243,11 +260,12 @@ export async function getTopCustomers(
     const stdDevRate = Math.sqrt(rateVariance);
     const cvRate = avgRate > 0 ? stdDevRate / avgRate : 0;
 
-    const { p, r, c } = JSON.parse(item.key);
+    const { p, d, r, c } = JSON.parse(item.key);
 
     return {
       ...item,
       plant: parseInt(p),
+      distChannelDescription: d,
       recipientName: r,
       consigneeName: c,
       // Qty related fields

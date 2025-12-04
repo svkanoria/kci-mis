@@ -46,9 +46,9 @@ export function ExtendedFilter({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">No Grouping</SelectItem>
-                <SelectItem value="plant">By Plant</SelectItem>
-                <SelectItem value="recipientName">By Trader/Agent</SelectItem>
-                <SelectItem value="all">Full Grouping</SelectItem>
+                <SelectItem value="recipient">+ Recipient</SelectItem>
+                <SelectItem value="distChannel">+ Dist. Channel</SelectItem>
+                <SelectItem value="plant">+ Plant</SelectItem>
               </SelectContent>
             </Select>
           )}

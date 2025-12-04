@@ -68,17 +68,11 @@ export const DataGrid = ({
   }, []);
 
   const autoGroupColumnDef = useMemo<ColDef>(() => {
-    const width =
-      initialGrouping === "plant"
-        ? 110
-        : ["recipientName", "all"].includes(initialGrouping ?? "")
-          ? 200
-          : 130;
     return {
-      width,
+      width: 220,
       pinned: "left",
     };
-  }, [initialGrouping]);
+  }, []);
 
   const rowData = useMemo<GridRow[]>(() => {
     return groupedData.map(({ series, ...rest }) => {
@@ -110,10 +104,24 @@ export const DataGrid = ({
         filter: true,
         sortable: false,
         enableRowGroup: true,
-        rowGroup: ["plant", "all"].includes(initialGrouping ?? ""),
-        rowGroupIndex: ["plant", "all"].includes(initialGrouping ?? "")
-          ? 0
-          : null,
+        rowGroup: ["plant"].includes(initialGrouping ?? ""),
+        rowGroupIndex: ["plant"].includes(initialGrouping ?? "") ? 0 : null,
+        hide: true,
+      },
+      {
+        field: "distChannelDescription",
+        headerName: "Dist. Channel",
+        width: 150,
+        pinned: "left",
+        filter: true,
+        enableRowGroup: true,
+        rowGroup: ["distChannel", "plant"].includes(initialGrouping ?? ""),
+        rowGroupIndex:
+          initialGrouping === "plant"
+            ? 1
+            : initialGrouping === "distChannel"
+              ? 0
+              : null,
         hide: true,
       },
       {
@@ -122,13 +130,17 @@ export const DataGrid = ({
         pinned: "left",
         filter: true,
         enableRowGroup: true,
-        rowGroup: ["recipientName", "all"].includes(initialGrouping ?? ""),
+        rowGroup: ["recipient", "distChannel", "plant"].includes(
+          initialGrouping ?? "",
+        ),
         rowGroupIndex:
-          initialGrouping === "all"
-            ? 1
-            : initialGrouping === "recipientName"
-              ? 0
-              : null,
+          initialGrouping === "plant"
+            ? 2
+            : initialGrouping === "distChannel"
+              ? 1
+              : initialGrouping === "recipient"
+                ? 0
+                : null,
         hide: true,
       },
       {
