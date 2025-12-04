@@ -77,6 +77,12 @@ export const DataGrid = ({
     return {
       width: 220,
       pinned: "left",
+      tooltipValueGetter: (params: any) => {
+        if (params.node.group) {
+          return `Group: ${params.value}`;
+        }
+        return "";
+      },
     };
   }, []);
 
@@ -132,6 +138,7 @@ export const DataGrid = ({
       },
       {
         field: "recipientName",
+        tooltipField: "recipientName",
         width: 150,
         pinned: "left",
         filter: true,
@@ -151,6 +158,7 @@ export const DataGrid = ({
       },
       {
         field: "consigneeName",
+        tooltipField: "consigneeName",
         width: 200,
         pinned: "left",
         filter: true,
@@ -421,7 +429,7 @@ export const DataGrid = ({
           onGridReady={(params) => setGridApi(params.api)}
           rowGroupPanelShow="always"
           suppressAggFuncInHeader
-          groupHideParentOfSingleChild
+          enableBrowserTooltips
         />
       </div>
     </div>
