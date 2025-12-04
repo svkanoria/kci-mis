@@ -258,7 +258,6 @@ export async function getTopCustomers(
             .reduce((sum, r) => sum + Math.pow(r - avgRate, 2), 0) / n
         : 0;
     const stdDevRate = Math.sqrt(rateVariance);
-    const cvRate = avgRate > 0 ? stdDevRate / avgRate : 0;
 
     const { p, d, r, c } = JSON.parse(item.key);
 
@@ -277,7 +276,6 @@ export async function getTopCustomers(
       avgRate,
       rateVariance,
       stdDevRate,
-      cvRate,
       // Other
       totalAmount,
     };

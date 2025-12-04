@@ -237,17 +237,6 @@ export const DataGrid = ({
         pinned: "left",
         hide: !showQty || !showStats,
       },
-      {
-        field: "cvRate",
-        headerName: "CV Rate",
-        width: 70,
-        type: "numericColumn",
-        valueFormatter: (params) =>
-          params.value != null ? params.value.toFixed(2) : "",
-        cellStyle: rateStyle,
-        pinned: "left",
-        hide: !showRate || !showStats,
-      },
     ];
 
     periods.forEach((period) => {
