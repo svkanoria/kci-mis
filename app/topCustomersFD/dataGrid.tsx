@@ -45,7 +45,23 @@ export const DataGrid = ({
     "qty",
     "rate",
   ]);
-  const [showStats, setShowStats] = useState(true);
+  const [showStats, setShowStats] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("topCustomersFD-showStats");
+    if (stored !== null) {
+      setShowStats(stored === "true");
+    }
+    setIsInitialized(true);
+  }, []);
+
+  useEffect(() => {
+    if (isInitialized) {
+      localStorage.setItem("topCustomersFD-showStats", String(showStats));
+    }
+  }, [showStats, isInitialized]);
+
   const instanceId = useId();
 
   const options = [
