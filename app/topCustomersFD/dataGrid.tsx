@@ -13,6 +13,7 @@ import { AgGridReact } from "ag-grid-react";
 import { getTopCustomers } from "@/lib/api";
 import { formatIndianNumber } from "@/lib/utils/format";
 import Select from "react-select";
+import { start } from "repl";
 
 // Register License Key with LicenseManager
 LicenseManager.setLicenseKey(process.env.NEXT_PUBLIC_AG_GRID_LICENSE || "");
@@ -126,8 +127,6 @@ export const DataGrid = ({
         filter: true,
         sortable: false,
         enableRowGroup: true,
-        rowGroup: ["plant"].includes(initialGrouping ?? ""),
-        rowGroupIndex: ["plant"].includes(initialGrouping ?? "") ? 0 : null,
         hide: true,
       },
       {
@@ -137,13 +136,6 @@ export const DataGrid = ({
         pinned: "left",
         filter: true,
         enableRowGroup: true,
-        rowGroup: ["distChannel", "plant"].includes(initialGrouping ?? ""),
-        rowGroupIndex:
-          initialGrouping === "plant"
-            ? 1
-            : initialGrouping === "distChannel"
-              ? 0
-              : null,
         hide: true,
       },
       {
@@ -153,17 +145,6 @@ export const DataGrid = ({
         pinned: "left",
         filter: true,
         enableRowGroup: true,
-        rowGroup: ["recipient", "distChannel", "plant"].includes(
-          initialGrouping ?? "",
-        ),
-        rowGroupIndex:
-          initialGrouping === "plant"
-            ? 2
-            : initialGrouping === "distChannel"
-              ? 1
-              : initialGrouping === "recipient"
-                ? 0
-                : null,
         hide: true,
       },
       {
@@ -320,19 +301,31 @@ export const DataGrid = ({
       });
     });
     return defs;
-  }, [periods, selectedGroups, showStats, initialGrouping]);
+  }, [periods, selectedGroups, showStats]);
 
   useEffect(() => {
     if (gridApi) {
-      const sortState = gridApi.getColumnState();
-      const isSorted = sortState.some((col) => col.sort !== null);
-      if (!isSorted) {
-        gridApi.applyColumnState({
-          state: [{ colId: "totalQty", sort: "desc" }],
-        });
+      const cols: string[] = [
+        "plant",
+        "distChannelDescription",
+        "recipientName",
+      ];
+
+      let index = 3;
+      if (initialGrouping === "plant") {
+        index = 0;
+      } else if (initialGrouping === "distChannel") {
+        index = 1;
+      } else if (initialGrouping === "recipient") {
+        index = 2;
       }
+
+      const groupCols = cols.slice(index);
+      const emptyCols = cols.slice(0, index);
+      gridApi.setRowGroupColumns(groupCols);
+      gridApi.setColumnsVisible(emptyCols, false);
     }
-  }, [rowData, gridApi]);
+  }, [gridApi, initialGrouping]);
 
   return (
     <div className="grow min-h-0 flex flex-col gap-2">
