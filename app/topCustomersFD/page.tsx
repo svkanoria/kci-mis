@@ -22,12 +22,15 @@ export default async function Page({
       ? resolvedSearchParams.grouping
       : "none";
 
+  const noDirect = resolvedSearchParams.noDirect === "true" ? true : false;
+
   const data = getTopCustomers({
     from,
     to,
     period,
     product,
     grouping,
+    noDirect,
   });
 
   return (

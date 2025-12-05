@@ -154,7 +154,7 @@ export async function getTopCustomers(
   filters: CommonFilterParams &
     Required<Pick<CommonFilterParams, "period">> & {
       grouping: string;
-      excludeDirectChannel?: boolean;
+      noDirect?: boolean;
     },
 ) {
   const isCategoryFilter = filters.product?.startsWith("C:");
@@ -196,7 +196,7 @@ export async function getTopCustomers(
       and(
         ...getRawCommonConditions(filters),
         ...getDerivedCommonConditions(filters),
-        ...(filters.excludeDirectChannel
+        ...(filters.noDirect
           ? [
               eq(
                 salesInvoicesRawTable.consigneeName,
