@@ -12,36 +12,34 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
 import { Controller } from "react-hook-form";
 
 interface ExtendedFilterFormValues extends FilterFormValues {
   grouping: string;
-  noDirect: boolean;
+  channels: string;
 }
 
 export function ExtendedFilter({
   initialGrouping,
-  initialNoDirect,
+  initialChannels,
   ...props
 }: FilterProps<ExtendedFilterFormValues> & {
   initialGrouping?: string;
-  initialNoDirect?: boolean;
+  initialChannels?: string;
 }) {
   return (
     <Filter<ExtendedFilterFormValues>
       {...props}
       extraDefaultValues={{
         grouping: initialGrouping ?? "",
-        noDirect: initialNoDirect ?? false,
+        channels: initialChannels ?? "",
       }}
       onExtraSubmit={(data, params) => {
         if (data.grouping !== "") {
           params.set("grouping", data.grouping);
         }
-        if (data.noDirect) {
-          params.set("noDirect", "true");
+        if (data.channels !== "") {
+          params.set("channels", data.channels);
         }
       }}
       renderExtraFields={(control) => (
@@ -65,16 +63,18 @@ export function ExtendedFilter({
           />
           <Controller
             control={control}
-            name="noDirect"
+            name="channels"
             render={({ field }) => (
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="noDirect"
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-                <Label htmlFor="noDirect">Indirect only</Label>
-              </div>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <SelectTrigger className="w-[170px]">
+                  <SelectValue placeholder="Select Channels" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Channels</SelectItem>
+                  <SelectItem value="dealer-known">Dealer Known</SelectItem>
+                  <SelectItem value="dealer-unknown">Dealer Unknown</SelectItem>
+                </SelectContent>
+              </Select>
             )}
           />
         </>

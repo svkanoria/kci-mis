@@ -154,7 +154,7 @@ export async function getTopCustomers(
   filters: CommonFilterParams &
     Required<Pick<CommonFilterParams, "period">> & {
       grouping: string;
-      noDirect?: boolean;
+      channels: string;
     },
 ) {
   const isCategoryFilter = filters.product?.startsWith("C:");
@@ -196,15 +196,25 @@ export async function getTopCustomers(
       and(
         ...getRawCommonConditions(filters),
         ...getDerivedCommonConditions(filters),
-        ...(filters.noDirect
+        ...(filters.channels === "dealer-known"
           ? [
-              eq(
-                salesInvoicesRawTable.consigneeName,
-                salesInvoicesRawTable.recipientName,
+              not(
+                eq(
+                  salesInvoicesRawTable.consigneeName,
+                  salesInvoicesRawTable.recipientName,
+                ),
               ),
-              not(eq(salesInvoicesRawTable.distChannelDescription, "Direct")),
+              eq(salesInvoicesRawTable.distChannelDescription, "Dealer"),
             ]
-          : []),
+          : filters.channels === "dealer-unknown"
+            ? [
+                eq(
+                  salesInvoicesRawTable.consigneeName,
+                  salesInvoicesRawTable.recipientName,
+                ),
+                eq(salesInvoicesRawTable.distChannelDescription, "Dealer"),
+              ]
+            : []),
       ),
     )
     .groupBy(

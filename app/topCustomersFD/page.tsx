@@ -22,7 +22,10 @@ export default async function Page({
       ? resolvedSearchParams.grouping
       : "none";
 
-  const noDirect = resolvedSearchParams.noDirect === "true" ? true : false;
+  const channels =
+    typeof resolvedSearchParams.channels === "string"
+      ? resolvedSearchParams.channels
+      : "all";
 
   const data = getTopCustomers({
     from,
@@ -30,7 +33,7 @@ export default async function Page({
     period,
     product,
     grouping,
-    noDirect,
+    channels,
   });
 
   return (
@@ -44,7 +47,8 @@ export default async function Page({
         initialPeriod={period}
         initialProduct={product}
         initialGrouping={grouping}
-        key={`${from}-${to}-${product}-${period}-${grouping}`}
+        initialChannels={channels}
+        key={`${from}-${to}-${product}-${period}-${grouping}-${channels}`}
       />
       <Suspense fallback={<div>Loading...</div>}>
         <DataGrid data={data} initialGrouping={grouping} />
