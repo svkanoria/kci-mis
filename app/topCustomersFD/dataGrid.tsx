@@ -13,12 +13,6 @@ import { AgGridReact } from "ag-grid-react";
 import { getTopCustomers } from "@/lib/api";
 import { formatIndianNumber } from "@/lib/utils/format";
 import Select from "react-select";
-import { AlertCircleIcon } from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 
 // Register License Key with LicenseManager
 LicenseManager.setLicenseKey(process.env.NEXT_PUBLIC_AG_GRID_LICENSE || "");
@@ -179,42 +173,6 @@ export const DataGrid = ({
         pinned: "left",
         filter: true,
         enableRowGroup: true,
-        cellRenderer: (params: any) => {
-          if (params.node.group) {
-            return params.value;
-          }
-
-          if (!params.data) {
-            return params.value;
-          }
-
-          const { consigneeName, recipientName, distChannelDescription } =
-            params.data;
-
-          const isWarning =
-            consigneeName === recipientName &&
-            String(distChannelDescription).toLowerCase() === "dealer";
-
-          if (isWarning) {
-            return (
-              <div className="flex items-center gap-1 w-full overflow-hidden">
-                <Tooltip>
-                  <TooltipTrigger>
-                    <AlertCircleIcon
-                      className="shrink-0 text-orange-600"
-                      size={14}
-                    />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Possible unknown customer</p>
-                  </TooltipContent>
-                </Tooltip>
-                <span className="truncate">{params.value}</span>
-              </div>
-            );
-          }
-          return params.value;
-        },
       },
       {
         field: "totalAmount",

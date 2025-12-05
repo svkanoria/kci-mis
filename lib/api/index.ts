@@ -1,6 +1,6 @@
 import { db } from "@/db/drizzle";
 import { salesInvoicesRawTable, salesInvoicesDerivedTable } from "@/db/schema";
-import { and, eq, gte, lte, sql } from "drizzle-orm";
+import { and, eq, gte, lte, not, sql } from "drizzle-orm";
 import { getAllPeriods, Period } from "@/lib/utils/date";
 
 /**
@@ -152,7 +152,10 @@ function processTimeSeries<T, K extends string, V>(
 
 export async function getTopCustomers(
   filters: CommonFilterParams &
-    Required<Pick<CommonFilterParams, "period">> & { grouping: string },
+    Required<Pick<CommonFilterParams, "period">> & {
+      grouping: string;
+      excludeDirectChannel?: boolean;
+    },
 ) {
   const isCategoryFilter = filters.product?.startsWith("C:");
   const qtyCol = isCategoryFilter
@@ -193,6 +196,15 @@ export async function getTopCustomers(
       and(
         ...getRawCommonConditions(filters),
         ...getDerivedCommonConditions(filters),
+        ...(filters.excludeDirectChannel
+          ? [
+              eq(
+                salesInvoicesRawTable.consigneeName,
+                salesInvoicesRawTable.recipientName,
+              ),
+              not(eq(salesInvoicesRawTable.distChannelDescription, "Direct")),
+            ]
+          : []),
       ),
     )
     .groupBy(
