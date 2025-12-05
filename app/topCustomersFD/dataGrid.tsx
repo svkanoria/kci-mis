@@ -21,6 +21,10 @@ ModuleRegistry.registerModules([AllEnterpriseModule]);
 
 type IRow = Awaited<ReturnType<typeof getTopCustomers>>[number];
 
+const lsKey = (key: string) => `topCustomersFD-${key}`;
+const SHOW_STATS_KEY = lsKey("showStats");
+const SELECTED_GROUPS_KEY = lsKey("selectedGroups");
+
 interface GridRow {
   consigneeName: string | null;
   [key: string]: string | number | null;
@@ -35,26 +39,36 @@ export const DataGrid = ({
 }) => {
   const groupedData = use(data);
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
-  const [selectedGroups, setSelectedGroups] = useState<string[]>([
-    "qty",
-    "rate",
-  ]);
   const [showStats, setShowStats] = useState(false);
+  const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem("topCustomersFD-showStats");
-    if (stored !== null) {
-      setShowStats(stored === "true");
+    const storedShowStats = localStorage.getItem(SHOW_STATS_KEY);
+    if (storedShowStats !== null) {
+      setShowStats(storedShowStats === "true");
     }
+
+    const storedSelectedGroups = localStorage.getItem(SELECTED_GROUPS_KEY);
+    if (storedSelectedGroups) {
+      try {
+        setSelectedGroups(JSON.parse(storedSelectedGroups));
+      } catch (e) {
+        console.error("Failed to parse stored selected groups", e);
+      }
+    } else {
+      setSelectedGroups(["qty", "rate"]);
+    }
+
     setIsInitialized(true);
   }, []);
 
   useEffect(() => {
     if (isInitialized) {
-      localStorage.setItem("topCustomersFD-showStats", String(showStats));
+      localStorage.setItem(SHOW_STATS_KEY, String(showStats));
+      localStorage.setItem(SELECTED_GROUPS_KEY, JSON.stringify(selectedGroups));
     }
-  }, [showStats, isInitialized]);
+  }, [showStats, selectedGroups, isInitialized]);
 
   const instanceId = useId();
 
