@@ -410,6 +410,7 @@ export const DataGrid = ({
           rowGroupPanelShow="always"
           suppressAggFuncInHeader
           enableBrowserTooltips
+          grandTotalRow="top"
         />
       </div>
     </div>
