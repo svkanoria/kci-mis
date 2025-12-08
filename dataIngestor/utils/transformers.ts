@@ -13,10 +13,10 @@ export function transformDateFormat(str: string) {
 
   const formats = [
     "dd-MMM-yy", // 20-Dec-20
-    "dd.MM.yyyy", // 20.12.2020
     "dd.MM.yy", // 20.12.20
-    "dd/MM/yyyy", // 20/12/2020
     "dd/MM/yy", // 20/12/20
+    "dd.MM.yyyy", // 20.12.2020
+    "dd/MM/yyyy", // 20/12/2020
   ];
 
   for (const fmt of formats) {
