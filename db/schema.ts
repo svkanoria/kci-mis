@@ -82,6 +82,12 @@ export const salesInvoicesRawTable = pgTable("salesInvoicesRaw", {
   vehicleNo: varchar(),
 });
 
+export const methanolPricesTable = pgTable("methanolPrices", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  date: date().notNull().unique(),
+  dailyIcisKandlaPrice: decimal(),
+});
+
 export const salesInvoicesDerivedTable = pgTable("salesInvoicesDerived", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   rawId: integer()
