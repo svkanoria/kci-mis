@@ -2,7 +2,7 @@ import { db } from "@/db/drizzle";
 import {
   salesInvoicesRawTable,
   salesInvoicesDerivedTable,
-  methanolPricesTable,
+  methanolPricesInterpolatedView,
 } from "@/db/schema";
 import { and, eq, gte, lte, not, sql } from "drizzle-orm";
 import { getAllPeriods, Period } from "@/lib/utils/date";
@@ -220,7 +220,7 @@ export async function getTopCustomers(
         .mapWith(Number)
         .as("amount"),
       deltaAmount:
-        sql<number>`sum((${filteredRawSq.basicRate} - (${methanolPricesTable.dailyIcisKandlaPrice} * 500)) * ${filteredRawSq.qty})`
+        sql<number>`sum((${filteredRawSq.basicRate} - (${methanolPricesInterpolatedView.dailyIcisKandlaPrice} * 500)) * ${filteredRawSq.qty})`
           .mapWith(Number)
           .as("deltaAmount"),
     })
@@ -230,8 +230,8 @@ export async function getTopCustomers(
       eq(filteredRawSq.id, salesInvoicesDerivedTable.rawId),
     )
     .leftJoin(
-      methanolPricesTable,
-      eq(filteredRawSq.contractDate, methanolPricesTable.date),
+      methanolPricesInterpolatedView,
+      eq(filteredRawSq.contractDate, methanolPricesInterpolatedView.date),
     )
     .where(and(...getDerivedCommonConditions(filters)))
     .groupBy(
