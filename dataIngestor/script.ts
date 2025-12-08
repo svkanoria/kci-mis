@@ -7,26 +7,31 @@ import chalk from "chalk";
 import logger, { logStyles } from "./logger";
 import { computeDerivedData } from "./ops/computeDerivedData";
 import { insertSalesInvoicesFromCSV } from "./ops/insertSalesInvoicesFromCSV";
+import { insertICISMethanolPricesFromCSV } from "./ops/insertICISMethanolPricesFromCSV";
 
 const program = new Command();
 
 async function main() {
   program
     .name("data-ingestor")
-    .description("CLI to ingest sales data and compute derived metrics")
+    .description("CLI to ingest sales/RM data and compute derived metrics")
     .argument("[directory]", "Directory containing CSV files to ingest")
     .action(async (directory) => {
       console.log(chalk.bold.blue("Welcome to the KCI MIS Data Ingestor"));
 
-      const processingLevel = await select({
-        message: "What level of processing do you want to do?",
+      const processingType = await select({
+        message: "What type of processing do you want to do?",
         choices: [
-          { name: "Full", value: "Full" },
-          { name: "Derived data only", value: "Derived data only" },
+          { name: "Full sales data", value: "Full sales" },
+          { name: "Derived sales data", value: "Derived sales" },
+          { name: "Methanol price data", value: "Methanol price" },
         ],
       });
 
-      if (processingLevel === "Full") {
+      if (
+        processingType === "Full sales" ||
+        processingType === "Methanol price"
+      ) {
         let dirPath = directory;
 
         if (!dirPath) {
@@ -74,7 +79,11 @@ async function main() {
           const filePath = path.join(absolutePath, file);
           try {
             logger.info(logStyles.info(`Uploading data from '${file}'...`));
-            await insertSalesInvoicesFromCSV(filePath);
+            if (processingType === "Full sales") {
+              await insertSalesInvoicesFromCSV(filePath);
+            } else if (processingType === "Methanol price") {
+              await insertICISMethanolPricesFromCSV(filePath);
+            }
             logger.info(logStyles.success(`Completed upload from '${file}'.`));
           } catch (error) {
             logger.error(
@@ -85,13 +94,18 @@ async function main() {
         }
       }
 
-      logger.info(logStyles.info("Computing derived data..."));
-      await computeDerivedData();
-      logger.info(logStyles.success("Data ingestion complete."));
+      if (
+        processingType === "Full sales" ||
+        processingType === "Derived sales"
+      ) {
+        logger.info(logStyles.info("Computing derived sales data..."));
+        await computeDerivedData();
+        logger.info(logStyles.success("Data ingestion complete."));
 
-      logger.verbose(
-        chalk.magenta("See ./.logs/dataIngestor.log file for details."),
-      );
+        logger.verbose(
+          chalk.magenta("See ./.logs/dataIngestor.log file for details."),
+        );
+      }
     });
 
   await program.parseAsync(process.argv);

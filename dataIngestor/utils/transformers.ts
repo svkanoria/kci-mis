@@ -1,3 +1,5 @@
+import { parse, format, isValid } from "date-fns";
+
 export function nullifyEmpty(str: string) {
   if (str == "") {
     return null;
@@ -8,13 +10,27 @@ export function nullifyEmpty(str: string) {
 
 export function transformDateFormat(str: string) {
   if (!str) return str;
-  const parts = str.split(/[\.\/]/);
-  if (parts.length !== 3)
-    throw new Error(
-      `Unrecognized date format '${str}', it should be dd.mm.yyyy or dd/mm/yyyy`,
-    );
-  const [month, day, year] = parts;
-  return `${day}/${month}/${year}`;
+
+  const formats = [
+    "dd-MMM-yy", // 20-Dec-20
+    "dd.MM.yyyy", // 20.12.2020
+    "dd.MM.yy", // 20.12.20
+    "dd/MM/yyyy", // 20/12/2020
+    "dd/MM/yy", // 20/12/20
+  ];
+
+  for (const fmt of formats) {
+    const parsedDate = parse(str, fmt, new Date());
+    if (isValid(parsedDate)) {
+      // If the year is parsed as 2-digit, date-fns handles the century logic.
+      // However, strict parsing is usually safer if formats are ambiguous.
+      return format(parsedDate, "yyyy-MM-dd");
+    }
+  }
+
+  throw new Error(
+    `Unrecognized date format '${str}'. Supported formats: ${formats.join(", ")}`,
+  );
 }
 
 export function transformNumberStr(str: string) {

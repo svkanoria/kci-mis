@@ -92,10 +92,10 @@ export async function insertICISMethanolPricesFromCSV(filePath: string) {
       continue;
     }
 
-    if (!record.date || !record.price) {
+    if (!record.date || !record.dailyIcisKandlaPrice) {
       logger.warn(
         logStyles.warn(
-          `Upload skipped for record #${i}. Reason: Missing date or price`,
+          `Upload skipped for record #${i}. Reason: Missing date or dailyIcisKandlaPrice`,
         ),
       );
       skippedCount++;
