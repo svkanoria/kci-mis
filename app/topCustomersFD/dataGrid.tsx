@@ -73,8 +73,9 @@ export const DataGrid = ({
   const instanceId = useId();
 
   const options = [
-    { value: "qty", label: "Quantity" },
+    { value: "qty", label: "Qty" },
     { value: "rate", label: "Rate" },
+    { value: "delta", label: "Delta" },
   ];
 
   const periods = useMemo(() => {
@@ -115,11 +116,13 @@ export const DataGrid = ({
       const row: GridRow = {
         ...rest,
       };
-      series.forEach(({ periodStart, value: { qty, amount, rate } }) => {
+      series.forEach(({ periodStart, value: { qty, amount, rate, delta } }) => {
         const p = periodStart.getTime().toString();
         row[p] = qty;
         row[p + "-amount"] = amount;
         row[p + "-rate"] = rate;
+        row[p + "-delta-amount"] = delta * qty;
+        row[p + "-delta"] = delta;
       });
       return row;
     });
@@ -128,9 +131,11 @@ export const DataGrid = ({
   const colDefs = useMemo<ColDef<GridRow>[]>(() => {
     const showQty = selectedGroups.includes("qty");
     const showRate = selectedGroups.includes("rate");
+    const showDelta = selectedGroups.includes("delta");
 
     const qtyStyle = { backgroundColor: "rgba(255, 235, 205, 0.3)" };
     const rateStyle = { backgroundColor: "rgba(240, 200, 255, 0.3)" };
+    const deltaStyle = { backgroundColor: "rgba(200, 255, 200, 0.3)" };
 
     const defs: ColDef<GridRow>[] = [
       {
@@ -223,6 +228,39 @@ export const DataGrid = ({
         },
       },
       {
+        field: "totalDeltaAmount",
+        headerName: "Total Delta Amt",
+        width: 110,
+        type: "numericColumn",
+        valueFormatter: (params) => formatIndianNumber(params.value),
+        pinned: "left",
+        filter: "agMultiColumnFilter",
+        aggFunc: "sum",
+        hide: true,
+      },
+      {
+        field: "avgDelta",
+        headerName: "Avg Delta",
+        width: 90,
+        type: "numericColumn",
+        valueFormatter: (params) => formatIndianNumber(params.value),
+        cellStyle: deltaStyle,
+        pinned: "left",
+        filter: "agMultiColumnFilter",
+        valueGetter: (params) => {
+          if (params.node && params.node.group) {
+            const totalDeltaAmount = params.node.aggData
+              ? params.node.aggData.totalDeltaAmount
+              : 0;
+            const totalQty = params.node.aggData
+              ? params.node.aggData.totalQty
+              : 0;
+            return totalQty > 0 ? totalDeltaAmount / totalQty : 0;
+          }
+          return params.data ? params.data.avgDelta : null;
+        },
+      },
+      {
         field: "stdDevQty",
         headerName: "SD Qty",
         width: 80,
@@ -247,6 +285,28 @@ export const DataGrid = ({
       {
         field: "cvQty",
         headerName: "CV Qty",
+        width: 70,
+        type: "numericColumn",
+        valueFormatter: (params) =>
+          params.value != null ? params.value.toFixed(2) : "",
+        cellStyle: qtyStyle,
+        pinned: "left",
+        hide: !showQty || !showStats,
+      },
+      {
+        field: "stdDevDelta",
+        headerName: "SD Delta",
+        width: 80,
+        type: "numericColumn",
+        valueFormatter: (params) =>
+          params.value != null ? params.value.toFixed(2) : "",
+        cellStyle: deltaStyle,
+        pinned: "left",
+        hide: !showDelta || !showStats,
+      },
+      {
+        field: "cvDelta",
+        headerName: "CV Delta",
         width: 70,
         type: "numericColumn",
         valueFormatter: (params) =>
@@ -312,6 +372,42 @@ export const DataGrid = ({
           return params.data ? params.data[period + "-rate"] : null;
         },
       });
+
+      defs.push({
+        field: period + "-delta-amount",
+        headerName: headerName,
+        width: 120,
+        type: "numericColumn",
+        valueFormatter: (params) => formatIndianNumber(params.value),
+        sortable: false,
+        hide: true,
+        lockVisible: true,
+        suppressColumnsToolPanel: true,
+        aggFunc: "sum",
+      });
+
+      defs.push({
+        field: period + "-delta",
+        headerName: headerName,
+        width: 80,
+        type: "numericColumn",
+        valueFormatter: (params) => formatIndianNumber(params.value),
+        cellStyle: deltaStyle,
+        sortable: false,
+        hide: !showDelta,
+        valueGetter: (params) => {
+          if (params.node && params.node.group) {
+            const totalDeltaAmount = params.node.aggData
+              ? params.node.aggData[period + "-delta-amount"]
+              : 0;
+            const totalQty = params.node.aggData
+              ? params.node.aggData[period]
+              : 0;
+            return totalQty > 0 ? totalDeltaAmount / totalQty : 0;
+          }
+          return params.data ? params.data[period + "-delta"] : null;
+        },
+      });
     });
     return defs;
   }, [periods, selectedGroups, showStats]);
@@ -368,8 +464,9 @@ export const DataGrid = ({
               control: () => "!bg-background !border-input",
               menu: () => "!bg-popover !text-popover-foreground !z-[100]",
               option: ({ isFocused, isSelected, data }: any) => {
-                const color =
-                  data.value === "qty" ? "!bg-[#fffbf2]" : "!bg-[#fcf2ff]";
+                let color = "!bg-[#fffbf2]";
+                if (data.value === "rate") color = "!bg-[#fcf2ff]";
+                if (data.value === "delta") color = "!bg-[#f2fff2]";
                 return isFocused
                   ? "!bg-accent !text-accent-foreground"
                   : isSelected
@@ -377,8 +474,9 @@ export const DataGrid = ({
                     : `${color} !text-foreground`;
               },
               multiValue: ({ data }: any) => {
-                const color =
-                  data.value === "qty" ? "!bg-[#fffbf2]" : "!bg-[#fcf2ff]";
+                let color = "!bg-[#fffbf2]";
+                if (data.value === "rate") color = "!bg-[#fcf2ff]";
+                if (data.value === "delta") color = "!bg-[#f2fff2]";
                 return `${color} !text-foreground`;
               },
               multiValueLabel: () => "!text-foreground",

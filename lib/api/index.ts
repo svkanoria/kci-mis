@@ -1,5 +1,9 @@
 import { db } from "@/db/drizzle";
-import { salesInvoicesRawTable, salesInvoicesDerivedTable } from "@/db/schema";
+import {
+  salesInvoicesRawTable,
+  salesInvoicesDerivedTable,
+  methanolPricesTable,
+} from "@/db/schema";
 import { and, eq, gte, lte, not, sql } from "drizzle-orm";
 import { getAllPeriods, Period } from "@/lib/utils/date";
 
@@ -215,11 +219,19 @@ export async function getTopCustomers(
       amount: sql<number>`sum(${filteredRawSq.basicAmount})`
         .mapWith(Number)
         .as("amount"),
+      deltaAmount:
+        sql<number>`sum((${filteredRawSq.basicRate} - (${methanolPricesTable.dailyIcisKandlaPrice} * 500)) * ${filteredRawSq.qty})`
+          .mapWith(Number)
+          .as("deltaAmount"),
     })
     .from(filteredRawSq)
     .leftJoin(
       salesInvoicesDerivedTable,
       eq(filteredRawSq.id, salesInvoicesDerivedTable.rawId),
+    )
+    .leftJoin(
+      methanolPricesTable,
+      eq(filteredRawSq.contractDate, methanolPricesTable.date),
     )
     .where(and(...getDerivedCommonConditions(filters)))
     .groupBy(
@@ -242,7 +254,7 @@ export async function getTopCustomers(
     filters.period,
     (r) => r.period,
     "key",
-    { qty: 0, amount: 0, rate: 0 },
+    { qty: 0, amount: 0, rate: 0, delta: 0 },
     (r) =>
       JSON.stringify({
         p: r.plant,
@@ -254,6 +266,7 @@ export async function getTopCustomers(
       qty: r.qty,
       amount: r.amount,
       rate: r.qty > 0 ? r.amount / r.qty : 0,
+      delta: r.qty > 0 ? r.deltaAmount / r.qty : 0,
     }),
   );
 
@@ -261,6 +274,7 @@ export async function getTopCustomers(
     const quantities = item.series.map((s) => s.value.qty);
     const amounts = item.series.map((s) => s.value.amount);
     const rates = item.series.map((s) => s.value.rate);
+    const deltas = item.series.map((s) => s.value.delta);
     const n = item.series.length;
 
     const totalQty = quantities.reduce((sum, q) => sum + q, 0);
@@ -282,6 +296,19 @@ export async function getTopCustomers(
         : 0;
     const stdDevRate = Math.sqrt(rateVariance);
 
+    const totalDeltaAmount = item.series.reduce(
+      (sum, s) => sum + s.value.delta * s.value.qty,
+      0,
+    );
+    const avgDelta = totalQty > 0 ? totalDeltaAmount / totalQty : 0;
+    const deltaVariance =
+      n > 0
+        ? deltas
+            .filter((d) => d !== 0)
+            .reduce((sum, d) => sum + Math.pow(d - avgDelta, 2), 0) / n
+        : 0;
+    const stdDevDelta = Math.sqrt(deltaVariance);
+
     const { p, d, r, c } = JSON.parse(item.key);
 
     return {
@@ -299,8 +326,13 @@ export async function getTopCustomers(
       avgRate,
       rateVariance,
       stdDevRate,
+      // Delta related fields
+      avgDelta,
+      deltaVariance,
+      stdDevDelta,
       // Other
       totalAmount,
+      totalDeltaAmount,
     };
   });
 
