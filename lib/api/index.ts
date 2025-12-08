@@ -158,9 +158,6 @@ export async function getTopCustomers(
     },
 ) {
   const isCategoryFilter = filters.product?.startsWith("C:");
-  const qtyCol = isCategoryFilter
-    ? salesInvoicesDerivedTable.normQty
-    : salesInvoicesRawTable.qty;
 
   const groupRecipient = ["recipient", "distChannel", "plant"].includes(
     filters.grouping,
@@ -168,72 +165,76 @@ export async function getTopCustomers(
   const groupDistChannel = ["distChannel", "plant"].includes(filters.grouping);
   const groupPlant = ["plant"].includes(filters.grouping);
 
+  const rawConditions = [
+    ...getRawCommonConditions(filters),
+    ...(filters.channels === "dealer-known"
+      ? [
+          not(
+            eq(
+              salesInvoicesRawTable.consigneeName,
+              salesInvoicesRawTable.recipientName,
+            ),
+          ),
+          eq(salesInvoicesRawTable.distChannelDescription, "Dealer"),
+        ]
+      : filters.channels === "dealer-unknown"
+        ? [
+            eq(
+              salesInvoicesRawTable.consigneeName,
+              salesInvoicesRawTable.recipientName,
+            ),
+            eq(salesInvoicesRawTable.distChannelDescription, "Dealer"),
+          ]
+        : []),
+  ];
+
+  const filteredRawSq = db
+    .select()
+    .from(salesInvoicesRawTable)
+    .where(and(...rawConditions))
+    .as("filtered_raw");
+
+  const qtyCol = isCategoryFilter
+    ? salesInvoicesDerivedTable.normQty
+    : filteredRawSq.qty;
+
   const rows = await db
     .select({
-      plant: groupPlant ? salesInvoicesRawTable.plant : sql<number>`0`,
+      plant: groupPlant ? filteredRawSq.plant : sql<number>`0`,
       distChannelDescription: groupDistChannel
-        ? salesInvoicesRawTable.distChannelDescription
+        ? filteredRawSq.distChannelDescription
         : sql<string>`''`,
       recipientName: groupRecipient
-        ? salesInvoicesRawTable.recipientName
+        ? filteredRawSq.recipientName
         : sql<string>`''`,
-      consigneeName: salesInvoicesRawTable.consigneeName,
-      period:
-        sql`date_trunc(${filters.period}, ${salesInvoicesRawTable.invDate})`
-          .mapWith((v) => new Date(v as string))
-          .as("period"),
+      consigneeName: filteredRawSq.consigneeName,
+      period: sql`date_trunc(${filters.period}, ${filteredRawSq.invDate})`
+        .mapWith((v) => new Date(v as string))
+        .as("period"),
       qty: sql<number>`sum(${qtyCol})`.mapWith(Number).as("qty"),
-      amount: sql<number>`sum(${salesInvoicesRawTable.basicAmount})`
+      amount: sql<number>`sum(${filteredRawSq.basicAmount})`
         .mapWith(Number)
         .as("amount"),
     })
-    .from(salesInvoicesRawTable)
+    .from(filteredRawSq)
     .leftJoin(
       salesInvoicesDerivedTable,
-      eq(salesInvoicesRawTable.id, salesInvoicesDerivedTable.rawId),
+      eq(filteredRawSq.id, salesInvoicesDerivedTable.rawId),
     )
-    .where(
-      and(
-        ...getRawCommonConditions(filters),
-        ...getDerivedCommonConditions(filters),
-        ...(filters.channels === "dealer-known"
-          ? [
-              not(
-                eq(
-                  salesInvoicesRawTable.consigneeName,
-                  salesInvoicesRawTable.recipientName,
-                ),
-              ),
-              eq(salesInvoicesRawTable.distChannelDescription, "Dealer"),
-            ]
-          : filters.channels === "dealer-unknown"
-            ? [
-                eq(
-                  salesInvoicesRawTable.consigneeName,
-                  salesInvoicesRawTable.recipientName,
-                ),
-                eq(salesInvoicesRawTable.distChannelDescription, "Dealer"),
-              ]
-            : []),
-      ),
-    )
+    .where(and(...getDerivedCommonConditions(filters)))
     .groupBy(
-      ...(groupPlant ? [salesInvoicesRawTable.plant] : []),
-      ...(groupDistChannel
-        ? [salesInvoicesRawTable.distChannelDescription]
-        : []),
-      ...(groupRecipient ? [salesInvoicesRawTable.recipientName] : []),
-      salesInvoicesRawTable.consigneeName,
+      ...(groupPlant ? [filteredRawSq.plant] : []),
+      ...(groupDistChannel ? [filteredRawSq.distChannelDescription] : []),
+      ...(groupRecipient ? [filteredRawSq.recipientName] : []),
+      filteredRawSq.consigneeName,
       sql`period`,
     )
     .orderBy(
       sql`period`,
-      salesInvoicesRawTable.consigneeName,
-      ...(groupRecipient ? [salesInvoicesRawTable.recipientName] : []),
-      ...(groupDistChannel
-        ? [salesInvoicesRawTable.distChannelDescription]
-        : []),
-      ...(groupPlant ? [salesInvoicesRawTable.plant] : []),
+      filteredRawSq.consigneeName,
+      ...(groupRecipient ? [filteredRawSq.recipientName] : []),
+      ...(groupDistChannel ? [filteredRawSq.distChannelDescription] : []),
+      ...(groupPlant ? [filteredRawSq.plant] : []),
     );
 
   const data = processTimeSeries(
