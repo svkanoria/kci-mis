@@ -136,7 +136,9 @@ export function Filter<T extends FilterFormValues = FilterFormValues>({
         }}
       />
       {renderExtraFields && renderExtraFields(control)}
-      <Button onClick={handleSubmit(onSubmit)}>Go</Button>
+      <Button className="min-w-[70px]" onClick={handleSubmit(onSubmit)}>
+        Go
+      </Button>
     </form>
   );
 }

@@ -67,16 +67,15 @@ export function ExtendedFilter({
                   }
                   className="w-[170px]"
                   dropdownClassName="w-[170px]"
-                  placeholder="No Grouping"
-                  renderValue={(selected) => {
-                    if (selected.length > 1) {
-                      return (
-                        <span className="truncate">
-                          {`${selected.length} Selected`}
-                        </span>
-                      );
-                    }
-                  }}
+                  renderValue={(selected) => (
+                    <span className="truncate">
+                      {selected.length === 0
+                        ? "No Groupings"
+                        : selected.length === 1
+                          ? `1 Grouping`
+                          : `${selected.length} Groupings`}
+                    </span>
+                  )}
                 />
               );
             }}
