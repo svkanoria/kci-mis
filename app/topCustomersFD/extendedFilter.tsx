@@ -13,20 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Controller } from "react-hook-form";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Command,
-  CommandGroup,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import { Check, ChevronsUpDown } from "lucide-react";
+import { MultiCombobox } from "@/components/ui/multiCombobox";
 
 interface ExtendedFilterFormValues extends FilterFormValues {
   grouping: string;
@@ -66,61 +53,21 @@ export function ExtendedFilter({
                 ? field.value.split(",").filter((v) => v !== "" && v !== "none")
                 : [];
               const options = [
-                { value: "recipient", label: "+ Recipient" },
-                { value: "distChannel", label: "+ Dist. Channel" },
-                { value: "plant", label: "+ Plant" },
+                { value: "recipient", label: "Recipient" },
+                { value: "distChannel", label: "Dist. Channel" },
+                { value: "plant", label: "Plant" },
               ];
 
               return (
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      className="w-[170px] justify-between font-normal"
-                    >
-                      {selectedValues.length > 0
-                        ? `${selectedValues.length} selected`
-                        : "Select Grouping"}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[170px] p-0">
-                    <Command>
-                      <CommandList>
-                        <CommandGroup>
-                          {options.map((option) => (
-                            <CommandItem
-                              key={option.value}
-                              value={option.value}
-                              onSelect={() => {
-                                const isSelected = selectedValues.includes(
-                                  option.value,
-                                );
-                                const newValues = isSelected
-                                  ? selectedValues.filter(
-                                      (v) => v !== option.value,
-                                    )
-                                  : [...selectedValues, option.value];
-                                field.onChange(newValues.join(","));
-                              }}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  selectedValues.includes(option.value)
-                                    ? "opacity-100"
-                                    : "opacity-0",
-                                )}
-                              />
-                              {option.label}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
+                <MultiCombobox
+                  options={options}
+                  value={selectedValues}
+                  onValueChange={(newValues) =>
+                    field.onChange(newValues.join(","))
+                  }
+                  placeholder="Select Grouping"
+                  className="w-[170px]"
+                />
               );
             }}
           />
