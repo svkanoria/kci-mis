@@ -308,6 +308,7 @@ export async function getTopCustomers(
             .reduce((sum, d) => sum + Math.pow(d - avgDelta, 2), 0) / n
         : 0;
     const stdDevDelta = Math.sqrt(deltaVariance);
+    const cvDelta = avgDelta !== 0 ? stdDevDelta / Math.abs(avgDelta) : 0;
 
     const { p, d, r, c } = JSON.parse(item.key);
 
@@ -330,6 +331,7 @@ export async function getTopCustomers(
       avgDelta,
       deltaVariance,
       stdDevDelta,
+      cvDelta,
       // Other
       totalAmount,
       totalDeltaAmount,
