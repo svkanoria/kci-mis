@@ -163,11 +163,10 @@ export async function getTopCustomers(
 ) {
   const isCategoryFilter = filters.product?.startsWith("C:");
 
-  const groupRecipient = ["recipient", "distChannel", "plant"].includes(
-    filters.grouping,
-  );
-  const groupDistChannel = ["distChannel", "plant"].includes(filters.grouping);
-  const groupPlant = ["plant"].includes(filters.grouping);
+  const groupings = filters.grouping.split(",");
+  const groupRecipient = groupings.includes("recipient");
+  const groupDistChannel = groupings.includes("distChannel");
+  const groupPlant = groupings.includes("plant");
 
   const rawConditions = [
     ...getRawCommonConditions(filters),

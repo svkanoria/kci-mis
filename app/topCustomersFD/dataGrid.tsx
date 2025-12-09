@@ -414,25 +414,27 @@ export const DataGrid = ({
 
   useEffect(() => {
     if (gridApi) {
-      const cols: string[] = [
+      const groupings = initialGrouping ? initialGrouping.split(",") : [];
+      const activeGroupCols: string[] = [];
+
+      if (groupings.includes("plant")) activeGroupCols.push("plant");
+      if (groupings.includes("distChannel"))
+        activeGroupCols.push("distChannelDescription");
+      if (groupings.includes("recipient"))
+        activeGroupCols.push("recipientName");
+
+      const allPotentialGroupCols = [
         "plant",
         "distChannelDescription",
         "recipientName",
       ];
 
-      let index = 3;
-      if (initialGrouping === "plant") {
-        index = 0;
-      } else if (initialGrouping === "distChannel") {
-        index = 1;
-      } else if (initialGrouping === "recipient") {
-        index = 2;
-      }
+      const colsToHide = allPotentialGroupCols.filter(
+        (c) => !activeGroupCols.includes(c),
+      );
 
-      const groupCols = cols.slice(index);
-      const emptyCols = cols.slice(0, index);
-      gridApi.setRowGroupColumns(groupCols);
-      gridApi.setColumnsVisible(emptyCols, false);
+      gridApi.setRowGroupColumns(activeGroupCols);
+      gridApi.setColumnsVisible(colsToHide, false);
     }
   }, [gridApi, initialGrouping]);
 
