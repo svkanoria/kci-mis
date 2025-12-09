@@ -65,8 +65,18 @@ export function ExtendedFilter({
                   onValueChange={(newValues) =>
                     field.onChange(newValues.join(","))
                   }
-                  placeholder="Select Grouping"
                   className="w-[170px]"
+                  dropdownClassName="w-[170px]"
+                  placeholder="No Grouping"
+                  renderValue={(selected) => {
+                    if (selected.length > 1) {
+                      return (
+                        <span className="truncate">
+                          {`${selected.length} Selected`}
+                        </span>
+                      );
+                    }
+                  }}
                 />
               );
             }}

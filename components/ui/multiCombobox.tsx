@@ -29,6 +29,7 @@ export function MultiCombobox(props: {
   onValueChange?: (value: string[]) => void;
   className?: string;
   dropdownClassName?: string;
+  renderValue?: (value: string[]) => React.ReactNode;
 }) {
   const {
     options,
@@ -40,6 +41,7 @@ export function MultiCombobox(props: {
     onValueChange,
     className,
     dropdownClassName,
+    renderValue,
   } = props;
 
   const [open, setOpen] = React.useState(false);
@@ -60,6 +62,8 @@ export function MultiCombobox(props: {
     onValueChange?.(newValues);
   };
 
+  const renderedValue = renderValue?.(value);
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -69,17 +73,21 @@ export function MultiCombobox(props: {
           aria-expanded={open}
           className={cn("w-[200px] justify-between", className)}
         >
-          <div className="truncate">
-            {value.length > 0
-              ? value
-                  .map(
-                    (val) =>
-                      options.find((option) => option.value === val)?.label ||
-                      val,
-                  )
-                  .join(", ")
-              : placeholder}
-          </div>
+          {renderedValue !== undefined ? (
+            renderedValue
+          ) : (
+            <div className="truncate">
+              {value.length > 0
+                ? value
+                    .map(
+                      (val) =>
+                        options.find((option) => option.value === val)?.label ||
+                        val,
+                    )
+                    .join(", ")
+                : placeholder}
+            </div>
+          )}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
