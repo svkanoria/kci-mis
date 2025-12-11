@@ -44,6 +44,16 @@ const SparklineCellRenderer = (params: any) => {
     })
     .join(" ");
 
+  const zeroPoints = trend
+    .map((val: number, i: number) => {
+      if (val !== 0) return null;
+      const x = (i / (trend.length - 1)) * (width - 2 * padding) + padding;
+      const y =
+        height - padding - ((val - min) / range) * (height - 2 * padding);
+      return { x, y };
+    })
+    .filter((p: any) => p !== null);
+
   const avgY =
     height - padding - ((avg - min) / range) * (height - 2 * padding);
 
@@ -62,6 +72,9 @@ const SparklineCellRenderer = (params: any) => {
           stroke="#2563eb"
           strokeWidth="1.5"
         />
+        {zeroPoints.map((p: any, i: number) => (
+          <circle key={i} cx={p.x} cy={p.y} r="2" fill="#ef4444" />
+        ))}
         <line
           x1={padding}
           y1={avgY}
@@ -261,7 +274,18 @@ export const DataGrid = ({
         cellStyle: qtyStyle,
         pinned: "left",
         filter: "agMultiColumnFilter",
-        aggFunc: "avg",
+        valueGetter: (params) => {
+          if (params.node?.group) {
+            const aggData = params.node.aggData;
+            if (!aggData) return 0;
+            let sum = 0;
+            periods.forEach((p) => {
+              sum += aggData[p] ?? 0;
+            });
+            return periods.length > 0 ? sum / periods.length : 0;
+          }
+          return params.data ? params.data.avgQty : null;
+        },
         hide: !showQty,
       },
       {
@@ -279,7 +303,7 @@ export const DataGrid = ({
           if (params.node?.group && params.node.aggData) {
             const aggData = params.node.aggData;
             trend = periods.map((p) => aggData[p] ?? 0);
-            avg = aggData["avgQty"] ?? 0;
+            avg = params.getValue("avgQty") ?? 0;
           } else if (params.data) {
             const data = params.data;
             trend = periods.map((p) => data[p] ?? 0);
