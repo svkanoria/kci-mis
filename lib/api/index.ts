@@ -6,6 +6,12 @@ import {
 } from "@/db/schema";
 import { and, eq, gte, lte, not, sql } from "drizzle-orm";
 import { getAllPeriods, Period } from "@/lib/utils/date";
+import {
+  linearRegression,
+  mean,
+  standardDeviation,
+  sum,
+} from "simple-statistics";
 
 /**
  * Represents common parameters used for filtering data in API requests.
@@ -276,16 +282,22 @@ export async function getTopCustomers(
     const deltas = item.series.map((s) => s.value.delta);
     const n = item.series.length;
 
-    const totalQty = quantities.reduce((sum, q) => sum + q, 0);
-    const avgQty = n > 0 ? totalQty / n : 0;
-    const qtyVariance =
-      n > 0
-        ? quantities.reduce((sum, q) => sum + Math.pow(q - avgQty, 2), 0) / n
-        : 0;
-    const stdDevQty = Math.sqrt(qtyVariance);
-    const cvQty = avgQty > 0 ? stdDevQty / avgQty : 0;
+    // Linear Regression Calculation
+    const calculateRegression = (values: number[]) => {
+      if (n < 2) return { slope: 0, intercept: 0 };
+      const points = values.map((y, x) => [x, y]);
+      const { m, b } = linearRegression(points);
+      return { slope: m, intercept: b };
+    };
 
-    const totalAmount = amounts.reduce((sum, a) => sum + a, 0);
+    const totalQty = sum(quantities);
+    const avgQty = n > 0 ? mean(quantities) : 0;
+    const stdDevQty = n > 0 ? standardDeviation(quantities) : 0;
+    const cvQty = avgQty > 0 ? stdDevQty / avgQty : 0;
+    const { slope: slopeQty, intercept: interceptQty } =
+      calculateRegression(quantities);
+
+    const totalAmount = sum(amounts);
     const avgRate = totalQty > 0 ? totalAmount / totalQty : 0;
     const rateVariance =
       n > 0
@@ -294,6 +306,8 @@ export async function getTopCustomers(
             .reduce((sum, r) => sum + Math.pow(r - avgRate, 2), 0) / n
         : 0;
     const stdDevRate = Math.sqrt(rateVariance);
+    const { slope: slopeRate, intercept: interceptRate } =
+      calculateRegression(rates);
 
     const totalDeltaAmount = item.series.reduce(
       (sum, s) => sum + s.value.delta * s.value.qty,
@@ -308,6 +322,8 @@ export async function getTopCustomers(
         : 0;
     const stdDevDelta = Math.sqrt(deltaVariance);
     const cvDelta = avgDelta !== 0 ? stdDevDelta / Math.abs(avgDelta) : 0;
+    const { slope: slopeDelta, intercept: interceptDelta } =
+      calculateRegression(deltas);
 
     const { p, d, r, c } = JSON.parse(item.key);
 
@@ -322,15 +338,21 @@ export async function getTopCustomers(
       avgQty,
       stdDevQty,
       cvQty,
+      slopeQty,
+      interceptQty,
       // Rate related fields
       avgRate,
       rateVariance,
       stdDevRate,
+      slopeRate,
+      interceptRate,
       // Delta related fields
       avgDelta,
       deltaVariance,
       stdDevDelta,
       cvDelta,
+      slopeDelta,
+      interceptDelta,
       // Other
       totalAmount,
       totalDeltaAmount,
