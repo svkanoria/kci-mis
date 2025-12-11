@@ -266,7 +266,7 @@ export async function getTopCustomers(
     filters.period,
     (r) => r.period,
     "key",
-    { qty: 0, amount: 0, rate: 0, delta: 0 },
+    { qty: 0, amount: 0, rate: null, delta: null },
     (r) =>
       JSON.stringify({
         p: r.plant,
@@ -277,8 +277,8 @@ export async function getTopCustomers(
     (r) => ({
       qty: r.qty,
       amount: r.amount,
-      rate: r.qty > 0 ? r.amount / r.qty : 0,
-      delta: r.qty > 0 ? r.deltaAmount / r.qty : 0,
+      rate: r.qty > 0 ? r.amount / r.qty : null,
+      delta: r.qty > 0 ? r.deltaAmount / r.qty : null,
     }),
   );
 
@@ -288,6 +288,7 @@ export async function getTopCustomers(
     const rates = item.series.map((s) => s.value.rate);
     const deltas = item.series.map((s) => s.value.delta);
 
+    // Qty related fields
     const totalQty = sum(qtys);
     const avgQty = qtys.length > 0 ? mean(qtys) : 0;
     const stdDevQty = qtys.length > 0 ? standardDeviation(qtys) : 0;
@@ -295,18 +296,19 @@ export async function getTopCustomers(
     const { slope: slopeQty } = calculateRegression(qtys);
 
     const totalAmount = sum(amounts);
+    // Rate related fields
     const avgRate = totalQty > 0 ? totalAmount / totalQty : 0;
-    const filteredRates = rates.filter((r) => r > 0);
+    const filteredRates = rates.filter((r) => r !== null);
     const stdDevRate =
       filteredRates.length > 0 ? standardDeviation(filteredRates) : 0;
-    const { slope: slopeRate } = calculateRegression(filteredRates);
 
     const totalDeltaAmount = item.series.reduce(
-      (sum, s) => sum + s.value.delta * s.value.qty,
+      (sum, s) => sum + (s.value.delta ?? 0) * s.value.qty,
       0,
     );
+    // Delta related fields
     const avgDelta = totalQty > 0 ? totalDeltaAmount / totalQty : 0;
-    const filteredDeltas = deltas.filter((d) => d !== 0);
+    const filteredDeltas = deltas.filter((d) => d !== null);
     const stdDevDelta =
       filteredDeltas.length > 0 ? standardDeviation(filteredDeltas) : 0;
     const cvDelta = avgDelta !== 0 ? stdDevDelta / Math.abs(avgDelta) : 0;
@@ -329,7 +331,6 @@ export async function getTopCustomers(
       // Rate related fields
       avgRate,
       stdDevRate,
-      slopeRate,
       // Delta related fields
       avgDelta,
       stdDevDelta,
