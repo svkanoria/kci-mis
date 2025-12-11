@@ -194,6 +194,7 @@ export const DataGrid = ({
         pinned: "left",
         filter: "agMultiColumnFilter",
         aggFunc: "sum",
+        hide: !showQty,
       },
       {
         field: "avgQty",
@@ -205,6 +206,7 @@ export const DataGrid = ({
         pinned: "left",
         filter: "agMultiColumnFilter",
         aggFunc: "avg",
+        hide: !showQty,
       },
       {
         field: "stdDevQty",
@@ -261,6 +263,7 @@ export const DataGrid = ({
           }
           return params.data ? params.data.avgRate : null;
         },
+        hide: !showRate,
       },
       {
         field: "stdDevRate",
@@ -306,6 +309,7 @@ export const DataGrid = ({
           }
           return params.data ? params.data.avgDelta : null;
         },
+        hide: !showDelta,
       },
       {
         field: "stdDevDelta",
