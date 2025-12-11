@@ -91,13 +91,6 @@ function determineAllPeriods<T>(
   return getAllPeriods(from, to, period);
 }
 
-function calculateRegression(values: number[]) {
-  if (values.length < 2) return { slope: 0, intercept: 0 };
-  const points = values.map((y, x) => [x, y]);
-  const { m, b } = linearRegression(points);
-  return { slope: m, intercept: b };
-}
-
 /**
  * Processes raw data rows into a structured time-series format, grouping data
  * by a specific key and filling in missing periods with a default value.
@@ -165,6 +158,13 @@ function processTimeSeries<T, K extends string, V>(
         series: { periodStart: Date; value: V }[];
       },
   );
+}
+
+function calculateRegression(values: number[]) {
+  if (values.length < 2) return { slope: 0, intercept: 0 };
+  const points = values.map((y, x) => [x, y]);
+  const { m, b } = linearRegression(points);
+  return { slope: m, intercept: b };
 }
 
 export async function getTopCustomers(
@@ -297,7 +297,7 @@ export async function getTopCustomers(
 
     const totalAmount = sum(amounts);
     // Rate related fields
-    const avgRate = totalQty > 0 ? totalAmount / totalQty : 0;
+    const avgRate = totalQty > 0 ? totalAmount / totalQty : null;
     const filteredRates = rates.filter((r) => r !== null);
     const stdDevRate =
       filteredRates.length > 0 ? standardDeviation(filteredRates) : 0;
@@ -307,11 +307,14 @@ export async function getTopCustomers(
       0,
     );
     // Delta related fields
-    const avgDelta = totalQty > 0 ? totalDeltaAmount / totalQty : 0;
+    const avgDelta = totalQty > 0 ? totalDeltaAmount / totalQty : null;
     const filteredDeltas = deltas.filter((d) => d !== null);
     const stdDevDelta =
       filteredDeltas.length > 0 ? standardDeviation(filteredDeltas) : 0;
-    const cvDelta = avgDelta !== 0 ? stdDevDelta / Math.abs(avgDelta) : 0;
+    const cvDelta =
+      avgDelta !== null && avgDelta !== 0
+        ? stdDevDelta / Math.abs(avgDelta)
+        : 0;
     const { slope: slopeDelta } = calculateRegression(filteredDeltas);
 
     const { p, d, r, c } = JSON.parse(item.key);
