@@ -91,6 +91,13 @@ function determineAllPeriods<T>(
   return getAllPeriods(from, to, period);
 }
 
+function calculateRegression(values: number[]) {
+  if (values.length < 2) return { slope: 0, intercept: 0 };
+  const points = values.map((y, x) => [x, y]);
+  const { m, b } = linearRegression(points);
+  return { slope: m, intercept: b };
+}
+
 /**
  * Processes raw data rows into a structured time-series format, grouping data
  * by a specific key and filling in missing periods with a default value.
@@ -276,54 +283,34 @@ export async function getTopCustomers(
   );
 
   const result = data.map((item) => {
-    const quantities = item.series.map((s) => s.value.qty);
+    const qtys = item.series.map((s) => s.value.qty);
     const amounts = item.series.map((s) => s.value.amount);
     const rates = item.series.map((s) => s.value.rate);
     const deltas = item.series.map((s) => s.value.delta);
-    const n = item.series.length;
 
-    // Linear Regression Calculation
-    const calculateRegression = (values: number[]) => {
-      if (n < 2) return { slope: 0, intercept: 0 };
-      const points = values.map((y, x) => [x, y]);
-      const { m, b } = linearRegression(points);
-      return { slope: m, intercept: b };
-    };
-
-    const totalQty = sum(quantities);
-    const avgQty = n > 0 ? mean(quantities) : 0;
-    const stdDevQty = n > 0 ? standardDeviation(quantities) : 0;
+    const totalQty = sum(qtys);
+    const avgQty = qtys.length > 0 ? mean(qtys) : 0;
+    const stdDevQty = qtys.length > 0 ? standardDeviation(qtys) : 0;
     const cvQty = avgQty > 0 ? stdDevQty / avgQty : 0;
-    const { slope: slopeQty, intercept: interceptQty } =
-      calculateRegression(quantities);
+    const { slope: slopeQty } = calculateRegression(qtys);
 
     const totalAmount = sum(amounts);
     const avgRate = totalQty > 0 ? totalAmount / totalQty : 0;
-    const rateVariance =
-      n > 0
-        ? rates
-            .filter((r) => r > 0)
-            .reduce((sum, r) => sum + Math.pow(r - avgRate, 2), 0) / n
-        : 0;
-    const stdDevRate = Math.sqrt(rateVariance);
-    const { slope: slopeRate, intercept: interceptRate } =
-      calculateRegression(rates);
+    const filteredRates = rates.filter((r) => r > 0);
+    const stdDevRate =
+      filteredRates.length > 0 ? standardDeviation(filteredRates) : 0;
+    const { slope: slopeRate } = calculateRegression(filteredRates);
 
     const totalDeltaAmount = item.series.reduce(
       (sum, s) => sum + s.value.delta * s.value.qty,
       0,
     );
     const avgDelta = totalQty > 0 ? totalDeltaAmount / totalQty : 0;
-    const deltaVariance =
-      n > 0
-        ? deltas
-            .filter((d) => d !== 0)
-            .reduce((sum, d) => sum + Math.pow(d - avgDelta, 2), 0) / n
-        : 0;
-    const stdDevDelta = Math.sqrt(deltaVariance);
+    const filteredDeltas = deltas.filter((d) => d !== 0);
+    const stdDevDelta =
+      filteredDeltas.length > 0 ? standardDeviation(filteredDeltas) : 0;
     const cvDelta = avgDelta !== 0 ? stdDevDelta / Math.abs(avgDelta) : 0;
-    const { slope: slopeDelta, intercept: interceptDelta } =
-      calculateRegression(deltas);
+    const { slope: slopeDelta } = calculateRegression(filteredDeltas);
 
     const { p, d, r, c } = JSON.parse(item.key);
 
@@ -339,20 +326,15 @@ export async function getTopCustomers(
       stdDevQty,
       cvQty,
       slopeQty,
-      interceptQty,
       // Rate related fields
       avgRate,
-      rateVariance,
       stdDevRate,
       slopeRate,
-      interceptRate,
       // Delta related fields
       avgDelta,
-      deltaVariance,
       stdDevDelta,
       cvDelta,
       slopeDelta,
-      interceptDelta,
       // Other
       totalAmount,
       totalDeltaAmount,

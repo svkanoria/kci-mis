@@ -294,17 +294,6 @@ export const DataGrid = ({
         hide: !showQty || !showStats,
       },
       {
-        field: "interceptQty",
-        headerName: "Intcpt Qty",
-        width: 80,
-        type: "numericColumn",
-        valueFormatter: (params) =>
-          params.value != null ? params.value.toFixed(2) : "",
-        cellStyle: qtyStyle,
-        pinned: "left",
-        hide: !showQty || !showStats,
-      },
-      {
         field: "stdDevRate",
         headerName: "SD Rate",
         width: 80,
@@ -318,17 +307,6 @@ export const DataGrid = ({
       {
         field: "slopeRate",
         headerName: "Slope Rate",
-        width: 80,
-        type: "numericColumn",
-        valueFormatter: (params) =>
-          params.value != null ? params.value.toFixed(2) : "",
-        cellStyle: rateStyle,
-        pinned: "left",
-        hide: !showRate || !showStats,
-      },
-      {
-        field: "interceptRate",
-        headerName: "Intcpt Rate",
         width: 80,
         type: "numericColumn",
         valueFormatter: (params) =>
@@ -362,17 +340,6 @@ export const DataGrid = ({
       {
         field: "slopeDelta",
         headerName: "Slope Delta",
-        width: 80,
-        type: "numericColumn",
-        valueFormatter: (params) =>
-          params.value != null ? params.value.toFixed(2) : "",
-        cellStyle: deltaStyle,
-        pinned: "left",
-        hide: !showDelta || !showStats,
-      },
-      {
-        field: "interceptDelta",
-        headerName: "Intcpt Delta",
         width: 80,
         type: "numericColumn",
         valueFormatter: (params) =>
