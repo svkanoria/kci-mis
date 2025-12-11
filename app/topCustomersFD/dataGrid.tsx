@@ -21,13 +21,69 @@ ModuleRegistry.registerModules([AllEnterpriseModule]);
 
 type IRow = Awaited<ReturnType<typeof getTopCustomers>>[number];
 
+const SparklineCellRenderer = (params: any) => {
+  if (!params.value) return null;
+  const { trend, avg } = params.value;
+
+  if (!trend || trend.length < 2) return null;
+
+  const width = 140;
+  const height = 37;
+  const padding = 3;
+
+  const max = Math.max(...trend, avg ?? 0);
+  const min = Math.min(...trend, avg ?? 0);
+  const range = max - min || 1;
+
+  const points = trend
+    .map((val: number, i: number) => {
+      const x = (i / (trend.length - 1)) * (width - 2 * padding) + padding;
+      const y =
+        height - padding - ((val - min) / range) * (height - 2 * padding);
+      return `${x},${y}`;
+    })
+    .join(" ");
+
+  const avgY =
+    height - padding - ((avg - min) / range) * (height - 2 * padding);
+
+  return (
+    <div className="flex items-center justify-center h-full w-full overflow-hidden">
+      <svg
+        width="100%"
+        height="100%"
+        viewBox={`0 0 ${width} ${height}`}
+        preserveAspectRatio="none"
+        className="overflow-visible"
+      >
+        <polyline
+          points={points}
+          fill="none"
+          stroke="#2563eb"
+          strokeWidth="1.5"
+        />
+        <line
+          x1={padding}
+          y1={avgY}
+          x2={width - padding}
+          y2={avgY}
+          stroke="#ef4444"
+          strokeWidth="1"
+          strokeDasharray="4 2"
+          opacity="0.7"
+        />
+      </svg>
+    </div>
+  );
+};
+
 const lsKey = (key: string) => `topCustomersFD-${key}`;
 const SHOW_STATS_KEY = lsKey("showStats");
 const SELECTED_GROUPS_KEY = lsKey("selectedGroups");
 
 interface GridRow {
   consigneeName: string | null;
-  [key: string]: string | number | null;
+  [key: string]: any;
 }
 
 export const DataGrid = ({
@@ -209,6 +265,30 @@ export const DataGrid = ({
         hide: !showQty,
       },
       {
+        field: "qtyTrend",
+        headerName: "Qty Trend",
+        width: 150,
+        cellRenderer: SparklineCellRenderer,
+        cellStyle: qtyStyle,
+        pinned: "left",
+        hide: !showQty,
+        valueGetter: (params) => {
+          let trend: number[] = [];
+          let avg = 0;
+
+          if (params.node?.group && params.node.aggData) {
+            const aggData = params.node.aggData;
+            trend = periods.map((p) => aggData[p] ?? 0);
+            avg = aggData["avgQty"] ?? 0;
+          } else if (params.data) {
+            const data = params.data;
+            trend = periods.map((p) => data[p] ?? 0);
+            avg = data["avgQty"] ?? 0;
+          }
+          return { trend, avg };
+        },
+      },
+      {
         field: "stdDevQty",
         headerName: "SD Qty",
         width: 80,
@@ -310,6 +390,36 @@ export const DataGrid = ({
           return params.data ? params.data.avgDelta : null;
         },
         hide: !showDelta,
+      },
+      {
+        field: "deltaTrend",
+        headerName: "Delta Trend",
+        width: 150,
+        cellRenderer: SparklineCellRenderer,
+        cellStyle: deltaStyle,
+        pinned: "left",
+        hide: !showDelta,
+        valueGetter: (params) => {
+          let trend: number[] = [];
+          let avg = 0;
+
+          if (params.node?.group && params.node.aggData) {
+            const aggData = params.node.aggData;
+            trend = periods.map((p) => {
+              const totalDeltaAmount = aggData[p + "-delta-amount"] ?? 0;
+              const totalQty = aggData[p] ?? 0;
+              return totalQty > 0 ? totalDeltaAmount / totalQty : 0;
+            });
+            const totalDeltaAmount = aggData.totalDeltaAmount ?? 0;
+            const totalQty = aggData.totalQty ?? 0;
+            avg = totalQty > 0 ? totalDeltaAmount / totalQty : 0;
+          } else if (params.data) {
+            const data = params.data;
+            trend = periods.map((p) => data[p + "-delta"] ?? 0);
+            avg = data["avgDelta"] ?? 0;
+          }
+          return { trend, avg };
+        },
       },
       {
         field: "stdDevDelta",
@@ -532,6 +642,7 @@ export const DataGrid = ({
           defaultColDef={defaultColDef}
           autoGroupColumnDef={autoGroupColumnDef}
           headerHeight={60}
+          rowHeight={45}
           pagination
           suppressMovableColumns
           processUnpinnedColumns={() => []}
