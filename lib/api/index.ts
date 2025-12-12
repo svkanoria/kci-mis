@@ -6,12 +6,8 @@ import {
 } from "@/db/schema";
 import { and, eq, gte, lte, not, sql } from "drizzle-orm";
 import { getAllPeriods, Period } from "@/lib/utils/date";
-import {
-  linearRegression,
-  mean,
-  standardDeviation,
-  sum,
-} from "simple-statistics";
+import { mean, standardDeviation, sum } from "simple-statistics";
+import { calculateRegression } from "../utils/stats";
 
 /**
  * Represents common parameters used for filtering data in API requests.
@@ -160,13 +156,6 @@ function processTimeSeries<T, K extends string, V>(
   );
 }
 
-function calculateRegression(values: number[]) {
-  if (values.length < 2) return { slope: 0, intercept: 0 };
-  const points = values.map((y, x) => [x, y]);
-  const { m, b } = linearRegression(points);
-  return { slope: m, intercept: b };
-}
-
 export async function getTopCustomers(
   filters: CommonFilterParams &
     Required<Pick<CommonFilterParams, "period">> & {
@@ -293,7 +282,8 @@ export async function getTopCustomers(
     const avgQty = qtys.length > 0 ? mean(qtys) : 0;
     const stdDevQty = qtys.length > 0 ? standardDeviation(qtys) : 0;
     const cvQty = avgQty > 0 ? stdDevQty / avgQty : 0;
-    const { slope: slopeQty } = calculateRegression(qtys);
+    const { slope: slopeQty, intercept: interceptQty } =
+      calculateRegression(qtys);
 
     const totalAmount = sum(amounts);
     // Rate related fields
@@ -326,19 +316,20 @@ export async function getTopCustomers(
       recipientName: r,
       consigneeName: c,
       // Qty related fields
+      slopeQty,
+      interceptQty,
       totalQty,
       avgQty,
       stdDevQty,
       cvQty,
-      slopeQty,
       // Rate related fields
       avgRate,
       stdDevRate,
       // Delta related fields
       avgDelta,
+      slopeDelta,
       stdDevDelta,
       cvDelta,
-      slopeDelta,
       // Other
       totalAmount,
       totalDeltaAmount,

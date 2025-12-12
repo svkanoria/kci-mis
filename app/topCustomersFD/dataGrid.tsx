@@ -13,6 +13,7 @@ import { AgGridReact } from "ag-grid-react";
 import { getTopCustomers } from "@/lib/api";
 import { formatIndianNumber } from "@/lib/utils/format";
 import Select from "react-select";
+import { calculateRegression } from "@/lib/utils/stats";
 
 // Register License Key with LicenseManager
 LicenseManager.setLicenseKey(process.env.NEXT_PUBLIC_AG_GRID_LICENSE || "");
@@ -23,7 +24,7 @@ type IRow = Awaited<ReturnType<typeof getTopCustomers>>[number];
 
 const SparklineCellRenderer = (params: any) => {
   if (!params.value) return null;
-  const { trend, avg } = params.value;
+  const { trend, avg, slope, intercept } = params.value;
 
   if (!trend || trend.length < 2) return null;
 
@@ -31,8 +32,15 @@ const SparklineCellRenderer = (params: any) => {
   const height = 37;
   const padding = 3;
 
-  const max = Math.max(...trend, avg ?? 0);
-  const min = Math.min(...trend, avg ?? 0);
+  let regValues: number[] = [];
+  if (typeof slope === "number" && typeof intercept === "number") {
+    const y1 = intercept;
+    const y2 = slope * (trend.length - 1) + intercept;
+    regValues = [y1, y2];
+  }
+
+  const max = Math.max(...trend, avg ?? 0, ...regValues);
+  const min = Math.min(...trend, avg ?? 0, ...regValues);
   const range = max - min || 1;
 
   const points = trend
@@ -57,6 +65,32 @@ const SparklineCellRenderer = (params: any) => {
   const avgY =
     height - padding - ((avg - min) / range) * (height - 2 * padding);
 
+  let regLine = null;
+  if (typeof slope === "number" && typeof intercept === "number") {
+    const y1Val = intercept;
+    const y2Val = slope * (trend.length - 1) + intercept;
+
+    const x1 = padding;
+    const x2 = width - padding;
+
+    const y1 =
+      height - padding - ((y1Val - min) / range) * (height - 2 * padding);
+    const y2 =
+      height - padding - ((y2Val - min) / range) * (height - 2 * padding);
+
+    regLine = (
+      <line
+        x1={x1}
+        y1={y1}
+        x2={x2}
+        y2={y2}
+        stroke="#10b981"
+        strokeWidth="1"
+        opacity="0.5"
+      />
+    );
+  }
+
   return (
     <div className="flex items-center justify-center h-full w-full overflow-hidden">
       <svg
@@ -72,6 +106,7 @@ const SparklineCellRenderer = (params: any) => {
           stroke="#2563eb"
           strokeWidth="1.5"
         />
+        {regLine}
         {zeroPoints.map((p: any, i: number) => (
           <circle key={i} cx={p.x} cy={p.y} r="2" fill="#ef4444" />
         ))}
@@ -155,9 +190,7 @@ export const DataGrid = ({
         allPeriods.add(p);
       });
     });
-    return Array.from(allPeriods)
-      .sort((a, b) => parseInt(a) - parseInt(b))
-      .reverse();
+    return Array.from(allPeriods).sort((a, b) => parseInt(a) - parseInt(b));
   }, [groupedData]);
 
   const defaultColDef = useMemo<ColDef>(() => {
@@ -294,18 +327,36 @@ export const DataGrid = ({
         valueGetter: (params) => {
           let trend: number[] = [];
           let avg = 0;
+          let slope = 0;
+          let intercept = 0;
 
           if (params.node?.group && params.node.aggData) {
             const aggData = params.node.aggData;
             trend = periods.map((p) => aggData[p] ?? 0);
             avg = params.getValue("avgQty") ?? 0;
+            const reg = calculateRegression(trend);
+            slope = reg.slope;
+            intercept = reg.intercept;
           } else if (params.data) {
             const data = params.data;
             trend = periods.map((p) => data[p] ?? 0);
             avg = data["avgQty"] ?? 0;
+            slope = data["slopeQty"] ?? 0;
+            intercept = data["interceptQty"] ?? 0;
           }
-          return { trend, avg };
+          return { trend, avg, slope, intercept };
         },
+      },
+      {
+        field: "slopeQty",
+        headerName: "Slope Qty",
+        width: 80,
+        type: "numericColumn",
+        valueFormatter: (params) =>
+          params.value != null ? params.value.toFixed(2) : "",
+        cellStyle: qtyStyle,
+        pinned: "left",
+        hide: !showQty || !showStats,
       },
       {
         field: "stdDevQty",
@@ -322,17 +373,6 @@ export const DataGrid = ({
         field: "cvQty",
         headerName: "CV Qty",
         width: 70,
-        type: "numericColumn",
-        valueFormatter: (params) =>
-          params.value != null ? params.value.toFixed(2) : "",
-        cellStyle: qtyStyle,
-        pinned: "left",
-        hide: !showQty || !showStats,
-      },
-      {
-        field: "slopeQty",
-        headerName: "Slope Qty",
-        width: 80,
         type: "numericColumn",
         valueFormatter: (params) =>
           params.value != null ? params.value.toFixed(2) : "",
@@ -441,6 +481,17 @@ export const DataGrid = ({
         },
       },
       {
+        field: "slopeDelta",
+        headerName: "Slope Delta",
+        width: 80,
+        type: "numericColumn",
+        valueFormatter: (params) =>
+          params.value != null ? params.value.toFixed(2) : "",
+        cellStyle: deltaStyle,
+        pinned: "left",
+        hide: !showDelta || !showStats,
+      },
+      {
         field: "stdDevDelta",
         headerName: "SD Delta",
         width: 80,
@@ -455,17 +506,6 @@ export const DataGrid = ({
         field: "cvDelta",
         headerName: "CV Delta",
         width: 70,
-        type: "numericColumn",
-        valueFormatter: (params) =>
-          params.value != null ? params.value.toFixed(2) : "",
-        cellStyle: deltaStyle,
-        pinned: "left",
-        hide: !showDelta || !showStats,
-      },
-      {
-        field: "slopeDelta",
-        headerName: "Slope Delta",
-        width: 80,
         type: "numericColumn",
         valueFormatter: (params) =>
           params.value != null ? params.value.toFixed(2) : "",
