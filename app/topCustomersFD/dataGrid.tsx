@@ -276,13 +276,8 @@ export const DataGrid = ({
         filter: "agMultiColumnFilter",
         valueGetter: (params) => {
           if (params.node?.group) {
-            const aggData = params.node.aggData;
-            if (!aggData) return 0;
-            let sum = 0;
-            periods.forEach((p) => {
-              sum += aggData[p] ?? 0;
-            });
-            return periods.length > 0 ? sum / periods.length : 0;
+            const totalQty = params.node.aggData?.totalQty ?? 0;
+            return periods.length > 0 ? totalQty / periods.length : 0;
           }
           return params.data ? params.data.avgQty : null;
         },
