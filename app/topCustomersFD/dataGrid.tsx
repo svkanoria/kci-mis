@@ -14,6 +14,8 @@ import { getTopCustomers } from "@/lib/api";
 import { formatIndianNumber } from "@/lib/utils/format";
 import Select from "react-select";
 import { calculateRegression } from "@/lib/utils/stats";
+import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
 
 // Register License Key with LicenseManager
 LicenseManager.setLicenseKey(process.env.NEXT_PUBLIC_AG_GRID_LICENSE || "");
@@ -24,7 +26,7 @@ type IRow = Awaited<ReturnType<typeof getTopCustomers>>[number];
 
 const SparklineCellRenderer = (params: any) => {
   if (!params.value) return null;
-  const { trend, avg, slope, intercept } = params.value;
+  const { trend, avg, slope, intercept, isFlipped } = params.value;
 
   if (!trend || trend.length < 2) return null;
 
@@ -43,9 +45,15 @@ const SparklineCellRenderer = (params: any) => {
   const min = Math.min(...trend, avg ?? 0, ...regValues);
   const range = max - min || 1;
 
+  const getX = (i: number, total: number) => {
+    const ratio = i / (total - 1);
+    const effectiveRatio = isFlipped ? 1 - ratio : ratio;
+    return effectiveRatio * (width - 2 * padding) + padding;
+  };
+
   const points = trend
     .map((val: number, i: number) => {
-      const x = (i / (trend.length - 1)) * (width - 2 * padding) + padding;
+      const x = getX(i, trend.length);
       const y =
         height - padding - ((val - min) / range) * (height - 2 * padding);
       return `${x},${y}`;
@@ -55,7 +63,7 @@ const SparklineCellRenderer = (params: any) => {
   const zeroPoints = trend
     .map((val: number, i: number) => {
       if (val !== 0) return null;
-      const x = (i / (trend.length - 1)) * (width - 2 * padding) + padding;
+      const x = getX(i, trend.length);
       const y =
         height - padding - ((val - min) / range) * (height - 2 * padding);
       return { x, y };
@@ -70,8 +78,8 @@ const SparklineCellRenderer = (params: any) => {
     const y1Val = intercept;
     const y2Val = slope * (trend.length - 1) + intercept;
 
-    const x1 = padding;
-    const x2 = width - padding;
+    const x1 = isFlipped ? width - padding : padding;
+    const x2 = isFlipped ? padding : width - padding;
 
     const y1 =
       height - padding - ((y1Val - min) / range) * (height - 2 * padding);
@@ -128,6 +136,7 @@ const SparklineCellRenderer = (params: any) => {
 const lsKey = (key: string) => `topCustomersFD-${key}`;
 const SHOW_STATS_KEY = lsKey("showStats");
 const SELECTED_GROUPS_KEY = lsKey("selectedGroups");
+const IS_TIME_FLIPPED_KEY = lsKey("isTimeFlipped");
 
 interface GridRow {
   consigneeName: string | null;
@@ -144,6 +153,7 @@ export const DataGrid = ({
   const groupedData = use(data);
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
   const [showStats, setShowStats] = useState(false);
+  const [isTimeFlipped, setIsTimeFlipped] = useState(false);
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -151,6 +161,11 @@ export const DataGrid = ({
     const storedShowStats = localStorage.getItem(SHOW_STATS_KEY);
     if (storedShowStats !== null) {
       setShowStats(storedShowStats === "true");
+    }
+
+    const storedIsTimeFlipped = localStorage.getItem(IS_TIME_FLIPPED_KEY);
+    if (storedIsTimeFlipped !== null) {
+      setIsTimeFlipped(storedIsTimeFlipped === "true");
     }
 
     const storedSelectedGroups = localStorage.getItem(SELECTED_GROUPS_KEY);
@@ -170,9 +185,10 @@ export const DataGrid = ({
   useEffect(() => {
     if (isInitialized) {
       localStorage.setItem(SHOW_STATS_KEY, String(showStats));
+      localStorage.setItem(IS_TIME_FLIPPED_KEY, String(isTimeFlipped));
       localStorage.setItem(SELECTED_GROUPS_KEY, JSON.stringify(selectedGroups));
     }
-  }, [showStats, selectedGroups, isInitialized]);
+  }, [showStats, isTimeFlipped, selectedGroups, isInitialized]);
 
   const instanceId = useId();
 
@@ -344,7 +360,7 @@ export const DataGrid = ({
             slope = data["slopeQty"] ?? 0;
             intercept = data["interceptQty"] ?? 0;
           }
-          return { trend, avg, slope, intercept };
+          return { trend, avg, slope, intercept, isFlipped: isTimeFlipped };
         },
       },
       {
@@ -477,7 +493,7 @@ export const DataGrid = ({
             trend = periods.map((p) => data[p + "-delta"] ?? 0);
             avg = data["avgDelta"] ?? 0;
           }
-          return { trend, avg };
+          return { trend, avg, isFlipped: isTimeFlipped };
         },
       },
       {
@@ -515,7 +531,9 @@ export const DataGrid = ({
       },
     ];
 
-    periods.forEach((period) => {
+    const displayPeriods = isTimeFlipped ? [...periods].reverse() : periods;
+
+    displayPeriods.forEach((period) => {
       const date = new Date(parseInt(period));
       const headerName = date.toLocaleDateString(undefined, {
         year: "2-digit",
@@ -608,7 +626,7 @@ export const DataGrid = ({
       });
     });
     return defs;
-  }, [periods, selectedGroups, showStats]);
+  }, [periods, selectedGroups, showStats, isTimeFlipped]);
 
   useEffect(() => {
     if (gridApi) {
@@ -639,6 +657,13 @@ export const DataGrid = ({
   return (
     <div className="grow min-h-0 flex flex-col gap-2">
       <div className="flex justify-end items-center gap-4">
+        <Button
+          variant="secondary"
+          onClick={() => setIsTimeFlipped(!isTimeFlipped)}
+          title="Flip time direction"
+        >
+          Time <ArrowRight className={isTimeFlipped ? "rotate-180" : ""} />
+        </Button>
         {selectedGroups.length > 0 && (
           <label className="flex items-center gap-2 text-sm">
             <input
