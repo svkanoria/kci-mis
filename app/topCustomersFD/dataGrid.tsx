@@ -477,23 +477,32 @@ export const DataGrid = ({
         valueGetter: (params) => {
           let trend: number[] = [];
           let avg = 0;
+          let slope = 0;
+          let intercept = 0;
 
           if (params.node?.group && params.node.aggData) {
             const aggData = params.node.aggData;
-            trend = periods.map((p) => {
+            const rawTrend = periods.map((p) => {
               const totalDeltaAmount = aggData[p + "-delta-amount"] ?? 0;
               const totalQty = aggData[p] ?? 0;
-              return totalQty > 0 ? totalDeltaAmount / totalQty : 0;
+              return totalQty > 0 ? totalDeltaAmount / totalQty : null;
             });
+            trend = rawTrend.map((v) => v ?? 0);
             const totalDeltaAmount = aggData.totalDeltaAmount ?? 0;
             const totalQty = aggData.totalQty ?? 0;
             avg = totalQty > 0 ? totalDeltaAmount / totalQty : 0;
+            const filteredTrend = trend.filter((v) => v !== null);
+            const reg = calculateRegression(filteredTrend);
+            slope = reg.slope;
+            intercept = reg.intercept;
           } else if (params.data) {
             const data = params.data;
             trend = periods.map((p) => data[p + "-delta"] ?? 0);
             avg = data["avgDelta"] ?? 0;
+            slope = data["slopeDelta"] ?? 0;
+            intercept = data["interceptDelta"] ?? 0;
           }
-          return { trend, avg, isFlipped: isTimeFlipped };
+          return { trend, avg, slope, intercept, isFlipped: isTimeFlipped };
         },
       },
       {

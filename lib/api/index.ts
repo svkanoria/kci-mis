@@ -305,7 +305,8 @@ export async function getTopCustomers(
       avgDelta !== null && avgDelta !== 0
         ? stdDevDelta / Math.abs(avgDelta)
         : 0;
-    const { slope: slopeDelta } = calculateRegression(filteredDeltas);
+    const { slope: slopeDelta, intercept: interceptDelta } =
+      calculateRegression(filteredDeltas);
 
     const { p, d, r, c } = JSON.parse(item.key);
 
@@ -328,6 +329,7 @@ export async function getTopCustomers(
       // Delta related fields
       avgDelta,
       slopeDelta,
+      interceptDelta,
       stdDevDelta,
       cvDelta,
       // Other
