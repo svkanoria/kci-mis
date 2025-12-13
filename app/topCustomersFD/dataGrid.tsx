@@ -133,6 +133,95 @@ const SparklineCellRenderer = (params: any) => {
   );
 };
 
+const BarSparklineCellRenderer = (params: any) => {
+  if (!params.value) return null;
+  const { trend, avg, isFlipped } = params.value;
+
+  if (!trend || trend.length < 1) return null;
+
+  const width = 140;
+  const height = 37;
+  const padding = 3;
+  const barGap = 2;
+
+  const max = Math.max(...trend, avg ?? 0, 0);
+  const min = Math.min(...trend, avg ?? 0, 0);
+  const range = max - min || 1;
+
+  const totalBars = trend.length;
+  const barWidth = Math.max(
+    1,
+    (width - 2 * padding - (totalBars - 1) * barGap) / totalBars,
+  );
+
+  const zeroY =
+    height - padding - ((0 - min) / range) * (height - 2 * padding);
+
+  const bars = trend.map((val: number, i: number) => {
+    const x = isFlipped
+      ? width - padding - barWidth - i * (barWidth + barGap)
+      : padding + i * (barWidth + barGap);
+
+    const valY =
+      height - padding - ((val - min) / range) * (height - 2 * padding);
+
+    const barHeight = Math.abs(zeroY - valY);
+    const y = Math.min(zeroY, valY);
+
+    const fill = val >= 0 ? "#2563eb" : "#ef4444";
+
+    return (
+      <rect
+        key={i}
+        x={x}
+        y={y}
+        width={barWidth}
+        height={barHeight}
+        fill={fill}
+        opacity="0.8"
+      />
+    );
+  });
+
+  const avgY =
+    height - padding - ((avg - min) / range) * (height - 2 * padding);
+
+  return (
+    <div className="flex items-center justify-center h-full w-full overflow-hidden">
+      <svg
+        width="100%"
+        height="100%"
+        viewBox={`0 0 ${width} ${height}`}
+        preserveAspectRatio="none"
+        className="overflow-visible"
+      >
+        {bars}
+        <line
+          x1={padding}
+          y1={avgY}
+          x2={width - padding}
+          y2={avgY}
+          stroke="#ef4444"
+          strokeWidth="1"
+          strokeDasharray="4 2"
+          opacity="0.7"
+        />
+        {Math.abs(avgY - zeroY) > 2 && (
+          <line
+            x1={padding}
+            y1={zeroY}
+            x2={width - padding}
+            y2={zeroY}
+            stroke="#666"
+            strokeWidth="0.5"
+            opacity="0.5"
+          />
+        )}
+      </svg>
+    </div>
+  );
+};
+
 const lsKey = (key: string) => `topCustomersFD-${key}`;
 const SHOW_STATS_KEY = lsKey("showStats");
 const SELECTED_GROUPS_KEY = lsKey("selectedGroups");
@@ -470,7 +559,7 @@ export const DataGrid = ({
         field: "deltaTrend",
         headerName: "Delta Trend",
         width: 150,
-        cellRenderer: SparklineCellRenderer,
+        cellRenderer: BarSparklineCellRenderer,
         cellStyle: deltaStyle,
         pinned: "left",
         hide: !showDelta,
