@@ -154,8 +154,7 @@ const BarSparklineCellRenderer = (params: any) => {
     (width - 2 * padding - (totalBars - 1) * barGap) / totalBars,
   );
 
-  const zeroY =
-    height - padding - ((0 - min) / range) * (height - 2 * padding);
+  const zeroY = height - padding - ((0 - min) / range) * (height - 2 * padding);
 
   const bars = trend.map((val: number, i: number) => {
     const x = isFlipped
@@ -566,8 +565,6 @@ export const DataGrid = ({
         valueGetter: (params) => {
           let trend: number[] = [];
           let avg = 0;
-          let slope = 0;
-          let intercept = 0;
 
           if (params.node?.group && params.node.aggData) {
             const aggData = params.node.aggData;
@@ -580,18 +577,12 @@ export const DataGrid = ({
             const totalDeltaAmount = aggData.totalDeltaAmount ?? 0;
             const totalQty = aggData.totalQty ?? 0;
             avg = totalQty > 0 ? totalDeltaAmount / totalQty : 0;
-            const filteredTrend = trend.filter((v) => v !== null);
-            const reg = calculateRegression(filteredTrend);
-            slope = reg.slope;
-            intercept = reg.intercept;
           } else if (params.data) {
             const data = params.data;
             trend = periods.map((p) => data[p + "-delta"] ?? 0);
             avg = data["avgDelta"] ?? 0;
-            slope = data["slopeDelta"] ?? 0;
-            intercept = data["interceptDelta"] ?? 0;
           }
-          return { trend, avg, slope, intercept, isFlipped: isTimeFlipped };
+          return { trend, avg, isFlipped: isTimeFlipped };
         },
       },
       {
