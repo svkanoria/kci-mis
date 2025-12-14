@@ -108,14 +108,14 @@ export const DataGrid = ({ data }: { data: IRow[] }) => {
     return [
       {
         field: "status",
-        tooltipField: "status",
         headerName: "Status",
+        tooltipField: "status",
         width: 130,
         hide: true,
         filter: "agSetColumnFilter",
+        sort: "desc",
         rowGroup: true,
         enableRowGroup: true,
-        sort: "desc",
         valueFormatter: (params) => {
           if (params.value === 0) return "Current";
           return `Lost ${params.value}+ months`;
@@ -127,8 +127,8 @@ export const DataGrid = ({ data }: { data: IRow[] }) => {
       },
       {
         field: "consigneeName",
-        tooltipField: "consigneeName",
         headerName: "Customer Name",
+        tooltipField: "consigneeName",
         width: 300,
         filter: "agTextColumnFilter",
       },
@@ -136,6 +136,7 @@ export const DataGrid = ({ data }: { data: IRow[] }) => {
         field: "lastInvDate",
         headerName: "Last Inv Date",
         width: 120,
+        filter: "agDateColumnFilter",
         valueFormatter: (params) => {
           if (!params.value) return "";
           return new Date(params.value).toLocaleDateString("en-IN", {
@@ -144,37 +145,36 @@ export const DataGrid = ({ data }: { data: IRow[] }) => {
             year: "numeric",
           });
         },
-        filter: "agDateColumnFilter",
       },
       {
         field: "qty",
         headerName: "Total Qty",
         width: 110,
         type: "numericColumn",
-        valueFormatter: (params) => formatIndianNumber(params.value),
         filter: "agNumberColumnFilter",
         sort: "desc",
+        valueFormatter: (params) => formatIndianNumber(params.value),
       },
       {
         field: "avgActiveMonthQty",
         headerName: "Avg NZ Qty",
         width: 110,
         type: "numericColumn",
-        valueFormatter: (params) => formatIndianNumber(params.value),
         filter: "agNumberColumnFilter",
+        valueFormatter: (params) => formatIndianNumber(params.value),
       },
       {
         field: "history",
         headerName: "History",
         flex: 1,
-        cellRenderer: BarSparklineCellRenderer,
+        filter: false,
+        sortable: false,
         valueGetter: (params) => {
           if (!params.data || !params.data.history) return null;
           const trend = params.data.history.map((h) => h.qty);
           return { trend };
         },
-        sortable: false,
-        filter: false,
+        cellRenderer: BarSparklineCellRenderer,
       },
     ];
   }, []);
@@ -197,10 +197,10 @@ export const DataGrid = ({ data }: { data: IRow[] }) => {
           headerHeight={60}
           rowHeight={40}
           pagination
-          onGridReady={(params) => setGridApi(params.api)}
           rowGroupPanelShow="always"
           suppressAggFuncInHeader
           enableBrowserTooltips
+          onGridReady={(params) => setGridApi(params.api)}
         />
       </div>
     </div>

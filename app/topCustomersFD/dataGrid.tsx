@@ -366,29 +366,29 @@ export const DataGrid = ({
       {
         field: "plant",
         width: 70,
+        hide: true,
         pinned: "left",
         filter: true,
         sortable: false,
         enableRowGroup: true,
-        hide: true,
       },
       {
         field: "distChannelDescription",
         headerName: "Dist. Channel",
         width: 150,
+        hide: true,
         pinned: "left",
         filter: true,
         enableRowGroup: true,
-        hide: true,
       },
       {
         field: "recipientName",
         tooltipField: "recipientName",
         width: 150,
+        hide: true,
         pinned: "left",
         filter: true,
         enableRowGroup: true,
-        hide: true,
       },
       {
         field: "consigneeName",
@@ -403,10 +403,10 @@ export const DataGrid = ({
         headerName: "Total Amt",
         width: 110,
         type: "numericColumn",
-        valueFormatter: (params) => formatIndianNumber(params.value),
         pinned: "left",
         filter: "agMultiColumnFilter",
         aggFunc: "sum",
+        valueFormatter: (params) => formatIndianNumber(params.value),
       },
       // Qty related columns
       {
@@ -414,22 +414,22 @@ export const DataGrid = ({
         headerName: "Total Qty",
         width: 90,
         type: "numericColumn",
-        valueFormatter: (params) => formatIndianNumber(params.value),
-        cellStyle: qtyStyle,
+        hide: !showQty,
         pinned: "left",
         filter: "agMultiColumnFilter",
         aggFunc: "sum",
-        hide: !showQty,
+        valueFormatter: (params) => formatIndianNumber(params.value),
+        cellStyle: qtyStyle,
       },
       {
         field: "avgQty",
         headerName: "Avg Qty",
         width: 85,
         type: "numericColumn",
-        valueFormatter: (params) => formatIndianNumber(params.value),
-        cellStyle: qtyStyle,
+        hide: !showQty,
         pinned: "left",
         filter: "agMultiColumnFilter",
+        valueFormatter: (params) => formatIndianNumber(params.value),
         valueGetter: (params) => {
           if (params.node?.group) {
             const totalQty = params.node.aggData?.totalQty ?? 0;
@@ -437,16 +437,14 @@ export const DataGrid = ({
           }
           return params.data ? params.data.avgQty : null;
         },
-        hide: !showQty,
+        cellStyle: qtyStyle,
       },
       {
         field: "qtyTrend",
         headerName: "Qty Trend",
         width: 150,
-        cellRenderer: SparklineCellRenderer,
-        cellStyle: qtyStyle,
-        pinned: "left",
         hide: !showQty,
+        pinned: "left",
         valueGetter: (params) => {
           let trend: number[] = [];
           let avg = 0;
@@ -469,36 +467,38 @@ export const DataGrid = ({
           }
           return { trend, avg, slope, intercept, isFlipped: isTimeFlipped };
         },
+        cellRenderer: SparklineCellRenderer,
+        cellStyle: qtyStyle,
       },
       {
         field: "slopeQty",
         headerName: "Slope Qty",
         width: 80,
         type: "numericColumn",
+        hide: !showQty || !showStats,
         valueFormatter: (params) =>
           params.value != null ? params.value.toFixed(2) : "",
         cellStyle: qtyStyle,
-        hide: !showQty || !showStats,
       },
       {
         field: "stdDevQty",
         headerName: "SD Qty",
         width: 80,
         type: "numericColumn",
+        hide: !showQty || !showStats,
         valueFormatter: (params) =>
           params.value != null ? params.value.toFixed(2) : "",
         cellStyle: qtyStyle,
-        hide: !showQty || !showStats,
       },
       {
         field: "cvQty",
         headerName: "CV Qty",
         width: 70,
         type: "numericColumn",
+        hide: !showQty || !showStats,
         valueFormatter: (params) =>
           params.value != null ? params.value.toFixed(2) : "",
         cellStyle: qtyStyle,
-        hide: !showQty || !showStats,
       },
       // Rate related columns
       {
@@ -506,10 +506,10 @@ export const DataGrid = ({
         headerName: "Avg Rate",
         width: 90,
         type: "numericColumn",
-        valueFormatter: (params) => formatIndianNumber(params.value),
-        cellStyle: rateStyle,
+        hide: !showRate,
         pinned: "left",
         filter: "agMultiColumnFilter",
+        valueFormatter: (params) => formatIndianNumber(params.value),
         valueGetter: (params) => {
           if (params.node && params.node.group) {
             const totalAmount = params.node.aggData
@@ -522,17 +522,17 @@ export const DataGrid = ({
           }
           return params.data ? params.data.avgRate : null;
         },
-        hide: !showRate,
+        cellStyle: rateStyle,
       },
       {
         field: "stdDevRate",
         headerName: "SD Rate",
         width: 80,
         type: "numericColumn",
+        hide: !showRate || !showStats,
         valueFormatter: (params) =>
           params.value != null ? params.value.toFixed(2) : "",
         cellStyle: rateStyle,
-        hide: !showRate || !showStats,
       },
       // Delta related columns
       {
@@ -540,21 +540,21 @@ export const DataGrid = ({
         headerName: "Total Delta Amt",
         width: 110,
         type: "numericColumn",
-        valueFormatter: (params) => formatIndianNumber(params.value),
+        hide: true,
         pinned: "left",
         filter: "agMultiColumnFilter",
         aggFunc: "sum",
-        hide: true,
+        valueFormatter: (params) => formatIndianNumber(params.value),
       },
       {
         field: "avgDelta",
         headerName: "Avg Delta",
         width: 85,
         type: "numericColumn",
-        valueFormatter: (params) => formatIndianNumber(params.value),
-        cellStyle: deltaStyle,
+        hide: !showDelta,
         pinned: "left",
         filter: "agMultiColumnFilter",
+        valueFormatter: (params) => formatIndianNumber(params.value),
         valueGetter: (params) => {
           if (params.node && params.node.group) {
             const totalDeltaAmount = params.node.aggData
@@ -567,16 +567,14 @@ export const DataGrid = ({
           }
           return params.data ? params.data.avgDelta : null;
         },
-        hide: !showDelta,
+        cellStyle: deltaStyle,
       },
       {
         field: "deltaTrend",
         headerName: "Delta Trend",
         width: 150,
-        cellRenderer: BarSparklineCellRenderer,
-        cellStyle: deltaStyle,
-        pinned: "left",
         hide: !showDelta,
+        pinned: "left",
         valueGetter: (params) => {
           let trend: number[] = [];
           let avg = 0;
@@ -599,36 +597,38 @@ export const DataGrid = ({
           }
           return { trend, avg, isFlipped: isTimeFlipped };
         },
+        cellRenderer: BarSparklineCellRenderer,
+        cellStyle: deltaStyle,
       },
       {
         field: "slopeDelta",
         headerName: "Slope Delta",
         width: 80,
         type: "numericColumn",
+        hide: !showDelta || !showStats,
         valueFormatter: (params) =>
           params.value != null ? params.value.toFixed(2) : "",
         cellStyle: deltaStyle,
-        hide: !showDelta || !showStats,
       },
       {
         field: "stdDevDelta",
         headerName: "SD Delta",
         width: 80,
         type: "numericColumn",
+        hide: !showDelta || !showStats,
         valueFormatter: (params) =>
           params.value != null ? params.value.toFixed(2) : "",
         cellStyle: deltaStyle,
-        hide: !showDelta || !showStats,
       },
       {
         field: "cvDelta",
         headerName: "CV Delta",
         width: 70,
         type: "numericColumn",
+        hide: !showDelta || !showStats,
         valueFormatter: (params) =>
           params.value != null ? params.value.toFixed(2) : "",
         cellStyle: deltaStyle,
-        hide: !showDelta || !showStats,
       },
     ];
 
@@ -646,11 +646,11 @@ export const DataGrid = ({
         headerName: headerName + " Qty",
         width: 75,
         type: "numericColumn",
+        hide: !showQty,
+        sortable: false,
+        aggFunc: "sum",
         valueFormatter: (params) => formatIndianNumber(params.value),
         cellStyle: qtyStyle,
-        sortable: false,
-        hide: !showQty,
-        aggFunc: "sum",
       });
 
       // Hidden, used only for weighted avg rate calculation
@@ -659,12 +659,12 @@ export const DataGrid = ({
         headerName: headerName + " Amt",
         width: 120,
         type: "numericColumn",
-        valueFormatter: (params) => formatIndianNumber(params.value),
-        sortable: false,
         hide: true,
         lockVisible: true,
         suppressColumnsToolPanel: true,
+        sortable: false,
         aggFunc: "sum",
+        valueFormatter: (params) => formatIndianNumber(params.value),
       });
 
       defs.push({
@@ -672,10 +672,9 @@ export const DataGrid = ({
         headerName: headerName + " Rate",
         width: 80,
         type: "numericColumn",
-        valueFormatter: (params) => formatIndianNumber(params.value),
-        cellStyle: rateStyle,
-        sortable: false,
         hide: !showRate,
+        sortable: false,
+        valueFormatter: (params) => formatIndianNumber(params.value),
         valueGetter: (params) => {
           if (params.node && params.node.group) {
             const totalAmount = params.node.aggData
@@ -688,6 +687,7 @@ export const DataGrid = ({
           }
           return params.data ? params.data[period + "-rate"] : null;
         },
+        cellStyle: rateStyle,
       });
 
       defs.push({
@@ -695,12 +695,12 @@ export const DataGrid = ({
         headerName: headerName + " Delta Amt",
         width: 120,
         type: "numericColumn",
-        valueFormatter: (params) => formatIndianNumber(params.value),
-        sortable: false,
         hide: true,
         lockVisible: true,
         suppressColumnsToolPanel: true,
+        sortable: false,
         aggFunc: "sum",
+        valueFormatter: (params) => formatIndianNumber(params.value),
       });
 
       defs.push({
@@ -708,10 +708,9 @@ export const DataGrid = ({
         headerName: headerName + " Delta",
         width: 80,
         type: "numericColumn",
-        valueFormatter: (params) => formatIndianNumber(params.value),
-        cellStyle: deltaStyle,
-        sortable: false,
         hide: !showDelta,
+        sortable: false,
+        valueFormatter: (params) => formatIndianNumber(params.value),
         valueGetter: (params) => {
           if (params.node && params.node.group) {
             const totalDeltaAmount = params.node.aggData
@@ -724,6 +723,7 @@ export const DataGrid = ({
           }
           return params.data ? params.data[period + "-delta"] : null;
         },
+        cellStyle: deltaStyle,
       });
     });
     return defs;
@@ -840,14 +840,14 @@ export const DataGrid = ({
           autoGroupColumnDef={autoGroupColumnDef}
           headerHeight={60}
           rowHeight={45}
+          grandTotalRow="top"
           pagination
-          suppressMovableColumns
-          processUnpinnedColumns={() => []}
-          onGridReady={(params) => setGridApi(params.api)}
           rowGroupPanelShow="always"
           suppressAggFuncInHeader
           enableBrowserTooltips
-          grandTotalRow="top"
+          suppressMovableColumns
+          processUnpinnedColumns={() => []}
+          onGridReady={(params) => setGridApi(params.api)}
         />
       </div>
     </div>
