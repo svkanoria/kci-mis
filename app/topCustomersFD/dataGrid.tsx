@@ -15,7 +15,12 @@ import { formatIndianNumber } from "@/lib/utils/format";
 import Select from "react-select";
 import { calculateRegression } from "@/lib/utils/stats";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, HelpCircle } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // Register License Key with LicenseManager
 LicenseManager.setLicenseKey(process.env.NEXT_PUBLIC_AG_GRID_LICENSE || "");
@@ -278,6 +283,20 @@ export const DataGrid = ({
     }
   }, [showStats, isTimeFlipped, selectedGroups, isInitialized]);
 
+  useEffect(() => {
+    if (gridApi && showStats) {
+      const allCols = gridApi.getColumns();
+      if (allCols) {
+        const firstUnpinned = allCols.find(
+          (c) => !c.isPinned() && c.isVisible(),
+        );
+        if (firstUnpinned) {
+          gridApi.ensureColumnVisible(firstUnpinned, "start");
+        }
+      }
+    }
+  }, [gridApi, showStats]);
+
   const instanceId = useId();
 
   const options = [
@@ -405,7 +424,7 @@ export const DataGrid = ({
       {
         field: "avgQty",
         headerName: "Avg Qty",
-        width: 90,
+        width: 85,
         type: "numericColumn",
         valueFormatter: (params) => formatIndianNumber(params.value),
         cellStyle: qtyStyle,
@@ -459,7 +478,6 @@ export const DataGrid = ({
         valueFormatter: (params) =>
           params.value != null ? params.value.toFixed(2) : "",
         cellStyle: qtyStyle,
-        pinned: "left",
         hide: !showQty || !showStats,
       },
       {
@@ -470,7 +488,6 @@ export const DataGrid = ({
         valueFormatter: (params) =>
           params.value != null ? params.value.toFixed(2) : "",
         cellStyle: qtyStyle,
-        pinned: "left",
         hide: !showQty || !showStats,
       },
       {
@@ -481,7 +498,6 @@ export const DataGrid = ({
         valueFormatter: (params) =>
           params.value != null ? params.value.toFixed(2) : "",
         cellStyle: qtyStyle,
-        pinned: "left",
         hide: !showQty || !showStats,
       },
       // Rate related columns
@@ -516,7 +532,6 @@ export const DataGrid = ({
         valueFormatter: (params) =>
           params.value != null ? params.value.toFixed(2) : "",
         cellStyle: rateStyle,
-        pinned: "left",
         hide: !showRate || !showStats,
       },
       // Delta related columns
@@ -534,7 +549,7 @@ export const DataGrid = ({
       {
         field: "avgDelta",
         headerName: "Avg Delta",
-        width: 90,
+        width: 85,
         type: "numericColumn",
         valueFormatter: (params) => formatIndianNumber(params.value),
         cellStyle: deltaStyle,
@@ -593,7 +608,6 @@ export const DataGrid = ({
         valueFormatter: (params) =>
           params.value != null ? params.value.toFixed(2) : "",
         cellStyle: deltaStyle,
-        pinned: "left",
         hide: !showDelta || !showStats,
       },
       {
@@ -604,7 +618,6 @@ export const DataGrid = ({
         valueFormatter: (params) =>
           params.value != null ? params.value.toFixed(2) : "",
         cellStyle: deltaStyle,
-        pinned: "left",
         hide: !showDelta || !showStats,
       },
       {
@@ -615,7 +628,6 @@ export const DataGrid = ({
         valueFormatter: (params) =>
           params.value != null ? params.value.toFixed(2) : "",
         cellStyle: deltaStyle,
-        pinned: "left",
         hide: !showDelta || !showStats,
       },
     ];
@@ -754,15 +766,27 @@ export const DataGrid = ({
           Time <ArrowRight className={isTimeFlipped ? "rotate-180" : ""} />
         </Button>
         {selectedGroups.length > 0 && (
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={showStats}
-              onChange={(e) => setShowStats(e.target.checked)}
-              className="rounded border-gray-300"
-            />
-            Show Stats
-          </label>
+          <div className="flex items-center gap-2">
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showStats}
+                onChange={(e) => setShowStats(e.target.checked)}
+                className="rounded border-gray-300"
+              />
+              Show Stats
+            </label>
+            <Tooltip delayDuration={200}>
+              <TooltipTrigger asChild>
+                <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>
+                  Stats columns show up to the left of the time-series columns
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
         )}
         <div className="w-[300px]">
           <Select
