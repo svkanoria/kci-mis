@@ -856,6 +856,7 @@ export const DataGrid = ({
           pagination
           rowGroupPanelShow="always"
           suppressAggFuncInHeader
+          suppressAggFilteredOnly
           enableBrowserTooltips
           suppressMovableColumns
           processUnpinnedColumns={() => []}

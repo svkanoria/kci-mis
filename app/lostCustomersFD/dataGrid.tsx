@@ -211,6 +211,7 @@ export const DataGrid = ({ data }: { data: IRow[] }) => {
           pagination
           rowGroupPanelShow="always"
           suppressAggFuncInHeader
+          suppressAggFilteredOnly
           enableBrowserTooltips
           onGridReady={(params) => setGridApi(params.api)}
         />
