@@ -9,6 +9,9 @@ export default async function Home() {
         <li>
           <Link href="/topCustomersFD">Top Customers - Formaldehyde</Link>
         </li>
+        <li>
+          <Link href="/lostCustomersFD">Lost Customers - Formaldehyde</Link>
+        </li>
       </ul>
     </div>
   );

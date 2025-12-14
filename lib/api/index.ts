@@ -8,6 +8,7 @@ import { and, eq, gte, lte, not, sql } from "drizzle-orm";
 import { getAllPeriods, Period } from "@/lib/utils/date";
 import { mean, standardDeviation, sum } from "simple-statistics";
 import { calculateRegression } from "../utils/stats";
+import { startOfMonth, differenceInMonths, format } from "date-fns";
 
 /**
  * Represents common parameters used for filtering data in API requests.
@@ -163,8 +164,6 @@ export async function getTopCustomers(
       channels: string;
     },
 ) {
-  const isCategoryFilter = filters.product?.startsWith("C:");
-
   const groupings = filters.grouping.split(",");
   const groupRecipient = groupings.includes("recipient");
   const groupDistChannel = groupings.includes("distChannel");
@@ -198,6 +197,8 @@ export async function getTopCustomers(
     .from(salesInvoicesRawTable)
     .where(and(...rawConditions))
     .as("filtered_raw");
+
+  const isCategoryFilter = filters.product?.startsWith("C:");
 
   const qtyCol = isCategoryFilter
     ? salesInvoicesDerivedTable.normQty
@@ -339,4 +340,102 @@ export async function getTopCustomers(
   });
 
   return result.sort((a, b) => a.totalQty - b.totalQty).reverse();
+}
+
+export async function getLostCustomers(
+  filters: Omit<CommonFilterParams, "from" | "to" | "period">,
+) {
+  const rawConditions = getRawCommonConditions(filters);
+
+  const filteredRawSq = db
+    .select()
+    .from(salesInvoicesRawTable)
+    .where(and(...rawConditions))
+    .as("filtered_raw");
+
+  const isCategoryFilter = filters.product?.startsWith("C:");
+
+  const qtyCol = isCategoryFilter
+    ? salesInvoicesDerivedTable.normQty
+    : filteredRawSq.qty;
+
+  const rows = await db
+    .select({
+      consigneeName: filteredRawSq.consigneeName,
+      lastInvDate: sql<string>`max(${filteredRawSq.invDate})`.as("lastInvDate"),
+      qty: sql<number>`sum(${qtyCol})`.mapWith(Number).as("qty"),
+      history: sql<{ qty: number; date: string }[]>`
+        json_agg(
+          json_build_object(
+            'qty', ${qtyCol},
+            'date', ${filteredRawSq.invDate}
+          ) ORDER BY ${filteredRawSq.invDate} DESC
+        )
+      `.as("history"),
+    })
+    .from(filteredRawSq)
+    .leftJoin(
+      salesInvoicesDerivedTable,
+      eq(filteredRawSq.id, salesInvoicesDerivedTable.rawId),
+    )
+    .where(and(...getDerivedCommonConditions(filters)))
+    .groupBy(filteredRawSq.consigneeName)
+    .orderBy(sql`"qty" DESC`);
+
+  const [{ minDate: minDateStr, maxDate: maxDateStr }] = await db
+    .select({
+      minDate: sql<string | null>`min(${salesInvoicesRawTable.invDate})`,
+      maxDate: sql<string | null>`max(${salesInvoicesRawTable.invDate})`,
+    })
+    .from(salesInvoicesRawTable);
+  const minInvDate = minDateStr ? new Date(minDateStr) : new Date();
+  const maxInvDate = maxDateStr ? new Date(maxDateStr) : new Date();
+
+  return rows.map((row) => {
+    const lastInvDate = new Date(row.lastInvDate);
+    const monthsSinceLastInvoice = differenceInMonths(maxInvDate, lastInvDate);
+
+    let status = 0;
+    if (monthsSinceLastInvoice >= 24) status = 24;
+    else if (monthsSinceLastInvoice >= 12) status = 12;
+    else if (monthsSinceLastInvoice >= 9) status = 9;
+    else if (monthsSinceLastInvoice >= 6) status = 6;
+    else if (monthsSinceLastInvoice >= 3) status = 3;
+
+    if (!row.history || row.history.length === 0) {
+      return { ...row, lastInvDate, status, history: [] };
+    }
+
+    const monthlyData = new Map<string, number>();
+    row.history.forEach((item) => {
+      const monthKey = format(new Date(item.date), "yyyy-MM");
+      monthlyData.set(monthKey, (monthlyData.get(monthKey) ?? 0) + item.qty);
+    });
+
+    const periods = getAllPeriods(
+      startOfMonth(minInvDate),
+      startOfMonth(maxInvDate),
+      "month",
+    );
+
+    const newHistory = periods.map((date) => {
+      const monthKey = format(date, "yyyy-MM");
+      return {
+        date: date.toISOString(),
+        qty: monthlyData.get(monthKey) ?? 0,
+      };
+    });
+
+    const activeHistory = newHistory.filter((h) => h.qty > 0);
+    const avgActiveMonthQty =
+      activeHistory.reduce((sum, h) => sum + h.qty, 0) / activeHistory.length;
+
+    return {
+      ...row,
+      lastInvDate,
+      status,
+      avgActiveMonthQty,
+      history: newHistory.reverse(),
+    };
+  });
 }
