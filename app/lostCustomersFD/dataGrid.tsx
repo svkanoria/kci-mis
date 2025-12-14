@@ -10,6 +10,7 @@ import {
 import { AgGridReact } from "ag-grid-react";
 import { getLostCustomers } from "@/lib/api";
 import { formatIndianNumber } from "@/lib/utils/format";
+import { Input } from "@/components/ui/input";
 
 // Register License Key with LicenseManager
 LicenseManager.setLicenseKey(process.env.NEXT_PUBLIC_AG_GRID_LICENSE || "");
@@ -96,6 +97,7 @@ const BarSparklineCellRenderer = (params: any) => {
 
 export const DataGrid = ({ data }: { data: IRow[] }) => {
   const [gridApi, setGridApi] = useState<any>(null);
+  const [quickFilterText, setQuickFilterText] = useState("");
 
   const defaultColDef = useMemo<ColDef>(() => {
     return {
@@ -181,6 +183,15 @@ export const DataGrid = ({ data }: { data: IRow[] }) => {
 
   return (
     <div className="grow min-h-0 flex flex-col gap-2">
+      <div className="flex justify-between items-center gap-4">
+        <div className="w-72">
+          <Input
+            placeholder="Quick search..."
+            value={quickFilterText}
+            onChange={(e) => setQuickFilterText(e.target.value)}
+          />
+        </div>
+      </div>
       <div
         className="grow min-h-0"
         style={
@@ -191,6 +202,7 @@ export const DataGrid = ({ data }: { data: IRow[] }) => {
         }
       >
         <AgGridReact
+          quickFilterText={quickFilterText}
           rowData={data}
           columnDefs={colDefs}
           defaultColDef={defaultColDef}

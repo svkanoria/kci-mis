@@ -21,6 +21,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Input } from "@/components/ui/input";
 
 // Register License Key with LicenseManager
 LicenseManager.setLicenseKey(process.env.NEXT_PUBLIC_AG_GRID_LICENSE || "");
@@ -249,6 +250,7 @@ export const DataGrid = ({
   const [isTimeFlipped, setIsTimeFlipped] = useState(false);
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [quickFilterText, setQuickFilterText] = useState("");
 
   useEffect(() => {
     const storedShowStats = localStorage.getItem(SHOW_STATS_KEY);
@@ -757,71 +759,80 @@ export const DataGrid = ({
 
   return (
     <div className="grow min-h-0 flex flex-col gap-2">
-      <div className="flex justify-end items-center gap-4">
-        <Button
-          variant="secondary"
-          onClick={() => setIsTimeFlipped(!isTimeFlipped)}
-          title="Flip time direction"
-        >
-          Time <ArrowRight className={isTimeFlipped ? "rotate-180" : ""} />
-        </Button>
-        {selectedGroups.length > 0 && (
-          <div className="flex items-center gap-2">
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
-              <input
-                type="checkbox"
-                checked={showStats}
-                onChange={(e) => setShowStats(e.target.checked)}
-                className="rounded border-gray-300"
-              />
-              Show Stats
-            </label>
-            <Tooltip delayDuration={200}>
-              <TooltipTrigger asChild>
-                <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>
-                  Stats columns show up to the left of the time-series columns
-                </p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
-        )}
-        <div className="w-[300px]">
-          <Select
-            instanceId={instanceId}
-            isMulti
-            options={options}
-            value={options.filter((o) => selectedGroups.includes(o.value))}
-            onChange={(selected) =>
-              setSelectedGroups(selected.map((s) => s.value))
-            }
-            placeholder="Select columns"
-            classNames={{
-              control: () => "!bg-background !border-input",
-              menu: () => "!bg-popover !text-popover-foreground !z-[100]",
-              option: ({ isFocused, isSelected, data }: any) => {
-                let color = "!bg-[#fffbf2]";
-                if (data.value === "rate") color = "!bg-[#fcf2ff]";
-                if (data.value === "delta") color = "!bg-[#f2fff2]";
-                return isFocused
-                  ? "!bg-accent !text-accent-foreground"
-                  : isSelected
-                    ? "!bg-primary !text-primary-foreground"
-                    : `${color} !text-foreground`;
-              },
-              multiValue: ({ data }: any) => {
-                let color = "!bg-[#fffbf2]";
-                if (data.value === "rate") color = "!bg-[#fcf2ff]";
-                if (data.value === "delta") color = "!bg-[#f2fff2]";
-                return `${color} !text-foreground`;
-              },
-              multiValueLabel: () => "!text-foreground",
-              multiValueRemove: () =>
-                "!text-foreground hover:!bg-destructive hover:!text-destructive-foreground",
-            }}
+      <div className="flex justify-between items-center gap-4">
+        <div className="w-72">
+          <Input
+            placeholder="Quick search..."
+            value={quickFilterText}
+            onChange={(e) => setQuickFilterText(e.target.value)}
           />
+        </div>
+        <div className="flex items-center gap-4">
+          <Button
+            variant="secondary"
+            onClick={() => setIsTimeFlipped(!isTimeFlipped)}
+            title="Flip time direction"
+          >
+            Time <ArrowRight className={isTimeFlipped ? "rotate-180" : ""} />
+          </Button>
+          {selectedGroups.length > 0 && (
+            <div className="flex items-center gap-2">
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showStats}
+                  onChange={(e) => setShowStats(e.target.checked)}
+                  className="rounded border-gray-300"
+                />
+                Show Stats
+              </label>
+              <Tooltip delayDuration={200}>
+                <TooltipTrigger asChild>
+                  <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>
+                    Stats columns show up to the left of the time-series columns
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+          )}
+          <div className="w-[300px]">
+            <Select
+              instanceId={instanceId}
+              isMulti
+              options={options}
+              value={options.filter((o) => selectedGroups.includes(o.value))}
+              onChange={(selected) =>
+                setSelectedGroups(selected.map((s) => s.value))
+              }
+              placeholder="Select columns"
+              classNames={{
+                control: () => "!bg-background !border-input",
+                menu: () => "!bg-popover !text-popover-foreground !z-[100]",
+                option: ({ isFocused, isSelected, data }: any) => {
+                  let color = "!bg-[#fffbf2]";
+                  if (data.value === "rate") color = "!bg-[#fcf2ff]";
+                  if (data.value === "delta") color = "!bg-[#f2fff2]";
+                  return isFocused
+                    ? "!bg-accent !text-accent-foreground"
+                    : isSelected
+                      ? "!bg-primary !text-primary-foreground"
+                      : `${color} !text-foreground`;
+                },
+                multiValue: ({ data }: any) => {
+                  let color = "!bg-[#fffbf2]";
+                  if (data.value === "rate") color = "!bg-[#fcf2ff]";
+                  if (data.value === "delta") color = "!bg-[#f2fff2]";
+                  return `${color} !text-foreground`;
+                },
+                multiValueLabel: () => "!text-foreground",
+                multiValueRemove: () =>
+                  "!text-foreground hover:!bg-destructive hover:!text-destructive-foreground",
+              }}
+            />
+          </div>
         </div>
       </div>
       <div
@@ -834,6 +845,7 @@ export const DataGrid = ({
         }
       >
         <AgGridReact
+          quickFilterText={quickFilterText}
           rowData={rowData}
           columnDefs={colDefs}
           defaultColDef={defaultColDef}
