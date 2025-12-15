@@ -1,7 +1,7 @@
 import { Heading } from "@/components/typography/heading";
 import { getCustomerBuyingVsMethanol } from "@/lib/api";
 import { extractFilterParams } from "../_utils/filter";
-import { Filter } from "../_components/filter";
+import { ExtendedFilter } from "./extendedFilter";
 import { DataGrid } from "@/app/customerBuyingVsMethanol/dataGrid";
 import { Suspense } from "react";
 
@@ -26,11 +26,10 @@ export default async function Page({
       <Heading level="h1" className="mb-0!">
         Customer Buying vs Methanol
       </Heading>
-      <Filter
+      <ExtendedFilter
         initialFrom={from}
         initialTo={to}
         initialProduct={product}
-        hidePeriod
         key={`${from}-${to}-${product}`}
       />
       <Suspense fallback={<div>Loading...</div>}>
