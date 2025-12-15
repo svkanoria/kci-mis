@@ -11,6 +11,7 @@ import { AgGridReact } from "ag-grid-react";
 import { getLostCustomers } from "@/lib/api";
 import { formatIndianNumber } from "@/lib/utils/format";
 import { Input } from "@/components/ui/input";
+import { TimeDirectionButton } from "@/app/_components/timeDirectionButton";
 
 // Register License Key with LicenseManager
 LicenseManager.setLicenseKey(process.env.NEXT_PUBLIC_AG_GRID_LICENSE || "");
@@ -21,7 +22,7 @@ type IRow = Awaited<ReturnType<typeof getLostCustomers>>[number];
 
 const BarSparklineCellRenderer = (params: any) => {
   if (!params.value) return null;
-  const { trend } = params.value;
+  const { trend, isFlipped } = params.value;
 
   if (!trend || trend.length < 1) return null;
 
@@ -43,7 +44,9 @@ const BarSparklineCellRenderer = (params: any) => {
   const zeroY = height - padding - ((0 - min) / range) * (height - 2 * padding);
 
   const bars = trend.map((val: number, i: number) => {
-    const x = padding + i * (barWidth + barGap);
+    const x = isFlipped
+      ? width - padding - barWidth - i * (barWidth + barGap)
+      : padding + i * (barWidth + barGap);
 
     if (val === 0) {
       return (
@@ -98,6 +101,7 @@ const BarSparklineCellRenderer = (params: any) => {
 export const DataGrid = ({ data }: { data: IRow[] }) => {
   const [gridApi, setGridApi] = useState<any>(null);
   const [quickFilterText, setQuickFilterText] = useState("");
+  const [isTimeFlipped, setIsTimeFlipped] = useState(false);
 
   const defaultColDef = useMemo<ColDef>(() => {
     return {
@@ -174,12 +178,12 @@ export const DataGrid = ({ data }: { data: IRow[] }) => {
         valueGetter: (params) => {
           if (!params.data || !params.data.history) return null;
           const trend = params.data.history.map((h) => h.qty);
-          return { trend };
+          return { trend, isFlipped: isTimeFlipped };
         },
         cellRenderer: BarSparklineCellRenderer,
       },
     ];
-  }, []);
+  }, [isTimeFlipped]);
 
   return (
     <div className="grow min-h-0 flex flex-col gap-2">
@@ -189,6 +193,12 @@ export const DataGrid = ({ data }: { data: IRow[] }) => {
             placeholder="Quick search..."
             value={quickFilterText}
             onChange={(e) => setQuickFilterText(e.target.value)}
+          />
+        </div>
+        <div>
+          <TimeDirectionButton
+            isTimeFlipped={isTimeFlipped}
+            onClick={() => setIsTimeFlipped(!isTimeFlipped)}
           />
         </div>
       </div>

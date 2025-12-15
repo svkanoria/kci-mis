@@ -435,7 +435,7 @@ export async function getLostCustomers(
       lastInvDate,
       status,
       avgActiveMonthQty,
-      history: newHistory.reverse(),
+      history: newHistory,
     };
   });
 }

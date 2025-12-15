@@ -22,6 +22,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Input } from "@/components/ui/input";
+import { TimeDirectionButton } from "@/app/_components/timeDirectionButton";
 
 // Register License Key with LicenseManager
 LicenseManager.setLicenseKey(process.env.NEXT_PUBLIC_AG_GRID_LICENSE || "");
@@ -768,13 +769,6 @@ export const DataGrid = ({
           />
         </div>
         <div className="flex items-center gap-4">
-          <Button
-            variant="secondary"
-            onClick={() => setIsTimeFlipped(!isTimeFlipped)}
-            title="Flip time direction"
-          >
-            Time <ArrowRight className={isTimeFlipped ? "rotate-180" : ""} />
-          </Button>
           {selectedGroups.length > 0 && (
             <div className="flex items-center gap-2">
               <label className="flex items-center gap-2 text-sm cursor-pointer">
@@ -833,6 +827,10 @@ export const DataGrid = ({
               }}
             />
           </div>
+          <TimeDirectionButton
+            isTimeFlipped={isTimeFlipped}
+            onClick={() => setIsTimeFlipped(!isTimeFlipped)}
+          />
         </div>
       </div>
       <div
