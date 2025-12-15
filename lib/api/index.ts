@@ -8,7 +8,14 @@ import { and, eq, gte, lte, not, sql } from "drizzle-orm";
 import { getAllPeriods, Period } from "@/lib/utils/date";
 import { mean, standardDeviation, sum } from "simple-statistics";
 import { calculateRegression } from "../utils/stats";
-import { startOfMonth, differenceInMonths, format } from "date-fns";
+import {
+  startOfMonth,
+  differenceInMonths,
+  format,
+  differenceInDays,
+  addDays,
+} from "date-fns";
+import { min, sumBy } from "lodash";
 
 /**
  * Represents common parameters used for filtering data in API requests.
@@ -369,7 +376,7 @@ export async function getLostCustomers(
           json_build_object(
             'qty', ${qtyCol},
             'date', ${filteredRawSq.invDate}
-          ) ORDER BY ${filteredRawSq.invDate} DESC
+          ) ORDER BY ${filteredRawSq.invDate} ASC
         )
       `.as("history"),
     })
@@ -384,12 +391,12 @@ export async function getLostCustomers(
 
   const [{ minDate: minDateStr, maxDate: maxDateStr }] = await db
     .select({
-      minDate: sql<string | null>`min(${salesInvoicesRawTable.invDate})`,
-      maxDate: sql<string | null>`max(${salesInvoicesRawTable.invDate})`,
+      minDate: sql<string>`min(${salesInvoicesRawTable.invDate})`,
+      maxDate: sql<string>`max(${salesInvoicesRawTable.invDate})`,
     })
     .from(salesInvoicesRawTable);
-  const minInvDate = minDateStr ? new Date(minDateStr) : new Date();
-  const maxInvDate = maxDateStr ? new Date(maxDateStr) : new Date();
+  const minInvDate = new Date(minDateStr);
+  const maxInvDate = new Date(maxDateStr);
 
   return rows.map((row) => {
     const lastInvDate = new Date(row.lastInvDate);
@@ -438,4 +445,113 @@ export async function getLostCustomers(
       history: newHistory,
     };
   });
+}
+
+export async function getCustomerBuyingVsMethanol(
+  filters: Omit<CommonFilterParams, "period">,
+) {
+  const rawConditions = getRawCommonConditions(filters);
+
+  const filteredRawSq = db
+    .select()
+    .from(salesInvoicesRawTable)
+    .where(and(...rawConditions))
+    .as("filtered_raw");
+
+  const isCategoryFilter = filters.product?.startsWith("C:");
+
+  const qtyCol = isCategoryFilter
+    ? salesInvoicesDerivedTable.normQty
+    : filteredRawSq.qty;
+
+  const methanolPrices = await db
+    .select({
+      date: methanolPricesInterpolatedView.date,
+      price: sql<number>`${methanolPricesInterpolatedView.dailyIcisKandlaPrice}`
+        .mapWith(Number)
+        .as("price"),
+    })
+    .from(methanolPricesInterpolatedView)
+    .orderBy(methanolPricesInterpolatedView.date);
+
+  const rows = await db
+    .select({
+      consigneeName: filteredRawSq.consigneeName,
+      qty: sql<number>`sum(${qtyCol})`.mapWith(Number).as("qty"),
+      history: sql<{ qty: number; date: string | null }[]>`
+        json_agg(
+          json_build_object(
+            'qty', ${qtyCol},
+            'date', ${filteredRawSq.contractDate}
+          ) ORDER BY ${filteredRawSq.contractDate} ASC
+        )
+      `.as("history"),
+    })
+    .from(filteredRawSq)
+    .leftJoin(
+      salesInvoicesDerivedTable,
+      eq(filteredRawSq.id, salesInvoicesDerivedTable.rawId),
+    )
+    .where(and(...getDerivedCommonConditions(filters)))
+    .groupBy(filteredRawSq.consigneeName)
+    .orderBy(sql`"qty" DESC`);
+
+  const methanolPriceMap = new Map<string, number>();
+  methanolPrices.forEach((p) => {
+    methanolPriceMap.set(p.date, Number(p.price));
+  });
+
+  const processedRows = rows.map((row) => {
+    const historyMap = new Map<string, number>();
+    row.history.forEach((h) => {
+      if (h.date) {
+        historyMap.set(h.date, (historyMap.get(h.date) ?? 0) + h.qty);
+      }
+    });
+
+    const sortedHistory = Array.from(historyMap.entries())
+      .map(([date, qty]) => ({ date, qty }))
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    const buyingVsMethanol: {
+      date: string;
+      contractedQty?: number;
+      methanolPriceDelta: number;
+      gain: number;
+    }[] = [];
+
+    for (let i = 0; i < sortedHistory.length - 1; i++) {
+      const curr = sortedHistory[i];
+      const next = sortedHistory[i + 1];
+      const currDate = new Date(curr.date);
+      const nextDate = new Date(next.date);
+
+      const daysConsumed = Math.min(differenceInDays(nextDate, currDate), 30);
+      const dailyQty = curr.qty / daysConsumed;
+      const basePrice = methanolPriceMap.get(curr.date)!;
+
+      for (let d = 0; d < daysConsumed; d++) {
+        const date = addDays(currDate, d);
+        const dateStr = format(date, "yyyy-MM-dd");
+        const methanolPrice = methanolPriceMap.get(dateStr)!;
+        const methanolPriceDelta = methanolPrice - basePrice;
+
+        buyingVsMethanol.push({
+          date: dateStr,
+          contractedQty: d === 0 ? curr.qty : undefined,
+          methanolPriceDelta,
+          gain: ((methanolPriceDelta * 1000) / 2) * dailyQty,
+        });
+      }
+    }
+
+    return {
+      consigneeName: row.consigneeName,
+      buyingVsMethanol,
+      totalGain: sumBy(buyingVsMethanol, (i) => i.gain),
+      totalContractedQty: sumBy(buyingVsMethanol, (i) => i.contractedQty ?? 0),
+    };
+  });
+
+  return processedRows;
 }
