@@ -12,6 +12,7 @@ import { getLostCustomers } from "@/lib/api";
 import { formatIndianNumber } from "@/lib/utils/format";
 import { Input } from "@/components/ui/input";
 import { TimeDirectionButton } from "@/app/_components/timeDirectionButton";
+import { useTimeDirectionStore } from "@/lib/store";
 
 // Register License Key with LicenseManager
 LicenseManager.setLicenseKey(process.env.NEXT_PUBLIC_AG_GRID_LICENSE || "");
@@ -101,7 +102,7 @@ const BarSparklineCellRenderer = (params: any) => {
 export const DataGrid = ({ data }: { data: IRow[] }) => {
   const [gridApi, setGridApi] = useState<any>(null);
   const [quickFilterText, setQuickFilterText] = useState("");
-  const [isTimeFlipped, setIsTimeFlipped] = useState(false);
+  const { isTimeFlipped, toggleTimeFlipped } = useTimeDirectionStore();
 
   const defaultColDef = useMemo<ColDef>(() => {
     return {
@@ -196,10 +197,7 @@ export const DataGrid = ({ data }: { data: IRow[] }) => {
           />
         </div>
         <div>
-          <TimeDirectionButton
-            isTimeFlipped={isTimeFlipped}
-            onClick={() => setIsTimeFlipped(!isTimeFlipped)}
-          />
+          <TimeDirectionButton />
         </div>
       </div>
       <div

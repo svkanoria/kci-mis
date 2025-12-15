@@ -14,8 +14,7 @@ import { getTopCustomers } from "@/lib/api";
 import { formatIndianNumber } from "@/lib/utils/format";
 import Select from "react-select";
 import { calculateRegression } from "@/lib/utils/stats";
-import { Button } from "@/components/ui/button";
-import { ArrowRight, HelpCircle } from "lucide-react";
+import { HelpCircle } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -23,6 +22,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Input } from "@/components/ui/input";
 import { TimeDirectionButton } from "@/app/_components/timeDirectionButton";
+import { useTimeDirectionStore } from "@/lib/store";
 
 // Register License Key with LicenseManager
 LicenseManager.setLicenseKey(process.env.NEXT_PUBLIC_AG_GRID_LICENSE || "");
@@ -231,7 +231,6 @@ const BarSparklineCellRenderer = (params: any) => {
 const lsKey = (key: string) => `topCustomersFD-${key}`;
 const SHOW_STATS_KEY = lsKey("showStats");
 const SELECTED_GROUPS_KEY = lsKey("selectedGroups");
-const IS_TIME_FLIPPED_KEY = lsKey("isTimeFlipped");
 
 interface GridRow {
   consigneeName: string | null;
@@ -248,7 +247,7 @@ export const DataGrid = ({
   const groupedData = use(data);
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
   const [showStats, setShowStats] = useState(false);
-  const [isTimeFlipped, setIsTimeFlipped] = useState(false);
+  const { isTimeFlipped, toggleTimeFlipped } = useTimeDirectionStore();
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
   const [quickFilterText, setQuickFilterText] = useState("");
@@ -257,11 +256,6 @@ export const DataGrid = ({
     const storedShowStats = localStorage.getItem(SHOW_STATS_KEY);
     if (storedShowStats !== null) {
       setShowStats(storedShowStats === "true");
-    }
-
-    const storedIsTimeFlipped = localStorage.getItem(IS_TIME_FLIPPED_KEY);
-    if (storedIsTimeFlipped !== null) {
-      setIsTimeFlipped(storedIsTimeFlipped === "true");
     }
 
     const storedSelectedGroups = localStorage.getItem(SELECTED_GROUPS_KEY);
@@ -281,10 +275,9 @@ export const DataGrid = ({
   useEffect(() => {
     if (isInitialized) {
       localStorage.setItem(SHOW_STATS_KEY, String(showStats));
-      localStorage.setItem(IS_TIME_FLIPPED_KEY, String(isTimeFlipped));
       localStorage.setItem(SELECTED_GROUPS_KEY, JSON.stringify(selectedGroups));
     }
-  }, [showStats, isTimeFlipped, selectedGroups, isInitialized]);
+  }, [showStats, selectedGroups, isInitialized]);
 
   useEffect(() => {
     if (gridApi && showStats) {
@@ -827,10 +820,7 @@ export const DataGrid = ({
               }}
             />
           </div>
-          <TimeDirectionButton
-            isTimeFlipped={isTimeFlipped}
-            onClick={() => setIsTimeFlipped(!isTimeFlipped)}
-          />
+          <TimeDirectionButton />
         </div>
       </div>
       <div

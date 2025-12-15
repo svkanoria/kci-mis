@@ -1,17 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import { useTimeDirectionStore } from "@/lib/store";
 
-interface TimeDirectionButtonProps {
-  isTimeFlipped: boolean;
-  onClick: () => void;
-}
+export const TimeDirectionButton = () => {
+  const { isTimeFlipped, toggleTimeFlipped } = useTimeDirectionStore();
 
-export const TimeDirectionButton = ({
-  isTimeFlipped,
-  onClick,
-}: TimeDirectionButtonProps) => {
   return (
-    <Button variant="secondary" onClick={onClick} title="Flip time direction">
+    <Button
+      variant="secondary"
+      onClick={toggleTimeFlipped}
+      title="Flip time direction"
+    >
       Time <ArrowRight className={isTimeFlipped ? "rotate-180" : ""} />
     </Button>
   );
