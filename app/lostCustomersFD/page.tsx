@@ -4,6 +4,7 @@ import { extractFilterParams } from "../_utils/filter";
 import { ExtendedFilter } from "./extendedFilter";
 import { DataGrid } from "./dataGrid";
 import { Suspense } from "react";
+import { HomeButton } from "../_components/homeButton";
 
 export default async function Page({
   searchParams,
@@ -21,9 +22,12 @@ export default async function Page({
 
   return (
     <div className="flex h-full flex-col gap-4 p-3">
-      <Heading level="h1" className="mb-0!">
-        Lost Customers - Formaldehyde
-      </Heading>
+      <div className="flex items-center gap-4">
+        <HomeButton />
+        <Heading level="h1" className="mb-0!">
+          Lost Customers - Formaldehyde
+        </Heading>
+      </div>
       <ExtendedFilter initialProduct={product} key={`${product}`} />
       <Suspense fallback={<div>Loading...</div>}>
         <DataGrid data={data} />

@@ -12,6 +12,11 @@ export default async function Home() {
         <li>
           <Link href="/lostCustomersFD">Lost Customers - Formaldehyde</Link>
         </li>
+        <li>
+          <Link href="/customerBuyingVsMethanol">
+            Customer Buying vs Methanol
+          </Link>
+        </li>
       </ul>
     </div>
   );
