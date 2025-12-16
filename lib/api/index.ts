@@ -4,7 +4,7 @@ import {
   salesInvoicesDerivedTable,
   methanolPricesInterpolatedView,
 } from "@/db/schema";
-import { and, eq, gte, lte, not, sql } from "drizzle-orm";
+import { and, eq, gte, isNotNull, lte, not, sql } from "drizzle-orm";
 import { getAllPeriods, Period, formatDate, parseDate } from "@/lib/utils/date";
 import { mean, standardDeviation, sum } from "simple-statistics";
 import { calculateRegression } from "../utils/stats";
@@ -15,7 +15,7 @@ import {
   differenceInDays,
   addDays,
 } from "date-fns";
-import { min, sumBy } from "lodash";
+import { sumBy } from "lodash";
 
 /**
  * Represents common parameters used for filtering data in API requests.
@@ -203,6 +203,10 @@ export async function getTopCustomers(
     ? salesInvoicesDerivedTable.normQty
     : filteredRawSq.qty;
 
+  const rateCol = isCategoryFilter
+    ? salesInvoicesDerivedTable.normBasicRate
+    : filteredRawSq.basicRate;
+
   const rows = await db
     .select({
       plant: groupPlant ? filteredRawSq.plant : sql<number>`0`,
@@ -221,7 +225,7 @@ export async function getTopCustomers(
         .mapWith(Number)
         .as("amount"),
       deltaAmount:
-        sql<number>`sum((${filteredRawSq.basicRate} - (${methanolPricesInterpolatedView.dailyIcisKandlaPrice} * 500)) * ${filteredRawSq.qty})`
+        sql<number>`sum((${rateCol} - (${methanolPricesInterpolatedView.dailyIcisKandlaPrice} * 500)) * ${filteredRawSq.qty})`
           .mapWith(Number)
           .as("deltaAmount"),
     })
@@ -234,7 +238,14 @@ export async function getTopCustomers(
       methanolPricesInterpolatedView,
       eq(filteredRawSq.contractDate, methanolPricesInterpolatedView.date),
     )
-    .where(and(...getDerivedCommonConditions(filters)))
+    .where(
+      and(
+        ...getDerivedCommonConditions(filters),
+        isNotNull(filteredRawSq.basicAmount),
+        isNotNull(rateCol),
+        isNotNull(filteredRawSq.contractDate),
+      ),
+    )
     .groupBy(
       ...(groupPlant ? [filteredRawSq.plant] : []),
       ...(groupDistChannel ? [filteredRawSq.distChannelDescription] : []),
@@ -381,8 +392,14 @@ export async function getLostCustomers(
     .groupBy(filteredRawSq.consigneeName)
     .orderBy(sql`"qty" DESC`);
 
+  if (rows.length === 0) {
+    return [];
+  }
+
   const [{ minDate: minDateStr, maxDate: maxDateStr }] = await db
     .select({
+      // At this point, we know there is at least one row, hence
+      // we are sure minDateStr and maxDateStr won't be null
       minDate: sql<string>`min(${salesInvoicesRawTable.invDate})`,
       maxDate: sql<string>`max(${salesInvoicesRawTable.invDate})`,
     })
@@ -426,7 +443,6 @@ export async function getLostCustomers(
     });
 
     const activeHistory = newHistory.filter((h) => h.qty > 0);
-
     const avgActiveMonthQty =
       activeHistory.reduce((sum, h) => sum + h.qty, 0) / activeHistory.length;
 
