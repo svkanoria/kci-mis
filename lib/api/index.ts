@@ -194,7 +194,13 @@ export async function getTopCustomers(
   const filteredRawSq = db
     .select()
     .from(salesInvoicesRawTable)
-    .where(and(...rawConditions))
+    .where(
+      and(
+        ...rawConditions,
+        isNotNull(salesInvoicesRawTable.basicAmount),
+        isNotNull(salesInvoicesRawTable.contractDate),
+      ),
+    )
     .as("filtered_raw");
 
   const isCategoryFilter = filters.product?.startsWith("C:");
@@ -238,14 +244,7 @@ export async function getTopCustomers(
       methanolPricesInterpolatedView,
       eq(filteredRawSq.contractDate, methanolPricesInterpolatedView.date),
     )
-    .where(
-      and(
-        ...getDerivedCommonConditions(filters),
-        isNotNull(filteredRawSq.basicAmount),
-        isNotNull(rateCol),
-        isNotNull(filteredRawSq.contractDate),
-      ),
-    )
+    .where(and(...getDerivedCommonConditions(filters), isNotNull(rateCol)))
     .groupBy(
       ...(groupPlant ? [filteredRawSq.plant] : []),
       ...(groupDistChannel ? [filteredRawSq.distChannelDescription] : []),
