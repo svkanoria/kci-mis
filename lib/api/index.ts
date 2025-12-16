@@ -463,7 +463,7 @@ export async function getCustomerBuyingVsMethanol(
   const filteredRawSq = db
     .select()
     .from(salesInvoicesRawTable)
-    .where(and(...rawConditions))
+    .where(and(...rawConditions, isNotNull(salesInvoicesRawTable.contractDate)))
     .as("filtered_raw");
 
   const isCategoryFilter = filters.product?.startsWith("C:");
@@ -471,16 +471,6 @@ export async function getCustomerBuyingVsMethanol(
   const qtyCol = isCategoryFilter
     ? salesInvoicesDerivedTable.normQty
     : filteredRawSq.qty;
-
-  const methanolPrices = await db
-    .select({
-      date: methanolPricesInterpolatedView.date,
-      price: sql<number>`${methanolPricesInterpolatedView.dailyIcisKandlaPrice}`
-        .mapWith(Number)
-        .as("price"),
-    })
-    .from(methanolPricesInterpolatedView)
-    .orderBy(methanolPricesInterpolatedView.date);
 
   const rows = await db
     .select({
@@ -503,6 +493,37 @@ export async function getCustomerBuyingVsMethanol(
     .where(and(...getDerivedCommonConditions(filters)))
     .groupBy(filteredRawSq.consigneeName)
     .orderBy(sql`"qty" DESC`);
+
+  if (rows.length === 0) {
+    return [];
+  }
+
+  const [{ minDate: minDateStr, maxDate: maxDateStr }] = await db
+    .select({
+      // At this point, we know there is at least one row, hence
+      // we are sure minDateStr and maxDateStr won't be null
+      minDate: sql<string>`min(${salesInvoicesRawTable.contractDate})`,
+      maxDate: sql<string>`max(${salesInvoicesRawTable.contractDate})`,
+    })
+    .from(salesInvoicesRawTable);
+  const minInvDate = new Date(minDateStr);
+  const maxInvDate = new Date(maxDateStr);
+
+  const methanolPrices = await db
+    .select({
+      date: methanolPricesInterpolatedView.date,
+      price: sql<number>`${methanolPricesInterpolatedView.dailyIcisKandlaPrice}`
+        .mapWith(Number)
+        .as("price"),
+    })
+    .from(methanolPricesInterpolatedView)
+    .where(
+      and(
+        gte(methanolPricesInterpolatedView.date, formatDate(minInvDate)),
+        lte(methanolPricesInterpolatedView.date, formatDate(maxInvDate)),
+      ),
+    )
+    .orderBy(methanolPricesInterpolatedView.date);
 
   const methanolPriceMap = new Map<string, number>();
   methanolPrices.forEach((p) => {
