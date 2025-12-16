@@ -23,6 +23,7 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "@types/lodash": "^4.17.20",
     "ag-charts-enterprise": "^12.3.1",
+    "ag-charts-react": "^12.3.1",
     "ag-grid-enterprise": "^34.3.1",
     "ag-grid-react": "^34.3.1",
     "chalk": "^4.1.2",

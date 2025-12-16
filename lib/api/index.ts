@@ -15,7 +15,7 @@ import {
   differenceInDays,
   addDays,
 } from "date-fns";
-import { sumBy } from "lodash";
+import { filter, sumBy } from "lodash";
 
 /**
  * Represents common parameters used for filtering data in API requests.
@@ -455,7 +455,7 @@ export async function getLostCustomers(
   });
 }
 
-export async function getCustomerBuyingVsMethanol(
+export async function getCustomerBuyingPatternFD(
   filters: Omit<CommonFilterParams, "period">,
 ) {
   const rawConditions = getRawCommonConditions(filters);
@@ -475,15 +475,9 @@ export async function getCustomerBuyingVsMethanol(
   const rows = await db
     .select({
       consigneeName: filteredRawSq.consigneeName,
+      contractDate: filteredRawSq.contractDate,
+      invDate: filteredRawSq.invDate,
       qty: sql<number>`sum(${qtyCol})`.mapWith(Number).as("qty"),
-      history: sql<{ qty: number; date: string | null }[]>`
-        json_agg(
-          json_build_object(
-            'qty', ${qtyCol},
-            'date', ${filteredRawSq.contractDate}
-          ) ORDER BY ${filteredRawSq.contractDate} ASC
-        )
-      `.as("history"),
     })
     .from(filteredRawSq)
     .leftJoin(
@@ -491,8 +485,16 @@ export async function getCustomerBuyingVsMethanol(
       eq(filteredRawSq.id, salesInvoicesDerivedTable.rawId),
     )
     .where(and(...getDerivedCommonConditions(filters)))
-    .groupBy(filteredRawSq.consigneeName)
-    .orderBy(sql`"qty" DESC`);
+    .groupBy(
+      filteredRawSq.consigneeName,
+      filteredRawSq.contractDate,
+      filteredRawSq.invDate,
+    )
+    .orderBy(
+      filteredRawSq.consigneeName,
+      filteredRawSq.contractDate,
+      filteredRawSq.invDate,
+    );
 
   if (rows.length === 0) {
     return [];
@@ -503,7 +505,7 @@ export async function getCustomerBuyingVsMethanol(
       // At this point, we know there is at least one row, hence
       // we are sure minDateStr and maxDateStr won't be null
       minDate: sql<string>`min(${salesInvoicesRawTable.contractDate})`,
-      maxDate: sql<string>`max(${salesInvoicesRawTable.contractDate})`,
+      maxDate: sql<string>`max(${salesInvoicesRawTable.invDate})`,
     })
     .from(salesInvoicesRawTable);
   const minInvDate = new Date(minDateStr);
@@ -530,59 +532,56 @@ export async function getCustomerBuyingVsMethanol(
     methanolPriceMap.set(p.date, Number(p.price));
   });
 
-  const processedRows = rows.map((row) => {
-    const historyMap = new Map<string, number>();
-    row.history.forEach((h) => {
-      if (h.date) {
-        historyMap.set(h.date, (historyMap.get(h.date) ?? 0) + h.qty);
-      }
-    });
-
-    const sortedHistory = Array.from(historyMap.entries())
-      .map(([date, qty]) => ({ date, qty }))
-      .sort(
-        (a, b) => parseDate(a.date).getTime() - parseDate(b.date).getTime(),
-      );
-
-    const buyingVsMethanol: {
+  let data: {
+    consigneeName: string;
+    contractDate: string;
+    contractQty: number;
+    contractMethanolPrice: number;
+    gain: number;
+    firstLiftingDate: string;
+    finalLiftingDate: string;
+    invoices: {
       date: string;
-      contractedQty?: number;
-      methanolPriceDelta: number;
-      gain: number;
-    }[] = [];
+      qty: number;
+      methanolPrice: number;
+    }[];
+  }[] = [];
 
-    for (let i = 0; i < sortedHistory.length - 1; i++) {
-      const curr = sortedHistory[i];
-      const next = sortedHistory[i + 1];
-      const currDate = parseDate(curr.date);
-      const nextDate = parseDate(next.date);
+  let currContract: (typeof data)[number] | null = null;
 
-      const daysConsumed = Math.min(differenceInDays(nextDate, currDate), 30);
-      const dailyQty = curr.qty / daysConsumed;
-      const basePrice = methanolPriceMap.get(curr.date)!;
-
-      for (let d = 0; d < daysConsumed; d++) {
-        const date = addDays(currDate, d);
-        const dateStr = formatDate(date);
-        const methanolPrice = methanolPriceMap.get(dateStr)!;
-        const methanolPriceDelta = methanolPrice - basePrice;
-
-        buyingVsMethanol.push({
-          date: dateStr,
-          contractedQty: d === 0 ? curr.qty : undefined,
-          methanolPriceDelta,
-          gain: ((methanolPriceDelta * 1000) / 2) * dailyQty,
-        });
-      }
+  for (const row of rows) {
+    if (
+      !currContract ||
+      currContract.consigneeName !== row.consigneeName ||
+      currContract.contractDate !== row.contractDate
+    ) {
+      currContract = {
+        consigneeName: row.consigneeName,
+        contractDate: row.contractDate!,
+        contractQty: 0,
+        contractMethanolPrice: methanolPriceMap.get(row.contractDate!)!,
+        gain: 0,
+        firstLiftingDate: row.invDate!,
+        finalLiftingDate: row.invDate!,
+        invoices: [],
+      };
+      data.push(currContract);
     }
 
-    return {
-      consigneeName: row.consigneeName,
-      buyingVsMethanol,
-      totalGain: sumBy(buyingVsMethanol, (i) => i.gain),
-      totalContractedQty: sumBy(buyingVsMethanol, (i) => i.contractedQty ?? 0),
-    };
-  });
+    const currentMethanolPrice = methanolPriceMap.get(row.invDate!)!;
 
-  return processedRows;
+    currContract.invoices.push({
+      date: row.invDate!,
+      qty: row.qty,
+      methanolPrice: currentMethanolPrice,
+    });
+    currContract.contractQty += row.qty;
+    currContract.gain +=
+      ((row.qty * (currentMethanolPrice - currContract.contractMethanolPrice)) /
+        2) *
+      1000;
+    currContract.finalLiftingDate = row.invDate!;
+  }
+
+  return data;
 }

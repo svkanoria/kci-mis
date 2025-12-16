@@ -1,8 +1,8 @@
 import { Heading } from "@/components/typography/heading";
-import { getCustomerBuyingVsMethanol } from "@/lib/api";
+import { getCustomerBuyingPatternFD } from "@/lib/api";
 import { extractFilterParams } from "../_utils/filter";
 import { ExtendedFilter } from "./extendedFilter";
-import { DataGrid } from "@/app/customerBuyingVsMethanol/dataGrid";
+import { DataGrid } from "@/app/customerBuyingPatternFD/dataGrid";
 import { Suspense } from "react";
 import { HomeButton } from "../_components/homeButton";
 
@@ -16,7 +16,7 @@ export default async function Page({
     product: "C:Formaldehyde",
   });
 
-  const data = getCustomerBuyingVsMethanol({
+  const data = getCustomerBuyingPatternFD({
     from,
     to,
     product,
