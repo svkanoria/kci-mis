@@ -12,7 +12,7 @@ import { DateRange, DateRangePicker } from "@/components/ui/dateRangePicker";
 import { Button } from "@/components/ui/button";
 import { useRouter, usePathname } from "next/navigation";
 import { useForm, Controller, Control, DefaultValues } from "react-hook-form";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/utils/date";
 
 export interface FilterProps<T extends FilterFormValues> {
   initialFrom?: Date;
@@ -62,10 +62,10 @@ export function Filter<T extends FilterFormValues = FilterFormValues>({
   const onSubmit = (data: T) => {
     const params = new URLSearchParams();
     if (data.range?.from) {
-      params.set("from", format(data.range.from, "yyyy-MM-dd"));
+      params.set("from", formatDate(data.range.from));
     }
     if (data.range?.to) {
-      params.set("to", format(data.range.to, "yyyy-MM-dd"));
+      params.set("to", formatDate(data.range.to));
     }
     if (data.period !== "") {
       params.set("period", data.period);

@@ -14,9 +14,27 @@ import {
   eachMonthOfInterval,
   eachQuarterOfInterval,
   eachYearOfInterval,
+  format,
+  parseISO,
 } from "date-fns";
 
 const DEFAULT_FY_START_MONTH = 3; // April
+
+/**
+ * Formats a date to a string (yyyy-MM-dd).
+ * @param date The date to format
+ */
+export function formatDate(date: Date): string {
+  return format(date, "yyyy-MM-dd");
+}
+
+/**
+ * Parses a date string (yyyy-MM-dd) to a Date object.
+ * @param dateStr The date string to parse
+ */
+export function parseDate(dateStr: string): Date {
+  return parseISO(dateStr);
+}
 
 /**
  * Returns the start of the financial year for the given date.

@@ -1,4 +1,4 @@
-import { Period } from "@/lib/utils/date";
+import { Period, parseDate } from "@/lib/utils/date";
 
 export function extractFilterParams(
   searchParams: {
@@ -13,8 +13,8 @@ export function extractFilterParams(
 ) {
   const { from, to, product, period } = searchParams;
 
-  const parsedFrom = typeof from === "string" ? new Date(from) : defaults?.from;
-  const parsedTo = typeof to === "string" ? new Date(to) : defaults?.to;
+  const parsedFrom = typeof from === "string" ? parseDate(from) : defaults?.from;
+  const parsedTo = typeof to === "string" ? parseDate(to) : defaults?.to;
   const parsedPeriod = (
     typeof period === "string" && ["month", "quarter", "year"].includes(period)
       ? period

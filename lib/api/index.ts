@@ -5,7 +5,7 @@ import {
   methanolPricesInterpolatedView,
 } from "@/db/schema";
 import { and, eq, gte, lte, not, sql } from "drizzle-orm";
-import { getAllPeriods, Period } from "@/lib/utils/date";
+import { getAllPeriods, Period, formatDate, parseDate } from "@/lib/utils/date";
 import { mean, standardDeviation, sum } from "simple-statistics";
 import { calculateRegression } from "../utils/stats";
 import {
@@ -38,19 +38,11 @@ function getRawCommonConditions(filters: CommonFilterParams) {
   const conditions = [];
   if (filters.from) {
     conditions.push(
-      gte(
-        salesInvoicesRawTable.invDate,
-        filters.from.toISOString().split("T")[0],
-      ),
+      gte(salesInvoicesRawTable.invDate, formatDate(filters.from)),
     );
   }
   if (filters.to) {
-    conditions.push(
-      lte(
-        salesInvoicesRawTable.invDate,
-        filters.to.toISOString().split("T")[0],
-      ),
-    );
+    conditions.push(lte(salesInvoicesRawTable.invDate, formatDate(filters.to)));
   }
   if (filters.product && !filters.product.startsWith("C:")) {
     conditions.push(
@@ -415,7 +407,7 @@ export async function getLostCustomers(
 
     const monthlyData = new Map<string, number>();
     row.history.forEach((item) => {
-      const monthKey = format(new Date(item.date), "yyyy-MM");
+      const monthKey = format(parseDate(item.date), "yyyy-MM");
       monthlyData.set(monthKey, (monthlyData.get(monthKey) ?? 0) + item.qty);
     });
 
@@ -428,12 +420,13 @@ export async function getLostCustomers(
     const newHistory = periods.map((date) => {
       const monthKey = format(date, "yyyy-MM");
       return {
-        date: date.toISOString(),
+        date: formatDate(date),
         qty: monthlyData.get(monthKey) ?? 0,
       };
     });
 
     const activeHistory = newHistory.filter((h) => h.qty > 0);
+
     const avgActiveMonthQty =
       activeHistory.reduce((sum, h) => sum + h.qty, 0) / activeHistory.length;
 
@@ -511,7 +504,9 @@ export async function getCustomerBuyingVsMethanol(
 
     const sortedHistory = Array.from(historyMap.entries())
       .map(([date, qty]) => ({ date, qty }))
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      .sort(
+        (a, b) => parseDate(a.date).getTime() - parseDate(b.date).getTime(),
+      );
 
     const buyingVsMethanol: {
       date: string;
@@ -523,8 +518,8 @@ export async function getCustomerBuyingVsMethanol(
     for (let i = 0; i < sortedHistory.length - 1; i++) {
       const curr = sortedHistory[i];
       const next = sortedHistory[i + 1];
-      const currDate = new Date(curr.date);
-      const nextDate = new Date(next.date);
+      const currDate = parseDate(curr.date);
+      const nextDate = parseDate(next.date);
 
       const daysConsumed = Math.min(differenceInDays(nextDate, currDate), 30);
       const dailyQty = curr.qty / daysConsumed;
@@ -532,7 +527,7 @@ export async function getCustomerBuyingVsMethanol(
 
       for (let d = 0; d < daysConsumed; d++) {
         const date = addDays(currDate, d);
-        const dateStr = format(date, "yyyy-MM-dd");
+        const dateStr = formatDate(date);
         const methanolPrice = methanolPriceMap.get(dateStr)!;
         const methanolPriceDelta = methanolPrice - basePrice;
 
