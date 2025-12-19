@@ -474,6 +474,15 @@ export const DataGrid = ({
         hide: !showQty || !showStats,
         valueFormatter: (params) =>
           params.value != null ? params.value.toFixed(2) : "",
+        valueGetter: (params) => {
+          if (params.node?.group && params.node.aggData) {
+            const aggData = params.node.aggData;
+            const trend = periods.map((p) => aggData[p] ?? 0);
+            const reg = calculateRegression(trend);
+            return reg.slope;
+          }
+          return params.data ? params.data["slopeQty"] : null;
+        },
         cellStyle: qtyStyle,
       },
       {
@@ -604,6 +613,21 @@ export const DataGrid = ({
         hide: !showDelta || !showStats,
         valueFormatter: (params) =>
           params.value != null ? params.value.toFixed(2) : "",
+        valueGetter: (params) => {
+          if (params.node?.group && params.node.aggData) {
+            const aggData = params.node.aggData;
+            const rawTrend = periods.map((p) => {
+              const totalDeltaAmount = aggData[p + "-delta-amount"] ?? 0;
+              const totalQty = aggData[p] ?? 0;
+              return totalQty > 0 ? totalDeltaAmount / totalQty : 0;
+            });
+            const reg = calculateRegression(rawTrend);
+            return reg.slope;
+          } else if (params.data) {
+            return params.data["slopeDelta"] ?? 0;
+          }
+          return null;
+        },
         cellStyle: deltaStyle,
       },
       {
