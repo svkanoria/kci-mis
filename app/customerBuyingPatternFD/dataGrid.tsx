@@ -38,7 +38,7 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
     return [
       {
         field: "consigneeName",
-        headerName: "Customer",
+        headerName: "Consignee Name",
         width: 250,
         hide: true,
         filter: true,
