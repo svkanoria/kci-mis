@@ -245,6 +245,7 @@ export async function insertSalesInvoicesFromCSV(filePath: string) {
     logger.verbose(
       `Uploading record #${++i}, internalRefNo '${internalRefNo}'`,
     );
+
     let record;
     try {
       record = mapAndTransformCSVRecord(csvRecord);
@@ -257,32 +258,34 @@ export async function insertSalesInvoicesFromCSV(filePath: string) {
       failedCount++;
     }
 
-    const missingFields = getMissingFields(record);
-    if (missingFields.length === 0) {
-      try {
-        await db
-          .insert(salesInvoicesRawTable)
-          .values(record)
-          .onConflictDoUpdate({
-            target: salesInvoicesRawTable.internalRefNo,
-            set: record,
-          });
-        uploadedCount++;
-      } catch (error) {
-        logger.error(
-          logStyles.error(
-            `Upload failed for record #${i}, internalRefNo '${internalRefNo}'. Reason: ${stringifyUploadError(error)}`,
+    if (record) {
+      const missingFields = getMissingFields(record);
+      if (missingFields.length === 0) {
+        try {
+          await db
+            .insert(salesInvoicesRawTable)
+            .values(record)
+            .onConflictDoUpdate({
+              target: salesInvoicesRawTable.internalRefNo,
+              set: record,
+            });
+          uploadedCount++;
+        } catch (error) {
+          logger.error(
+            logStyles.error(
+              `Upload failed for record #${i}, internalRefNo '${internalRefNo}'. Reason: ${stringifyUploadError(error)}`,
+            ),
+          );
+          failedCount++;
+        }
+      } else {
+        logger.warn(
+          logStyles.warn(
+            `Upload skipped for record #${i}, internalRefNo '${internalRefNo}'. Reason: Missing field(s) ${missingFields.join(", ")}`,
           ),
         );
-        failedCount++;
+        skippedCount++;
       }
-    } else {
-      logger.warn(
-        logStyles.warn(
-          `Upload skipped for record #${i}, internalRefNo '${internalRefNo}'. Reason: Missing field(s) ${missingFields.join(", ")}`,
-        ),
-      );
-      skippedCount++;
     }
   }
 
