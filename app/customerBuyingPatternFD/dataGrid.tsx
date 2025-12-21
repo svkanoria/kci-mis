@@ -13,7 +13,7 @@ import { getCustomerBuyingPatternFD } from "@/lib/api";
 import { formatIndianNumber } from "@/lib/utils/format";
 import { Input } from "@/components/ui/input";
 import { differenceInDays } from "date-fns";
-import { parseDate } from "@/lib/utils/date";
+import { getStartOfFY, parseDate } from "@/lib/utils/date";
 
 // Register License Key with LicenseManager
 LicenseManager.setLicenseKey(process.env.NEXT_PUBLIC_AG_GRID_LICENSE || "");
@@ -36,6 +36,28 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
 
   const colDefs = useMemo<ColDef<IRow>[]>(() => {
     return [
+      {
+        headerName: "Year",
+        width: 90,
+        hide: true,
+        rowGroup: true,
+        enableRowGroup: true,
+        pinned: "left",
+        valueFormatter: (params) => {
+          const date = params.value;
+          if (!date) return "";
+          return date.toLocaleDateString(undefined, {
+            year: "2-digit",
+            month: "short",
+          });
+        },
+        type: "dateColumn",
+        valueGetter: (params) => {
+          const finalLiftingDate = params.getValue("finalLiftingDate");
+          if (!finalLiftingDate) return "";
+          return getStartOfFY(parseDate(finalLiftingDate as string));
+        },
+      },
       {
         field: "consigneeName",
         headerName: "Consignee Name",
