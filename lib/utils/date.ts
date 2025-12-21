@@ -151,7 +151,9 @@ export type Period = "month" | "quarter" | "year";
 export function getAllPeriods(from: Date, to: Date, period: Period): Date[] {
   const interval = { start: from, end: to };
   if (period === "year") {
-    return eachYearOfInterval(interval);
+    const start = getStartOfFY(from);
+    const end = getStartOfFY(to);
+    return eachYearOfInterval({ start, end }).map((d) => setMonth(d, 3));
   } else if (period === "quarter") {
     return eachQuarterOfInterval(interval);
   } else {

@@ -8,14 +8,7 @@ import { and, eq, gte, isNotNull, lte, not, sql } from "drizzle-orm";
 import { getAllPeriods, Period, formatDate, parseDate } from "@/lib/utils/date";
 import { mean, standardDeviation, sum } from "simple-statistics";
 import { calculateRegression } from "../utils/stats";
-import {
-  startOfMonth,
-  differenceInMonths,
-  format,
-  differenceInDays,
-  addDays,
-} from "date-fns";
-import { filter, sumBy } from "lodash";
+import { startOfMonth, differenceInMonths, format } from "date-fns";
 
 /**
  * Represents common parameters used for filtering data in API requests.
@@ -223,7 +216,10 @@ export async function getTopCustomers(
         ? filteredRawSq.recipientName
         : sql<string>`''`,
       consigneeName: filteredRawSq.consigneeName,
-      period: sql`date_trunc(${filters.period}, ${filteredRawSq.invDate})`
+      period: (filters.period === "year"
+        ? sql`date_trunc('year', ${filteredRawSq.invDate} - interval '3 months') + interval '3 months'`
+        : sql`date_trunc(${filters.period}, ${filteredRawSq.invDate})`
+      )
         .mapWith((v) => new Date(v as string))
         .as("period"),
       qty: sql<number>`sum(${qtyCol})`.mapWith(Number).as("qty"),
