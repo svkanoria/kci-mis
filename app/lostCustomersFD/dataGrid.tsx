@@ -27,7 +27,8 @@ const BarSparklineCellRenderer = (params: any) => {
 
   if (!trend || trend.length < 1) return null;
 
-  const width = 140;
+  const width = 300;
+  const graphWidth = 260;
   const height = 37;
   const padding = 3;
   const barGap = 2;
@@ -39,14 +40,14 @@ const BarSparklineCellRenderer = (params: any) => {
   const totalBars = trend.length;
   const barWidth = Math.max(
     1,
-    (width - 2 * padding - (totalBars - 1) * barGap) / totalBars,
+    (graphWidth - 2 * padding - (totalBars - 1) * barGap) / totalBars,
   );
 
   const zeroY = height - padding - ((0 - min) / range) * (height - 2 * padding);
 
   const bars = trend.map((val: number, i: number) => {
     const x = isFlipped
-      ? width - padding - barWidth - i * (barWidth + barGap)
+      ? graphWidth - padding - barWidth - i * (barWidth + barGap)
       : padding + i * (barWidth + barGap);
 
     if (val === 0) {
@@ -90,10 +91,27 @@ const BarSparklineCellRenderer = (params: any) => {
         width="100%"
         height="100%"
         viewBox={`0 0 ${width} ${height}`}
-        preserveAspectRatio="none"
         className="overflow-visible"
       >
         {bars}
+        <text
+          x={graphWidth + 4}
+          y={8}
+          fontSize="9"
+          fill="#6b7280"
+          textAnchor="start"
+        >
+          {formatIndianNumber(max)}
+        </text>
+        <text
+          x={graphWidth + 4}
+          y={height - 2}
+          fontSize="9"
+          fill="#6b7280"
+          textAnchor="start"
+        >
+          {formatIndianNumber(min)}
+        </text>
       </svg>
     </div>
   );
@@ -173,7 +191,7 @@ export const DataGrid = ({ data }: { data: IRow[] }) => {
       {
         field: "history",
         headerName: "History",
-        flex: 1,
+        width: 320,
         filter: false,
         sortable: false,
         valueGetter: (params) => {
