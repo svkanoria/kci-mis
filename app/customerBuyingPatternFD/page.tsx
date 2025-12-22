@@ -16,7 +16,7 @@ export default async function Page({
     product: "C:Formaldehyde",
   });
 
-  const data = getCustomerBuyingPatternFD({
+  const dataPromise = getCustomerBuyingPatternFD({
     from,
     to,
     product,
@@ -37,7 +37,7 @@ export default async function Page({
         key={`${from}-${to}-${product}`}
       />
       <Suspense fallback={<div>Loading...</div>}>
-        <DataGrid data={data} />
+        <DataGrid queryResult={dataPromise} />
       </Suspense>
     </div>
   );

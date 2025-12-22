@@ -493,7 +493,7 @@ export async function getCustomerBuyingPatternFD(
     );
 
   if (rows.length === 0) {
-    return [];
+    return { data: [], methanolPrices: [] };
   }
 
   const [{ minDate: minDateStr, maxDate: maxDateStr }] = await db
@@ -540,6 +540,7 @@ export async function getCustomerBuyingPatternFD(
       date: string;
       qty: number;
       methanolPrice: number;
+      gain: number;
     }[];
   }[] = [];
 
@@ -566,18 +567,20 @@ export async function getCustomerBuyingPatternFD(
 
     const currentMethanolPrice = methanolPriceMap.get(row.invDate!)!;
 
+    const invoiceGain =
+      ((row.qty * (currentMethanolPrice - currContract.contractMethanolPrice)) /
+        2) *
+      1000;
     currContract.invoices.push({
       date: row.invDate!,
       qty: row.qty,
       methanolPrice: currentMethanolPrice,
+      gain: invoiceGain,
     });
     currContract.contractQty += row.qty;
-    currContract.gain +=
-      ((row.qty * (currentMethanolPrice - currContract.contractMethanolPrice)) /
-        2) *
-      1000;
+    currContract.gain += invoiceGain;
     currContract.finalLiftingDate = row.invDate!;
   }
 
-  return data;
+  return { data, methanolPrices };
 }

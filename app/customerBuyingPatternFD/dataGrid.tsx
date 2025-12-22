@@ -20,10 +20,15 @@ LicenseManager.setLicenseKey(process.env.NEXT_PUBLIC_AG_GRID_LICENSE || "");
 
 ModuleRegistry.registerModules([AllEnterpriseModule]);
 
-type IRow = Awaited<ReturnType<typeof getCustomerBuyingPatternFD>>[number];
+type ResponseType = Awaited<ReturnType<typeof getCustomerBuyingPatternFD>>;
+type IRow = ResponseType["data"][number];
 
-export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
-  const rowData = use(data);
+export const DataGrid = ({
+  queryResult,
+}: {
+  queryResult: Promise<ResponseType>;
+}) => {
+  const { data, methanolPrices } = use(queryResult);
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
   const [quickFilterText, setQuickFilterText] = useState("");
 
@@ -31,6 +36,13 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
     return {
       suppressHeaderMenuButton: true,
       wrapHeaderText: true,
+    };
+  }, []);
+
+  const autoGroupColumnDef = useMemo<ColDef>(() => {
+    return {
+      width: 250,
+      pinned: "left",
     };
   }, []);
 
@@ -149,8 +161,132 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
         },
         aggFunc: "avg",
       },
+      {
+        headerName: "Timeline",
+        width: 180,
+        sortable: false,
+        cellRenderer: (params: any) => {
+          if (params.node.group) return null;
+
+          const contractDate = params.data.contractDate;
+          const finalLiftingDate = params.data.finalLiftingDate;
+
+          if (!contractDate || !finalLiftingDate) return null;
+
+          const startIndex = methanolPrices.findIndex(
+            (p) => p.date >= contractDate,
+          );
+          if (startIndex === -1) return null;
+
+          const relevantPrices = [];
+          for (let i = startIndex; i < methanolPrices.length; i++) {
+            const p = methanolPrices[i];
+            if (p.date > finalLiftingDate) break;
+            relevantPrices.push(p.price);
+          }
+
+          if (relevantPrices.length === 0) return null;
+
+          const minPrice = Math.min(...relevantPrices);
+          const maxPrice = Math.max(...relevantPrices);
+          const range = maxPrice - minPrice || 1;
+
+          const width = 150;
+          const height = 50;
+
+          const contractPrice = params.data.contractMethanolPrice;
+          const contractPriceY =
+            height - ((contractPrice - minPrice) / range) * height;
+
+          const points = relevantPrices
+            .map((price, index) => {
+              const x = (index / (relevantPrices.length - 1 || 1)) * width;
+              const y = height - ((price - minPrice) / range) * height;
+              return `${x},${y}`;
+            })
+            .join(" ");
+
+          const invoices = params.data.invoices || [];
+          let maxAbsGain = 0;
+          for (const inv of invoices) {
+            if (Math.abs(inv.gain) > maxAbsGain)
+              maxAbsGain = Math.abs(inv.gain);
+          }
+
+          const bars = [];
+          let priceCursor = startIndex;
+
+          for (const invoice of invoices) {
+            while (
+              priceCursor < methanolPrices.length &&
+              methanolPrices[priceCursor].date < invoice.date
+            ) {
+              priceCursor++;
+            }
+
+            if (
+              priceCursor < methanolPrices.length &&
+              methanolPrices[priceCursor].date === invoice.date
+            ) {
+              const relativeIndex = priceCursor - startIndex;
+              if (relativeIndex < relevantPrices.length) {
+                const x =
+                  (relativeIndex / (relevantPrices.length - 1 || 1)) * width;
+
+                const zeroY = height / 2;
+                const barHeight =
+                  maxAbsGain === 0
+                    ? 0
+                    : (Math.abs(invoice.gain) / maxAbsGain) * (height / 2);
+
+                const y = invoice.gain > 0 ? zeroY - barHeight : zeroY;
+                const color = invoice.gain >= 0 ? "#22c55e" : "#ef4444";
+
+                bars.push(
+                  <rect
+                    key={invoice.date}
+                    x={x}
+                    y={y}
+                    width={2}
+                    height={barHeight}
+                    fill={color}
+                    opacity={0.8}
+                  />,
+                );
+              }
+            }
+          }
+
+          return (
+            <div className="flex items-center h-full">
+              <svg
+                width={width}
+                height={height}
+                style={{ overflow: "visible" }}
+              >
+                <line
+                  x1={0}
+                  y1={contractPriceY}
+                  x2={width}
+                  y2={contractPriceY}
+                  stroke="#9ca3af"
+                  strokeWidth="1"
+                  strokeDasharray="2 2"
+                />
+                {bars}
+                <polyline
+                  fill="none"
+                  stroke="#2563eb"
+                  strokeWidth="1.5"
+                  points={points}
+                />
+              </svg>
+            </div>
+          );
+        },
+      },
     ];
-  }, []);
+  }, [methanolPrices]);
 
   return (
     <div className="grow min-h-0 flex flex-col gap-2">
@@ -174,11 +310,12 @@ export const DataGrid = ({ data }: { data: Promise<IRow[]> }) => {
       >
         <AgGridReact
           quickFilterText={quickFilterText}
-          rowData={rowData}
+          rowData={data}
           columnDefs={colDefs}
           defaultColDef={defaultColDef}
+          autoGroupColumnDef={autoGroupColumnDef}
           headerHeight={40}
-          rowHeight={30}
+          rowHeight={60}
           grandTotalRow="top"
           pagination
           rowGroupPanelShow="always"
