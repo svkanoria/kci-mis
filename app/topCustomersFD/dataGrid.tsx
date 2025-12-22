@@ -38,6 +38,7 @@ const SparklineCellRenderer = (params: any) => {
   if (!trend || trend.length < 2) return null;
 
   const width = 140;
+  const graphWidth = 105;
   const height = 37;
   const padding = 3;
 
@@ -55,7 +56,7 @@ const SparklineCellRenderer = (params: any) => {
   const getX = (i: number, total: number) => {
     const ratio = i / (total - 1);
     const effectiveRatio = isFlipped ? 1 - ratio : ratio;
-    return effectiveRatio * (width - 2 * padding) + padding;
+    return effectiveRatio * (graphWidth - 2 * padding) + padding;
   };
 
   const points = trend
@@ -85,8 +86,8 @@ const SparklineCellRenderer = (params: any) => {
     const y1Val = intercept;
     const y2Val = slope * (trend.length - 1) + intercept;
 
-    const x1 = isFlipped ? width - padding : padding;
-    const x2 = isFlipped ? padding : width - padding;
+    const x1 = isFlipped ? graphWidth - padding : padding;
+    const x2 = isFlipped ? padding : graphWidth - padding;
 
     const y1 =
       height - padding - ((y1Val - min) / range) * (height - 2 * padding);
@@ -128,13 +129,31 @@ const SparklineCellRenderer = (params: any) => {
         <line
           x1={padding}
           y1={avgY}
-          x2={width - padding}
+          x2={graphWidth - padding}
           y2={avgY}
           stroke="#ef4444"
           strokeWidth="1"
           strokeDasharray="4 2"
           opacity="0.7"
         />
+        <text
+          x={graphWidth + 4}
+          y={8}
+          fontSize="8"
+          fill="#6b7280"
+          textAnchor="start"
+        >
+          {formatIndianNumber(max)}
+        </text>
+        <text
+          x={graphWidth + 4}
+          y={height - 2}
+          fontSize="8"
+          fill="#6b7280"
+          textAnchor="start"
+        >
+          {formatIndianNumber(min)}
+        </text>
       </svg>
     </div>
   );
@@ -147,6 +166,7 @@ const BarSparklineCellRenderer = (params: any) => {
   if (!trend || trend.length < 1) return null;
 
   const width = 140;
+  const graphWidth = 100;
   const height = 37;
   const padding = 3;
   const barGap = 2;
@@ -158,14 +178,14 @@ const BarSparklineCellRenderer = (params: any) => {
   const totalBars = trend.length;
   const barWidth = Math.max(
     1,
-    (width - 2 * padding - (totalBars - 1) * barGap) / totalBars,
+    (graphWidth - 2 * padding - (totalBars - 1) * barGap) / totalBars,
   );
 
   const zeroY = height - padding - ((0 - min) / range) * (height - 2 * padding);
 
   const bars = trend.map((val: number, i: number) => {
     const x = isFlipped
-      ? width - padding - barWidth - i * (barWidth + barGap)
+      ? graphWidth - padding - barWidth - i * (barWidth + barGap)
       : padding + i * (barWidth + barGap);
 
     const valY =
@@ -205,7 +225,7 @@ const BarSparklineCellRenderer = (params: any) => {
         <line
           x1={padding}
           y1={avgY}
-          x2={width - padding}
+          x2={graphWidth - padding}
           y2={avgY}
           stroke="#ef4444"
           strokeWidth="1"
@@ -216,13 +236,31 @@ const BarSparklineCellRenderer = (params: any) => {
           <line
             x1={padding}
             y1={zeroY}
-            x2={width - padding}
+            x2={graphWidth - padding}
             y2={zeroY}
             stroke="#666"
             strokeWidth="0.5"
             opacity="0.5"
           />
         )}
+        <text
+          x={graphWidth + 4}
+          y={8}
+          fontSize="9"
+          fill="#6b7280"
+          textAnchor="start"
+        >
+          {formatIndianNumber(max)}
+        </text>
+        <text
+          x={graphWidth + 4}
+          y={height - 2}
+          fontSize="9"
+          fill="#6b7280"
+          textAnchor="start"
+        >
+          {formatIndianNumber(min)}
+        </text>
       </svg>
     </div>
   );
@@ -440,6 +478,7 @@ export const DataGrid = ({
         headerName: "Qty Trend",
         width: 150,
         hide: !showQty,
+        sortable: false,
         pinned: "left",
         valueGetter: (params) => {
           let trend: number[] = [];
@@ -579,6 +618,7 @@ export const DataGrid = ({
         headerName: "Delta Trend",
         width: 150,
         hide: !showDelta,
+        sortable: false,
         pinned: "left",
         valueGetter: (params) => {
           let trend: number[] = [];
