@@ -165,7 +165,7 @@ export const DataGrid = ({
       },
       {
         headerName: "Timeline",
-        width: 180,
+        width: 210,
         sortable: false,
         cellRenderer: (params: any) => {
           if (params.node.group) return null;
@@ -181,7 +181,8 @@ export const DataGrid = ({
           if (startIndex === -1) return null;
 
           const relevantPrices = [];
-          for (let i = startIndex; i < methanolPrices.length; i++) {
+          const loopStart = Math.max(0, startIndex - 15);
+          for (let i = loopStart; i < methanolPrices.length; i++) {
             const p = methanolPrices[i];
             if (p.date > finalLiftingDate) break;
             relevantPrices.push(p.price);
@@ -199,6 +200,10 @@ export const DataGrid = ({
           const contractPrice = params.data.contractMethanolPrice;
           const contractPriceY =
             height - ((contractPrice - minPrice) / range) * height;
+
+          const contractIndex = startIndex - loopStart;
+          const contractX =
+            (contractIndex / (relevantPrices.length - 1 || 1)) * width;
 
           const points = relevantPrices
             .map((price, index) => {
@@ -230,7 +235,7 @@ export const DataGrid = ({
               priceCursor < methanolPrices.length &&
               methanolPrices[priceCursor].date === invoice.date
             ) {
-              const relativeIndex = priceCursor - startIndex;
+              const relativeIndex = priceCursor - loopStart;
               if (relativeIndex < relevantPrices.length) {
                 const x =
                   (relativeIndex / (relevantPrices.length - 1 || 1)) * width;
@@ -267,6 +272,14 @@ export const DataGrid = ({
                 style={{ overflow: "visible" }}
               >
                 <line
+                  x1={contractX}
+                  y1={0}
+                  x2={contractX}
+                  y2={height}
+                  stroke="purple"
+                  strokeWidth="1"
+                />
+                <line
                   x1={0}
                   y1={contractPriceY}
                   x2={width}
@@ -282,6 +295,24 @@ export const DataGrid = ({
                   strokeWidth="1.5"
                   points={points}
                 />
+                <text
+                  x={width + 6}
+                  y={8}
+                  fontSize="9"
+                  fill="#6b7280"
+                  textAnchor="start"
+                >
+                  {maxPrice.toFixed(2)}
+                </text>
+                <text
+                  x={width + 6}
+                  y={height}
+                  fontSize="9"
+                  fill="#6b7280"
+                  textAnchor="start"
+                >
+                  {minPrice.toFixed(2)}
+                </text>
               </svg>
             </div>
           );

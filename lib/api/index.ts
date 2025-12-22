@@ -504,7 +504,7 @@ export async function getCustomerBuyingPatternFD(
       maxDate: sql<string>`max(${salesInvoicesRawTable.invDate})`,
     })
     .from(salesInvoicesRawTable);
-  const minMethanolDate = new Date(minDateStr);
+  const minMethanolDate = addDays(new Date(minDateStr), -15);
   const maxMethanolDate = new Date(maxDateStr);
 
   const methanolPrices = await db
