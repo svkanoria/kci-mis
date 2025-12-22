@@ -8,7 +8,7 @@ import { and, eq, gte, isNotNull, lte, not, sql } from "drizzle-orm";
 import { getAllPeriods, Period, formatDate, parseDate } from "@/lib/utils/date";
 import { mean, standardDeviation, sum } from "simple-statistics";
 import { calculateRegression } from "../utils/stats";
-import { startOfMonth, differenceInMonths, format } from "date-fns";
+import { startOfMonth, differenceInMonths, format, addDays } from "date-fns";
 
 /**
  * Represents common parameters used for filtering data in API requests.
@@ -504,8 +504,8 @@ export async function getCustomerBuyingPatternFD(
       maxDate: sql<string>`max(${salesInvoicesRawTable.invDate})`,
     })
     .from(salesInvoicesRawTable);
-  const minInvDate = new Date(minDateStr);
-  const maxInvDate = new Date(maxDateStr);
+  const minMethanolDate = new Date(minDateStr);
+  const maxMethanolDate = new Date(maxDateStr);
 
   const methanolPrices = await db
     .select({
@@ -517,8 +517,8 @@ export async function getCustomerBuyingPatternFD(
     .from(methanolPricesInterpolatedView)
     .where(
       and(
-        gte(methanolPricesInterpolatedView.date, formatDate(minInvDate)),
-        lte(methanolPricesInterpolatedView.date, formatDate(maxInvDate)),
+        gte(methanolPricesInterpolatedView.date, formatDate(minMethanolDate)),
+        lte(methanolPricesInterpolatedView.date, formatDate(maxMethanolDate)),
       ),
     )
     .orderBy(methanolPricesInterpolatedView.date);

@@ -53,6 +53,7 @@ export const DataGrid = ({
         width: 90,
         hide: true,
         rowGroup: true,
+        rowGroupIndex: 0,
         enableRowGroup: true,
         pinned: "left",
         valueFormatter: (params) => {
@@ -77,6 +78,7 @@ export const DataGrid = ({
         hide: true,
         filter: true,
         rowGroup: true,
+        rowGroupIndex: 1,
         enableRowGroup: true,
         pinned: "left",
       },
@@ -192,7 +194,7 @@ export const DataGrid = ({
           const range = maxPrice - minPrice || 1;
 
           const width = 150;
-          const height = 50;
+          const height = 40;
 
           const contractPrice = params.data.contractMethanolPrice;
           const contractPriceY =
@@ -315,7 +317,7 @@ export const DataGrid = ({
           defaultColDef={defaultColDef}
           autoGroupColumnDef={autoGroupColumnDef}
           headerHeight={40}
-          rowHeight={60}
+          rowHeight={50}
           grandTotalRow="top"
           pagination
           rowGroupPanelShow="always"
