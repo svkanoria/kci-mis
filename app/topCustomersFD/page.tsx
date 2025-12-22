@@ -55,7 +55,11 @@ export default async function Page({
         key={`${from}-${to}-${product}-${period}-${grouping}-${channels}`}
       />
       <Suspense fallback={<div>Loading...</div>}>
-        <DataGrid data={data} initialGrouping={grouping} />
+        <DataGrid
+          data={data}
+          initialGrouping={grouping}
+          key={`${from}-${to}-${product}-${period}-${grouping}-${channels}`}
+        />
       </Suspense>
     </div>
   );

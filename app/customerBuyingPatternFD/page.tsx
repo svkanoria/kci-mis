@@ -37,7 +37,7 @@ export default async function Page({
         key={`${from}-${to}-${product}`}
       />
       <Suspense fallback={<div>Loading...</div>}>
-        <DataGrid queryResult={dataPromise} />
+        <DataGrid queryResult={dataPromise} key={`${from}-${to}-${product}`} />
       </Suspense>
     </div>
   );

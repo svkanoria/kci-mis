@@ -30,7 +30,7 @@ export default async function Page({
       </div>
       <ExtendedFilter initialProduct={product} key={`${product}`} />
       <Suspense fallback={<div>Loading...</div>}>
-        <DataGrid data={data} />
+        <DataGrid data={data} key={`${product}`} />
       </Suspense>
     </div>
   );
