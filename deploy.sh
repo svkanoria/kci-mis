@@ -30,7 +30,27 @@ sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plu
 sudo systemctl enable docker
 sudo systemctl start docker
 
-# 4. Clone the application
+# 4 Install NVM and Node.js 24 LTS
+echo "Installing NVM and Node.js 24..."
+export NVM_DIR="$HOME/.nvm"
+
+# Install NVM if not already installed
+if [ ! -d "$NVM_DIR" ]; then
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+fi
+
+# Load NVM
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+# Install Node 24
+nvm install 24
+nvm use 24
+nvm alias default 24
+
+# Ensure npm is up to date
+npm install -g npm@latest
+
+# 5. Clone the application
 REPO_URL="https://github.com/svkanoria/kci-mis.git"
 APP_DIR="/home/ubuntu/kci-mis"
 
@@ -47,7 +67,11 @@ else
     cd "$APP_DIR"
 fi
 
-# 5. Configure Environment Variables
+npm install
+
+npx drizzlekit migrate
+
+# 6. Configure Environment Variables
 if [ ! -f .env ]; then
     echo "Creating .env file with placeholder values..."
     cat <<EOF > .env
@@ -62,7 +86,7 @@ else
     echo ".env file already exists. Skipping creation."
 fi
 
-# 6. Install and Configure Nginx
+# 7. Install and Configure Nginx
 if ! command -v nginx &> /dev/null; then
     echo "Installing and configuring Nginx..."
     sudo apt-get install -y nginx
@@ -99,5 +123,5 @@ else
     echo "Nginx is already installed. Skipping installation and configuration."
 fi
 
-# 7. Start the Application
-echo "Your application is ready to run. See README.md for instructions."
+echo "Your application is ready to run."
+echo "You can start it with 'docker compose up prod -d --build'."

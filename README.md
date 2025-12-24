@@ -41,3 +41,10 @@ Create a .env file with the following variables:
     NEXT_PUBLIC_AG_GRID_LICENSE=
 
 Finally, run the `deploy.sh` script. This will install Docker etc. and set up everything for you to be able to run the app.
+
+Before running the app for the first time, you will need to run the data ingestor script. For this, you first have to upload the data files into the EC2 instance, which can be done via `scp` (replace paths to suit):
+
+    # Ensure correct permissions for EC2 pem file
+    chmod 400 ~/Desktop/kci-mis.pem
+    # Copy the files to EC2
+    scp -i ~/Desktop/kci-mis.pem -r ~/Desktop/MIS/* ubuntu@13.234.76.53:/home/ubuntu/kci-mis-data
