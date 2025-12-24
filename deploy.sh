@@ -62,5 +62,42 @@ else
     echo ".env file already exists. Skipping creation."
 fi
 
-# 6. Start the Application
+# 6. Install and Configure Nginx
+if ! command -v nginx &> /dev/null; then
+    echo "Installing and configuring Nginx..."
+    sudo apt-get install -y nginx
+
+    # Create Nginx config
+    # We use port 3001 because that is what the production docker compose service maps to the host
+    sudo tee /etc/nginx/sites-available/kci-mis > /dev/null <<'EOF'
+server {
+    listen 80;
+    server_name _;
+
+    location / {
+        proxy_pass http://localhost:3001;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+EOF
+
+    # Enable the site
+    sudo ln -sf /etc/nginx/sites-available/kci-mis /etc/nginx/sites-enabled/
+    # Remove default site if it exists
+    if [ -f /etc/nginx/sites-enabled/default ]; then
+        sudo rm /etc/nginx/sites-enabled/default
+    fi
+
+    # Test and restart Nginx
+    sudo nginx -t
+    sudo systemctl restart nginx
+else
+    echo "Nginx is already installed. Skipping installation and configuration."
+fi
+
+# 7. Start the Application
 echo "Your application is ready to run. See README.md for instructions."
