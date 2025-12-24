@@ -10,6 +10,7 @@ Create an .env file with the following variables:
     POSTGRES_PASSWORD=postgres
     POSTGRES_DB=kci-mis
     HOST_DB_PORT=5433
+    NEXT_PUBLIC_AG_GRID_LICENSE=your_ag_grid_license_key
 
 I recommend the above values since they work well with containerized Postgres. `HOST_DB_PORT` exposes the postgres service on port 5433 of the host machine. I have used 5433 because host machines will probably have a natively installed Postgres at the default port 5432.
 
@@ -26,3 +27,17 @@ OR
 Upload the data using our data ingestor service:
 
     $ npm run data-ingestor
+
+### Deploying to EC2
+
+Create an EC2 instance and SSH into it.
+
+Create a .env file with the following variables:
+
+    POSTGRES_USER=postgres
+    POSTGRES_PASSWORD=postgres
+    POSTGRES_DB=kci-mis
+    HOST_DB_PORT=5433
+    NEXT_PUBLIC_AG_GRID_LICENSE=
+
+Finally, run the `deploy.sh` script. This will install Docker etc. and set up everything for you to be able to run the app.
