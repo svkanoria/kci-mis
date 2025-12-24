@@ -124,4 +124,4 @@ else
 fi
 
 echo "Your application is ready to run."
-echo "You can start it with 'docker compose up prod -d --build'."
+echo "You can start it with 'sudo docker compose up prod -d --build'."
