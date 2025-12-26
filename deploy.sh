@@ -69,8 +69,6 @@ fi
 
 npm install
 
-npx drizzlekit migrate
-
 # 6. Configure Environment Variables
 if [ ! -f .env ]; then
     echo "Creating .env file with placeholder values..."
@@ -91,12 +89,27 @@ if ! command -v nginx &> /dev/null; then
     echo "Installing and configuring Nginx..."
     sudo apt-get install -y nginx
 
+    # Generate self-signed certificate
+    sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+        -keyout /etc/ssl/private/nginx-selfsigned.key \
+        -out /etc/ssl/certs/nginx-selfsigned.crt \
+        -subj "/CN=localhost"
+
     # Create Nginx config
     # We use port 3001 because that is what the production docker compose service maps to the host
     sudo tee /etc/nginx/sites-available/kci-mis > /dev/null <<'EOF'
 server {
     listen 80;
     server_name _;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name _;
+
+    ssl_certificate /etc/ssl/certs/nginx-selfsigned.crt;
+    ssl_certificate_key /etc/ssl/private/nginx-selfsigned.key;
 
     location / {
         proxy_pass http://localhost:3001;
@@ -123,5 +136,4 @@ else
     echo "Nginx is already installed. Skipping installation and configuration."
 fi
 
-echo "Your application is ready to run."
-echo "You can start it with 'sudo docker compose up prod -d --build'."
+echo "Follow instructions in the README to set up your database start the app."

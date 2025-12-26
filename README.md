@@ -40,11 +40,19 @@ Create a .env file with the following variables:
     HOST_DB_PORT=5433
     NEXT_PUBLIC_AG_GRID_LICENSE=
 
-Finally, run the `deploy.sh` script. This will install Docker etc. and set up everything for you to be able to run the app.
+Run the `deploy.sh` script by copy-pasting it to the terminal. This will install Docker etc. and set up everything for you to be able to run the app.
 
-Before running the app for the first time, you will need to run the data ingestor script. For this, you first have to upload the data files into the EC2 instance, which can be done via `scp` (replace paths to suit):
+Set up your database schema:
+
+    npx drizzle-kit migrate
+
+Run the data ingestor script. For this, you first have to upload the data files into the EC2 instance, which can be done via `scp` (replace paths to suit):
 
     # Ensure correct permissions for EC2 pem file
     chmod 400 ~/Desktop/kci-mis.pem
     # Copy the files to EC2
     scp -i ~/Desktop/kci-mis.pem -r ~/Desktop/MIS/* ubuntu@13.234.76.53:/home/ubuntu/kci-mis-data
+
+Finally, run the app!
+
+    sudo docker compose up prod -d --build
