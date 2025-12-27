@@ -87,37 +87,35 @@ fi
 # 7. Install and Configure Nginx
 if ! command -v nginx &> /dev/null; then
     echo "Installing and configuring Nginx..."
-    sudo apt-get install -y nginx
+    sudo apt-get install -y nginx certbot python3-certbot-nginx
 
-    # Generate self-signed certificate
-    sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-        -keyout /etc/ssl/private/nginx-selfsigned.key \
-        -out /etc/ssl/certs/nginx-selfsigned.crt \
-        -subj "/CN=localhost"
+    # Get domain and email for Certbot
+    if [ -z "$DOMAIN_NAME" ]; then
+        read -p "Enter your domain name (e.g., example.com): " DOMAIN_NAME
+    fi
+    if [ -z "$CERT_EMAIL" ]; then
+        read -p "Enter your email for Certbot: " CERT_EMAIL
+    fi
+
+    if [ -z "$DOMAIN_NAME" ] || [ -z "$CERT_EMAIL" ]; then
+        echo "Domain name or email not provided. Exiting."
+        exit 1
+    fi
 
     # Create Nginx config
     # We use port 3001 because that is what the production docker compose service maps to the host
-    sudo tee /etc/nginx/sites-available/kci-mis > /dev/null <<'EOF'
+    sudo tee /etc/nginx/sites-available/kci-mis > /dev/null <<EOF
 server {
     listen 80;
-    server_name _;
-    return 301 https://$host$request_uri;
-}
-
-server {
-    listen 443 ssl;
-    server_name _;
-
-    ssl_certificate /etc/ssl/certs/nginx-selfsigned.crt;
-    ssl_certificate_key /etc/ssl/private/nginx-selfsigned.key;
+    server_name $DOMAIN_NAME;
 
     location / {
         proxy_pass http://localhost:3001;
         proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
+        proxy_set_header Host \$host;
+        proxy_cache_bypass \$http_upgrade;
     }
 }
 EOF
@@ -132,6 +130,10 @@ EOF
     # Test and restart Nginx
     sudo nginx -t
     sudo systemctl restart nginx
+
+    # Obtain SSL certificate with Certbot
+    echo "Obtaining SSL certificate..."
+    sudo certbot --nginx --non-interactive --agree-tos --redirect -m "$CERT_EMAIL" -d "$DOMAIN_NAME"
 else
     echo "Nginx is already installed. Skipping installation and configuration."
 fi

@@ -42,17 +42,19 @@ Create a .env file with the following variables:
 
 Run the `deploy.sh` script by copy-pasting it to the terminal. This will install Docker etc. and set up everything for you to be able to run the app.
 
-Set up your database schema:
+Now run the app:
+
+    sudo docker compose up prod -d --build
+
+Set up the database schema:
 
     npx drizzle-kit migrate
 
-Run the data ingestor script. For this, you first have to upload the data files into the EC2 instance, which can be done via `scp` (replace paths to suit):
+Run the data ingestor script. For this, you first have to upload the data files into the EC2 instance, which can be done via `scp` (replace IP and paths to suit):
 
     # Ensure correct permissions for EC2 pem file
     chmod 400 ~/Desktop/kci-mis.pem
     # Copy the files to EC2
-    scp -i ~/Desktop/kci-mis.pem -r ~/Desktop/MIS/* ubuntu@13.234.76.53:/home/ubuntu/kci-mis-data
+    scp -i ~/Desktop/kci-mis.pem -r ~/Desktop/MIS/* ubuntu@13.205.115.187:/home/ubuntu/data
 
-Finally, run the app!
-
-    sudo docker compose up prod -d --build
+Congratulations, the app has now been populated with data, and is ready to be viewed!!
