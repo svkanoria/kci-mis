@@ -20,3 +20,13 @@ export const useTimeDirectionStore = create<TimeDirectionState>()(
     },
   ),
 );
+
+interface HeaderTitleState {
+  title: string;
+  setTitle: (title: string) => void;
+}
+
+export const useHeaderTitleStore = create<HeaderTitleState>((set) => ({
+  title: "",
+  setTitle: (title) => set({ title }),
+}));

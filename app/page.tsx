@@ -2,20 +2,21 @@ import { Heading } from "@/components/typography/heading";
 import Link from "next/link";
 import { ArrowRight, BarChart3, Users, TrendingDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { HeaderTitleUpdater } from "./_components/headerTitleUpdater";
 
 export default async function Home() {
   return (
     <div className="container mx-auto p-8 max-w-5xl">
+      <HeaderTitleUpdater title="KCIL" />
       <div className="mb-12 text-center space-y-4">
         <Heading
           level="h1"
           className="text-4xl font-extrabold tracking-tight lg:text-5xl"
         >
-          KCI MIS
+          Investigative MIS
         </Heading>
         <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-          Management Information System Dashboard. Select a report below to get
-          started.
+          Select a report below to get started.
         </p>
       </div>
 

@@ -5,7 +5,7 @@ import { ExtendedFilter } from "./extendedFilter";
 import { DataGrid } from "./dataGrid";
 import { Suspense } from "react";
 import { Period } from "@/lib/utils/date";
-import { HomeButton } from "../_components/homeButton";
+import { HeaderTitleUpdater } from "../_components/headerTitleUpdater";
 
 export default async function Page({
   searchParams,
@@ -39,12 +39,7 @@ export default async function Page({
 
   return (
     <div className="flex h-full flex-col gap-4 p-3">
-      <div className="flex items-center gap-4">
-        <HomeButton />
-        <Heading level="h1" className="mb-0!">
-          Top Customers - Formaldehyde
-        </Heading>
-      </div>
+      <HeaderTitleUpdater title="Top Customers - Formaldehyde" />
       <ExtendedFilter
         initialFrom={from}
         initialTo={to}
