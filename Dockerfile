@@ -15,7 +15,7 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 
 # Install dependencies using 'npm ci' for clean, reproducible builds
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 
 # ---- Development Stage ----
 # This is the target for development.
