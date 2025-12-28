@@ -67,7 +67,7 @@ else
     cd "$APP_DIR"
 fi
 
-npm install
+npm install --legacy-peer-deps
 
 # 6. Configure Environment Variables
 if [ ! -f .env ]; then
@@ -78,6 +78,9 @@ POSTGRES_PASSWORD=your_postgres_password
 POSTGRES_DB=kci-mis
 HOST_DB_PORT=5432
 NEXT_PUBLIC_AG_GRID_LICENSE=your_ag_grid_license_key
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_auth_publishable_key
+CLERK_SECRET_KEY=your_clerk_auth_secret_key
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
 EOF
     echo "Created .env file. Please update it with your actual secrets."
 else

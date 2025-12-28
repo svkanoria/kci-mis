@@ -58,3 +58,9 @@ Run the data ingestor script. For this, you first have to upload the data files 
     scp -i ~/Desktop/kci-mis.pem -r ~/Desktop/MIS/* ubuntu@13.205.115.187:/home/ubuntu/data
 
 Congratulations, the app has now been populated with data, and is ready to be viewed!!
+
+To deploy updates to the app, some or all of the following commands may be required. Run this commands in the app's root directory:
+
+- git pull
+- npm install --legacy-peer-deps
+- npx drizzle-kit migrate
