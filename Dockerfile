@@ -47,6 +47,11 @@ COPY . .
 # Set environment to production
 ENV NODE_ENV production
 
+# Build arguments for Next.js build
+ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+ARG NEXT_PUBLIC_CLERK_SIGN_IN_URL
+ARG NEXT_PUBLIC_AG_GRID_LICENSE
+
 # Build the Next.js application
 RUN npm run build
 
