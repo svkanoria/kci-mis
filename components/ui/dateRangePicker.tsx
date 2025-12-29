@@ -9,18 +9,15 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { ChevronDown } from "lucide-react";
-import {
-  getStartOfPreviousFY,
-  getEndOfPreviousFY,
-  getStartOfPreviousQuarter,
-  getEndOfPreviousQuarter,
-  getStartOfPreviousMonth,
-  getEndOfPreviousMonth,
-} from "@/lib/utils/date";
 
 export interface DateRange {
   from: Date | undefined;
   to: Date | undefined;
+}
+
+export interface DateRangePreset {
+  label: string;
+  getRange: () => DateRange;
 }
 
 interface DateRangePickerProps {
@@ -32,6 +29,8 @@ interface DateRangePickerProps {
   disabled?: boolean;
   className?: string;
   datePickerClassName?: string;
+  presets?: DateRangePreset[];
+  isLoadingPresets?: boolean;
 }
 
 export const DateRangePicker = React.forwardRef<
@@ -47,6 +46,8 @@ export const DateRangePicker = React.forwardRef<
     disabled = false,
     className,
     datePickerClassName,
+    presets = [],
+    isLoadingPresets = false,
   } = props;
 
   // Component is controlled if 'value' prop was provided
@@ -83,65 +84,6 @@ export const DateRangePicker = React.forwardRef<
     setOpen(false);
   };
 
-  const presets = [
-    {
-      label: "Last Financial Year",
-      getRange: () => ({
-        from: getStartOfPreviousFY(),
-        to: getEndOfPreviousFY(),
-      }),
-    },
-    {
-      label: "Last Quarter",
-      getRange: () => ({
-        from: getStartOfPreviousQuarter(),
-        to: getEndOfPreviousQuarter(),
-      }),
-    },
-    {
-      label: "Last 1 Month",
-      getRange: () => ({
-        from: getStartOfPreviousMonth(),
-        to: getEndOfPreviousMonth(),
-      }),
-    },
-    {
-      label: "Last 2 Months",
-      getRange: () => ({
-        from: getStartOfPreviousMonth(2),
-        to: getEndOfPreviousMonth(),
-      }),
-    },
-    {
-      label: "Last 3 Months",
-      getRange: () => ({
-        from: getStartOfPreviousMonth(3),
-        to: getEndOfPreviousMonth(),
-      }),
-    },
-    {
-      label: "Last 4 Months",
-      getRange: () => ({
-        from: getStartOfPreviousMonth(4),
-        to: getEndOfPreviousMonth(),
-      }),
-    },
-    {
-      label: "Last 5 Months",
-      getRange: () => ({
-        from: getStartOfPreviousMonth(5),
-        to: getEndOfPreviousMonth(),
-      }),
-    },
-    {
-      label: "Last 6 Months",
-      getRange: () => ({
-        from: getStartOfPreviousMonth(6),
-        to: getEndOfPreviousMonth(),
-      }),
-    },
-  ];
-
   const handleFromChange = (newFrom: Date | undefined) => {
     const newRange: DateRange = {
       from: newFrom,
@@ -175,27 +117,33 @@ export const DateRangePicker = React.forwardRef<
         disabled={disabled}
         className={datePickerClassName}
       />
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button variant="outline" size="icon" disabled={disabled}>
-            <ChevronDown className="h-4 w-4" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent align="end" className="w-48 p-1">
-          <div className="grid gap-1">
-            {presets.map((preset) => (
-              <Button
-                key={preset.label}
-                variant="ghost"
-                className="justify-start font-normal"
-                onClick={() => handlePresetSelect(preset.getRange)}
-              >
-                {preset.label}
-              </Button>
-            ))}
-          </div>
-        </PopoverContent>
-      </Popover>
+      {(presets.length > 0 || isLoadingPresets) && (
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              disabled={disabled || isLoadingPresets}
+            >
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-48 p-1">
+            <div className="grid gap-1">
+              {presets.map((preset) => (
+                <Button
+                  key={preset.label}
+                  variant="ghost"
+                  className="justify-start font-normal"
+                  onClick={() => handlePresetSelect(preset.getRange)}
+                >
+                  {preset.label}
+                </Button>
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
+      )}
     </div>
   );
 });

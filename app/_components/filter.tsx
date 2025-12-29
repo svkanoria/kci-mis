@@ -8,11 +8,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { DateRange, DateRangePicker } from "@/components/ui/dateRangePicker";
+import {
+  DateRange,
+  DateRangePicker,
+  DateRangePreset,
+} from "@/components/ui/dateRangePicker";
 import { Button } from "@/components/ui/button";
 import { useRouter, usePathname } from "next/navigation";
 import { useForm, Controller, Control, DefaultValues } from "react-hook-form";
-import { formatDate } from "@/lib/utils/date";
+import {
+  formatDate,
+  getStartOfFY,
+  getEndOfFY,
+  getStartOfPreviousFY,
+} from "@/lib/utils/date";
+import { useEffect, useState } from "react";
 
 export interface FilterProps<T extends FilterFormValues> {
   initialFrom?: Date;
@@ -49,6 +59,47 @@ export function Filter<T extends FilterFormValues = FilterFormValues>({
 }: FilterProps<T>) {
   const router = useRouter();
   const pathname = usePathname();
+  const [presets, setPresets] = useState<DateRangePreset[]>([]);
+  const [isLoadingPresets, setIsLoadingPresets] = useState(true);
+
+  useEffect(() => {
+    const fetchDateRange = async () => {
+      try {
+        const response = await fetch("/api/sales-date-range");
+        const data = await response.json();
+
+        if (data.minDate && data.maxDate) {
+          const minDate = new Date(data.minDate);
+          const maxDate = new Date(data.maxDate);
+
+          const firstFYStart = getStartOfFY(minDate);
+          const newPresets: DateRangePreset[] = [];
+
+          let n = 0;
+          while (true) {
+            const fyStart = getStartOfPreviousFY(n, maxDate);
+            if (fyStart < firstFYStart) break;
+
+            const fyEnd = getEndOfFY(fyStart);
+            const year = fyStart.getFullYear();
+
+            newPresets.push({
+              label: `FY ${year}-${(year + 1).toString().slice(-2)}`,
+              getRange: () => ({ from: fyStart, to: fyEnd }),
+            });
+            n++;
+          }
+          setPresets(newPresets);
+        }
+      } catch (error) {
+        console.error("Failed to fetch date range for presets", error);
+      } finally {
+        setIsLoadingPresets(false);
+      }
+    };
+
+    fetchDateRange();
+  }, []);
 
   const { control, handleSubmit } = useForm<T>({
     defaultValues: {
@@ -90,6 +141,8 @@ export function Filter<T extends FilterFormValues = FilterFormValues>({
               value={field.value}
               onValueChange={field.onChange}
               datePickerClassName="max-w-[150px]"
+              presets={presets}
+              isLoadingPresets={isLoadingPresets}
             />
           )}
         />
