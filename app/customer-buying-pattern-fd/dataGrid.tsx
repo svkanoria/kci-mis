@@ -24,7 +24,7 @@ ModuleRegistry.registerModules([AllEnterpriseModule]);
 type ResponseType = Awaited<ReturnType<typeof getCustomerBuyingPatternFD>>;
 type IRow = ResponseType["data"][number];
 
-const lsKey = (key: string) => `customerBuyingPatternFD-${key}`;
+const lsKey = (key: string) => `customer-buying-pattern-fd-${key}`;
 const GRID_SORT_KEY = lsKey("sort");
 
 export const DataGrid = ({

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, use } from "react";
 import { ModuleRegistry, SortChangedEvent } from "ag-grid-community";
 import {
   AllEnterpriseModule,
@@ -20,9 +20,10 @@ LicenseManager.setLicenseKey(process.env.NEXT_PUBLIC_AG_GRID_LICENSE || "");
 
 ModuleRegistry.registerModules([AllEnterpriseModule]);
 
-type IRow = Awaited<ReturnType<typeof getLostCustomers>>[number];
+type ResponseType = Awaited<ReturnType<typeof getLostCustomers>>;
+type IRow = ResponseType[number];
 
-const lsKey = (key: string) => `lostCustomersFD-${key}`;
+const lsKey = (key: string) => `lost-customers-fd-${key}`;
 const GRID_SORT_KEY = lsKey("sort");
 
 const BarSparklineCellRenderer = (params: any) => {
@@ -121,7 +122,8 @@ const BarSparklineCellRenderer = (params: any) => {
   );
 };
 
-export const DataGrid = ({ data }: { data: IRow[] }) => {
+export const DataGrid = ({ data }: { data: Promise<ResponseType> }) => {
+  const rows = use(data);
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
   const [quickFilterText, setQuickFilterText] = useState("");
   const { isTimeFlipped, toggleTimeFlipped } = useTimeDirectionStore();
@@ -249,7 +251,7 @@ export const DataGrid = ({ data }: { data: IRow[] }) => {
       >
         <AgGridReact
           quickFilterText={quickFilterText}
-          rowData={data}
+          rowData={rows}
           columnDefs={colDefs}
           defaultColDef={defaultColDef}
           headerHeight={60}

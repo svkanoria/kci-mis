@@ -1,4 +1,3 @@
-import { Heading } from "@/components/typography/heading";
 import { getLostCustomers } from "@/lib/api";
 import { extractFilterParams } from "../_utils/filter";
 import { ExtendedFilter } from "./extendedFilter";
@@ -16,7 +15,7 @@ export default async function Page({
     product: "C:Formaldehyde",
   });
 
-  const data = await getLostCustomers({
+  const data = getLostCustomers({
     product,
   });
 

@@ -266,7 +266,7 @@ const BarSparklineCellRenderer = (params: any) => {
   );
 };
 
-const lsKey = (key: string) => `topCustomersFD-${key}`;
+const lsKey = (key: string) => `top-customers-fd-${key}`;
 const SHOW_STATS_KEY = lsKey("showStats");
 const SELECTED_GROUPS_KEY = lsKey("selectedGroups");
 const GRID_SORT_KEY = lsKey("sort");

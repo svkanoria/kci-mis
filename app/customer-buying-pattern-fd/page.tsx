@@ -1,8 +1,7 @@
-import { Heading } from "@/components/typography/heading";
 import { getCustomerBuyingPatternFD } from "@/lib/api";
 import { extractFilterParams } from "../_utils/filter";
 import { ExtendedFilter } from "./extendedFilter";
-import { DataGrid } from "@/app/customerBuyingPatternFD/dataGrid";
+import { DataGrid } from "@/app/customer-buying-pattern-fd/dataGrid";
 import { Suspense } from "react";
 import { HeaderTitleUpdater } from "../_components/headerTitleUpdater";
 

@@ -22,7 +22,7 @@ export default async function Home() {
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <ReportCard
-          href="/topCustomersFD"
+          href="/top-customers-fd"
           title="Top Customers FD"
           description="View and analyse top performing Formaldehyde customers."
           icon={<Users className="w-6 h-6" />}
@@ -30,7 +30,7 @@ export default async function Home() {
         />
 
         <ReportCard
-          href="/lostCustomersFD"
+          href="/lost-customers-fd"
           title="Lost Customers FD"
           description="View Formaldehyde customers lost over time."
           icon={<TrendingDown className="w-6 h-6" />}
@@ -38,7 +38,7 @@ export default async function Home() {
         />
 
         <ReportCard
-          href="/customerBuyingPatternFD"
+          href="/customer-buying-pattern-fd"
           title="Buying Pattern FD"
           description="View and analyse Formaldehyde customer buying patterns."
           icon={<BarChart3 className="w-6 h-6" />}
