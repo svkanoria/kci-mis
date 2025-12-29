@@ -375,8 +375,23 @@ export const DataGrid = ({
   }, []);
 
   const autoGroupColumnDef = useMemo<ColDef>(() => {
+    let width = 220;
+    const groupings = initialGrouping ? initialGrouping.split(",") : [];
+
+    if (groupings.length === 1 && groupings.includes("plant")) {
+      width = 120;
+    } else if (groupings.length === 1 && groupings.includes("distChannel")) {
+      width = 130;
+    } else if (
+      groupings.length === 2 &&
+      groupings.includes("plant") &&
+      groupings.includes("distChannel")
+    ) {
+      width = 150;
+    }
+
     return {
-      width: 220,
+      width,
       pinned: "left",
       tooltipValueGetter: (params: any) => {
         if (params.node.group) {
@@ -385,7 +400,7 @@ export const DataGrid = ({
         return "";
       },
     };
-  }, []);
+  }, [initialGrouping]);
 
   const rowData = useMemo<GridRow[]>(() => {
     return groupedData.map(({ series, ...rest }) => {
