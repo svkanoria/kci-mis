@@ -3,6 +3,7 @@
 import * as React from "react";
 import { CalendarIcon } from "lucide-react";
 import * as chrono from "chrono-node";
+import { addQuarters, addYears, subQuarters, subYears } from "date-fns";
 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -122,6 +123,17 @@ export const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(
       }
     };
 
+    const handleQuickAdjustment = (
+      adjustFn: (date: Date, amount: number) => Date,
+      amount: number,
+    ) => {
+      const baseDate = date ?? new Date();
+      const newDate = adjustFn(baseDate, amount);
+      handleDateChange(newDate);
+      setInputValue(formatDate(newDate));
+      setMonth(newDate);
+    };
+
     return (
       <div className={cn("relative flex gap-2", className)}>
         <Input
@@ -172,6 +184,36 @@ export const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(
             alignOffset={-8}
             sideOffset={10}
           >
+            <div className="flex items-center justify-evenly gap-1 p-2 border-b">
+              <Button
+                variant="outline"
+                className="h-7 px-2 text-xs"
+                onClick={() => handleQuickAdjustment(subYears, 1)}
+              >
+                -1Y
+              </Button>
+              <Button
+                variant="outline"
+                className="h-7 px-2 text-xs"
+                onClick={() => handleQuickAdjustment(subQuarters, 1)}
+              >
+                -1Q
+              </Button>
+              <Button
+                variant="outline"
+                className="h-7 px-2 text-xs"
+                onClick={() => handleQuickAdjustment(addQuarters, 1)}
+              >
+                +1Q
+              </Button>
+              <Button
+                variant="outline"
+                className="h-7 px-2 text-xs"
+                onClick={() => handleQuickAdjustment(addYears, 1)}
+              >
+                +1Y
+              </Button>
+            </div>
             <Calendar
               mode="single"
               selected={date}
