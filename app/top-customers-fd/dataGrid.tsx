@@ -463,6 +463,16 @@ export const DataGrid = ({
         pinned: "left",
         filter: true,
         enableRowGroup: true,
+        cellStyle: (params) => {
+          if (
+            params.data &&
+            params.data.consigneeName === params.data.recipientName &&
+            params.data.distChannelDescription?.toLowerCase() === "dealer"
+          ) {
+            return { color: "#ef4444" };
+          }
+          return null;
+        },
       },
       {
         field: "totalAmount",
