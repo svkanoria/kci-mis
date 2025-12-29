@@ -14,6 +14,7 @@ import { formatIndianNumber } from "@/lib/utils/format";
 import { Input } from "@/components/ui/input";
 import { differenceInDays } from "date-fns";
 import { getStartOfFY, parseDate } from "@/lib/utils/date";
+import { TimeDirectionButton } from "../_components/timeDirectionButton";
 
 // Register License Key with LicenseManager
 LicenseManager.setLicenseKey(process.env.NEXT_PUBLIC_AG_GRID_LICENSE || "");
@@ -349,6 +350,9 @@ export const DataGrid = ({
             value={quickFilterText}
             onChange={(e) => setQuickFilterText(e.target.value)}
           />
+        </div>
+        <div>
+          <TimeDirectionButton lockedDirection="forward" />
         </div>
       </div>
       <div
