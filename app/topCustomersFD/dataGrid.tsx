@@ -2,7 +2,7 @@
 
 import { use, useMemo, useState, useEffect, useId } from "react";
 
-import { ModuleRegistry } from "ag-grid-community";
+import { ModuleRegistry, SortChangedEvent } from "ag-grid-community";
 import {
   AllEnterpriseModule,
   LicenseManager,
@@ -269,6 +269,7 @@ const BarSparklineCellRenderer = (params: any) => {
 const lsKey = (key: string) => `topCustomersFD-${key}`;
 const SHOW_STATS_KEY = lsKey("showStats");
 const SELECTED_GROUPS_KEY = lsKey("selectedGroups");
+const GRID_SORT_KEY = lsKey("sort");
 
 interface GridRow {
   consigneeName: string | null;
@@ -289,6 +290,22 @@ export const DataGrid = ({
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
   const [quickFilterText, setQuickFilterText] = useState("");
+
+  const onGridReady = (params: any) => {
+    setGridApi(params.api);
+    const savedSort = localStorage.getItem(GRID_SORT_KEY);
+    if (savedSort) {
+      params.api.applyColumnState({
+        state: JSON.parse(savedSort),
+        defaultState: { sort: null },
+      });
+    }
+  };
+
+  const onSortChanged = (params: SortChangedEvent) => {
+    const sortState = params.api.getColumnState().filter((s) => s.sort != null);
+    localStorage.setItem(GRID_SORT_KEY, JSON.stringify(sortState));
+  };
 
   useEffect(() => {
     const storedShowStats = localStorage.getItem(SHOW_STATS_KEY);
@@ -912,7 +929,8 @@ export const DataGrid = ({
           enableBrowserTooltips
           suppressMovableColumns
           processUnpinnedColumns={() => []}
-          onGridReady={(params) => setGridApi(params.api)}
+          onGridReady={onGridReady}
+          onSortChanged={onSortChanged}
         />
       </div>
     </div>

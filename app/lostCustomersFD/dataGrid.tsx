@@ -1,11 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ModuleRegistry } from "ag-grid-community";
+import { ModuleRegistry, SortChangedEvent } from "ag-grid-community";
 import {
   AllEnterpriseModule,
   LicenseManager,
   ColDef,
+  GridApi,
 } from "ag-grid-enterprise";
 import { AgGridReact } from "ag-grid-react";
 import { getLostCustomers } from "@/lib/api";
@@ -20,6 +21,9 @@ LicenseManager.setLicenseKey(process.env.NEXT_PUBLIC_AG_GRID_LICENSE || "");
 ModuleRegistry.registerModules([AllEnterpriseModule]);
 
 type IRow = Awaited<ReturnType<typeof getLostCustomers>>[number];
+
+const lsKey = (key: string) => `lostCustomersFD-${key}`;
+const GRID_SORT_KEY = lsKey("sort");
 
 const BarSparklineCellRenderer = (params: any) => {
   if (!params.value) return null;
@@ -118,9 +122,25 @@ const BarSparklineCellRenderer = (params: any) => {
 };
 
 export const DataGrid = ({ data }: { data: IRow[] }) => {
-  const [gridApi, setGridApi] = useState<any>(null);
+  const [gridApi, setGridApi] = useState<GridApi | null>(null);
   const [quickFilterText, setQuickFilterText] = useState("");
   const { isTimeFlipped, toggleTimeFlipped } = useTimeDirectionStore();
+
+  const onGridReady = (params: any) => {
+    setGridApi(params.api);
+    const savedSort = localStorage.getItem(GRID_SORT_KEY);
+    if (savedSort) {
+      params.api.applyColumnState({
+        state: JSON.parse(savedSort),
+        defaultState: { sort: null },
+      });
+    }
+  };
+
+  const onSortChanged = (params: SortChangedEvent) => {
+    const sortState = params.api.getColumnState().filter((s) => s.sort != null);
+    localStorage.setItem(GRID_SORT_KEY, JSON.stringify(sortState));
+  };
 
   const defaultColDef = useMemo<ColDef>(() => {
     return {
@@ -239,7 +259,8 @@ export const DataGrid = ({ data }: { data: IRow[] }) => {
           suppressAggFuncInHeader
           suppressAggFilteredOnly
           enableBrowserTooltips
-          onGridReady={(params) => setGridApi(params.api)}
+          onGridReady={onGridReady}
+          onSortChanged={onSortChanged}
         />
       </div>
     </div>

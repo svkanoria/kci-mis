@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useMemo, useState } from "react";
-import { ModuleRegistry } from "ag-grid-community";
+import { ModuleRegistry, SortChangedEvent } from "ag-grid-community";
 import {
   AllEnterpriseModule,
   LicenseManager,
@@ -23,6 +23,9 @@ ModuleRegistry.registerModules([AllEnterpriseModule]);
 type ResponseType = Awaited<ReturnType<typeof getCustomerBuyingPatternFD>>;
 type IRow = ResponseType["data"][number];
 
+const lsKey = (key: string) => `customerBuyingPatternFD-${key}`;
+const GRID_SORT_KEY = lsKey("sort");
+
 export const DataGrid = ({
   queryResult,
 }: {
@@ -31,6 +34,22 @@ export const DataGrid = ({
   const { data, methanolPrices } = use(queryResult);
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
   const [quickFilterText, setQuickFilterText] = useState("");
+
+  const onGridReady = (params: any) => {
+    setGridApi(params.api);
+    const savedSort = localStorage.getItem(GRID_SORT_KEY);
+    if (savedSort) {
+      params.api.applyColumnState({
+        state: JSON.parse(savedSort),
+        defaultState: { sort: null },
+      });
+    }
+  };
+
+  const onSortChanged = (params: SortChangedEvent) => {
+    const sortState = params.api.getColumnState().filter((s) => s.sort != null);
+    localStorage.setItem(GRID_SORT_KEY, JSON.stringify(sortState));
+  };
 
   const defaultColDef = useMemo<ColDef>(() => {
     return {
@@ -355,7 +374,8 @@ export const DataGrid = ({
           suppressAggFuncInHeader
           suppressAggFilteredOnly
           enableBrowserTooltips
-          onGridReady={(params) => setGridApi(params.api)}
+          onGridReady={onGridReady}
+          onSortChanged={onSortChanged}
         />
       </div>
     </div>
