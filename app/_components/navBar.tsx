@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { HomeButton } from "./homeButton";
-import { User } from "lucide-react";
+import { User, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -11,11 +11,12 @@ import {
 } from "@/components/ui/popover";
 import { useUser, useClerk } from "@clerk/nextjs";
 import { useHeaderTitleStore } from "@/lib/store";
+import Link from "next/link";
 
 export function NavBar() {
   const pathname = usePathname();
 
-  if (pathname?.startsWith("/sign-in")) {
+  if (pathname?.startsWith("/sign-in") || pathname?.startsWith("/studio")) {
     return null;
   }
 
@@ -32,6 +33,12 @@ export function NavBar() {
         {title && <h1 className="ml-4 text-lg font-semibold">{title}</h1>}
       </div>
       <div className="flex items-center gap-2">
+        <Button variant="ghost" size="icon" asChild title="Help">
+          <Link href="/help">
+            <HelpCircle className="h-5 w-5" />
+            <span className="sr-only">Help</span>
+          </Link>
+        </Button>
         {user && (
           <Popover>
             <PopoverTrigger asChild>
