@@ -81,6 +81,9 @@ NEXT_PUBLIC_AG_GRID_LICENSE=your_ag_grid_license_key
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_auth_publishable_key
 CLERK_SECRET_KEY=your_clerk_auth_secret_key
 NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+NEXT_PUBLIC_SANITY_PROJECT_ID=your_sanity_project_id
+NEXT_PUBLIC_SANITY_DATASET=production
+NEXT_PUBLIC_SANITY_API_VERSION=2024-12-30
 EOF
     echo "Created .env file. Please update it with your actual secrets."
 else

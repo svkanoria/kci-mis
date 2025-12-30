@@ -32,15 +32,9 @@ Upload the data using our data ingestor service:
 
 Create an EC2 instance and SSH into it.
 
-Create a .env file with the following variables:
-
-    POSTGRES_USER=postgres
-    POSTGRES_PASSWORD=postgres
-    POSTGRES_DB=kci-mis
-    HOST_DB_PORT=5433
-    NEXT_PUBLIC_AG_GRID_LICENSE=
-
 Run the `deploy.sh` script by copy-pasting it to the terminal. This will install Docker etc. and set up everything for you to be able to run the app.
+
+Update the .env file with actual secrets.
 
 Now run the app:
 
