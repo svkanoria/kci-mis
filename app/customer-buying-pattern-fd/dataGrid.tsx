@@ -184,7 +184,7 @@ export const DataGrid = ({
         aggFunc: "avg",
       },
       {
-        headerName: "Timeline",
+        headerName: "Timeline - Gain",
         width: 210,
         sortable: false,
         cellRenderer: (params: any) => {
@@ -332,6 +332,158 @@ export const DataGrid = ({
                   textAnchor="start"
                 >
                   {minPrice.toFixed(2)}
+                </text>
+              </svg>
+            </div>
+          );
+        },
+      },
+      {
+        headerName: "Timeline - Qty",
+        width: 210,
+        sortable: false,
+        cellRenderer: (params: any) => {
+          if (params.node.group) return null;
+
+          const contractDate = params.data.contractDate;
+          const finalLiftingDate = params.data.finalLiftingDate;
+
+          if (!contractDate || !finalLiftingDate) return null;
+
+          const startIndex = methanolPrices.findIndex(
+            (p) => p.date >= contractDate,
+          );
+          if (startIndex === -1) return null;
+
+          const relevantPrices = [];
+          const loopStart = Math.max(0, startIndex - 15);
+          for (let i = loopStart; i < methanolPrices.length; i++) {
+            const p = methanolPrices[i];
+            if (p.date > finalLiftingDate) break;
+            relevantPrices.push(p.price);
+          }
+
+          if (relevantPrices.length === 0) return null;
+
+          const minPrice = Math.min(...relevantPrices);
+          const maxPrice = Math.max(...relevantPrices);
+          const range = maxPrice - minPrice || 1;
+
+          const width = 150;
+          const height = 40;
+
+          const contractPrice = params.data.contractMethanolPrice;
+          const contractPriceY =
+            height - ((contractPrice - minPrice) / range) * height;
+
+          const contractIndex = startIndex - loopStart;
+          const contractX =
+            (contractIndex / (relevantPrices.length - 1 || 1)) * width;
+
+          const points = relevantPrices
+            .map((price, index) => {
+              const x = (index / (relevantPrices.length - 1 || 1)) * width;
+              const y = height - ((price - minPrice) / range) * height;
+              return `${x},${y}`;
+            })
+            .join(" ");
+
+          const invoices = params.data.invoices || [];
+          let maxQty = 0;
+          for (const inv of invoices) {
+            if (inv.qty > maxQty) maxQty = inv.qty;
+          }
+
+          const bars = [];
+          let priceCursor = startIndex;
+
+          for (const invoice of invoices) {
+            while (
+              priceCursor < methanolPrices.length &&
+              methanolPrices[priceCursor].date < invoice.date
+            ) {
+              priceCursor++;
+            }
+
+            if (
+              priceCursor < methanolPrices.length &&
+              methanolPrices[priceCursor].date === invoice.date
+            ) {
+              const relativeIndex = priceCursor - loopStart;
+              if (relativeIndex < relevantPrices.length) {
+                const x =
+                  (relativeIndex / (relevantPrices.length - 1 || 1)) * width;
+
+                // Scale bar to 80% of height for max quantity
+                const barHeight =
+                  maxQty === 0 ? 0 : (invoice.qty / maxQty) * (height * 0.8);
+
+                const y = height - barHeight;
+                const color = "#3b82f6"; // blue-500
+
+                bars.push(
+                  <rect
+                    key={invoice.date}
+                    x={x}
+                    y={y}
+                    width={2}
+                    height={barHeight}
+                    fill={color}
+                    opacity={0.8}
+                  />,
+                );
+              }
+            }
+          }
+
+          return (
+            <div className="flex items-center h-full">
+              <svg
+                width={width}
+                height={height}
+                style={{ overflow: "visible" }}
+              >
+                <line
+                  x1={contractX}
+                  y1={0}
+                  x2={contractX}
+                  y2={height}
+                  stroke="purple"
+                  strokeWidth="1"
+                />
+                <line
+                  x1={0}
+                  y1={contractPriceY}
+                  x2={width}
+                  y2={contractPriceY}
+                  stroke="#9ca3af"
+                  strokeWidth="1"
+                  strokeDasharray="2 2"
+                />
+                {bars}
+                <polyline
+                  fill="none"
+                  stroke="#2563eb"
+                  strokeWidth="1.5"
+                  points={points}
+                />
+                <text
+                  x={width + 6}
+                  y={8}
+                  fontSize="9"
+                  fill="#6b7280"
+                  textAnchor="start"
+                >
+                  {maxQty.toFixed(0)}
+                </text>
+                <text
+                  x={width + 6}
+                  y={height}
+                  fontSize="9"
+                  fill="#6b7280"
+                  textAnchor="start"
+                >
+                  0
                 </text>
               </svg>
             </div>
