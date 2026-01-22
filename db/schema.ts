@@ -7,6 +7,8 @@ import {
   pgTable,
   pgView,
   varchar,
+  geometry,
+  unique,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
@@ -140,3 +142,33 @@ export const methanolPricesInterpolatedView = pgView(
   FROM ordered_prices op
   CROSS JOIN LATERAL generate_series(op.date::timestamp, COALESCE(op.next_date::timestamp - interval '1 day', op.date::timestamp), interval '1 day') as t(day)
 `);
+
+export const routesTable = pgTable(
+  "routes",
+  {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    plant: integer().notNull(),
+    destinationId: integer()
+      .references(() => destinationsTable.id)
+      .notNull(),
+    distanceKm: decimal(),
+  },
+  (t) => [unique().on(t.plant, t.destinationId)],
+);
+
+export const destinationsTable = pgTable(
+  "destinations",
+  {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    city: varchar().notNull(),
+    region: varchar().notNull(),
+    // SRID 4326 is the standard for GPS coordinates (WGS 84).
+    // We use point type to store a single location (longitude, latitude).
+    coordinates: geometry("coordinates", {
+      type: "point",
+      mode: "xy",
+      srid: 4326,
+    }),
+  },
+  (t) => [unique().on(t.city, t.region)],
+);
