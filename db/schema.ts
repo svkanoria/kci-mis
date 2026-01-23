@@ -105,6 +105,9 @@ export const salesInvoicesDerivedTable = pgTable("salesInvoicesDerived", {
   normQty: decimal().notNull(),
   // For example, FD 37%, 40% etc. all become 'Formaldehyde'
   productCategory: varchar().notNull(),
+  routeId: integer()
+    .references(() => routesTable.id)
+    .notNull(),
 });
 
 export const methanolPricesInterpolatedView = pgView(

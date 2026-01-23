@@ -1,13 +1,20 @@
 import { db } from "../drizzle";
 import {
+  destinationsTable,
+  routesTable,
   salesInvoicesDerivedTable,
   salesInvoicesRawTable,
 } from "../../db/schema";
-import { gt, sql } from "drizzle-orm";
+import { eq, gt, sql } from "drizzle-orm";
 import logger from "../logger";
+
+function getRouteKey(plant: number, city: string, region: string) {
+  return `${plant}####${city}####${region}`;
+}
 
 function getDerivedValues(
   rawRecord: typeof salesInvoicesRawTable.$inferSelect,
+  routesMap: Map<string, number>,
 ) {
   let productCategory = "Other";
   let normalizationFactor = 1.0;
@@ -39,6 +46,17 @@ function getDerivedValues(
     rawRecord.netRealisationPerUnit ?? "0",
   );
 
+  const routeKey = getRouteKey(
+    rawRecord.plant,
+    rawRecord.consigneeCity,
+    rawRecord.consigneeRegion,
+  );
+  const routeId = routesMap.get(routeKey);
+
+  if (!routeId) {
+    throw new Error(`Route not found for key: ${routeKey}`);
+  }
+
   return {
     rawId: rawRecord.id,
     productCategory,
@@ -48,10 +66,29 @@ function getDerivedValues(
     normNetRealisationPerUnit: (
       netRealisationPerUnit / normalizationFactor
     ).toString(),
+    routeId,
   };
 }
 
 export async function computeDerivedData() {
+  const routesData = await db
+    .select({
+      id: routesTable.id,
+      plant: routesTable.plant,
+      city: destinationsTable.city,
+      region: destinationsTable.region,
+    })
+    .from(routesTable)
+    .innerJoin(
+      destinationsTable,
+      eq(routesTable.destinationId, destinationsTable.id),
+    );
+
+  const routesMap = new Map<string, number>();
+  for (const route of routesData) {
+    routesMap.set(getRouteKey(route.plant, route.city, route.region), route.id);
+  }
+
   const BATCH_SIZE = 100;
   let lastId = 0;
   let processedCount = 0;
@@ -68,21 +105,37 @@ export async function computeDerivedData() {
       break;
     }
 
-    const derivedRows = batch.map((record) => getDerivedValues(record));
+    const derivedRows = batch
+      .map((record) => {
+        try {
+          return getDerivedValues(record, routesMap);
+        } catch (e) {
+          logger.error(
+            `Skipping record ${record.id}: ${
+              e instanceof Error ? e.message : e
+            }`,
+          );
+          return null;
+        }
+      })
+      .filter((r) => r !== null);
 
-    await db
-      .insert(salesInvoicesDerivedTable)
-      .values(derivedRows)
-      .onConflictDoUpdate({
-        target: salesInvoicesDerivedTable.rawId,
-        set: {
-          normalizationFactor: sql`excluded."normalizationFactor"`,
-          normBasicRate: sql`excluded."normBasicRate"`,
-          normNetRealisationPerUnit: sql`excluded."normNetRealisationPerUnit"`,
-          normQty: sql`excluded."normQty"`,
-          productCategory: sql`excluded."productCategory"`,
-        },
-      });
+    if (derivedRows.length > 0) {
+      await db
+        .insert(salesInvoicesDerivedTable)
+        .values(derivedRows as any)
+        .onConflictDoUpdate({
+          target: salesInvoicesDerivedTable.rawId,
+          set: {
+            normalizationFactor: sql`excluded."normalizationFactor"`,
+            normBasicRate: sql`excluded."normBasicRate"`,
+            normNetRealisationPerUnit: sql`excluded."normNetRealisationPerUnit"`,
+            normQty: sql`excluded."normQty"`,
+            productCategory: sql`excluded."productCategory"`,
+            routeId: sql`excluded."routeId"`,
+          },
+        });
+    }
 
     lastId = batch[batch.length - 1].id;
     processedCount += batch.length;

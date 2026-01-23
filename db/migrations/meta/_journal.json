@@ -29,6 +29,13 @@
       "when": 1769069951877,
       "tag": "0003_addDestinationsAndRoutesTables",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1769162083913,
+      "tag": "0004_addRouteIdToSalesInvoicesDerivedTable",
+      "breakpoints": true
     }
   ]
 }

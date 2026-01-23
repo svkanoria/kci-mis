@@ -99,14 +99,13 @@ async function main() {
         processingType === "Full sales" ||
         processingType === "Derived sales"
       ) {
-        logger.info(logStyles.info("Computing derived sales data..."));
-        await computeDerivedData();
-        logger.info(logStyles.success("Data ingestion complete."));
-
         logger.info(logStyles.info("Computing sales routes..."));
         await computeRoutes();
-        logger.info(logStyles.success("Sales routes computation complete."));
 
+        logger.info(logStyles.info("Computing derived sales data..."));
+        await computeDerivedData();
+
+        logger.info(logStyles.success("Data ingestion complete."));
         logger.verbose(
           chalk.magenta("See ./.logs/dataIngestor.log file for details."),
         );
