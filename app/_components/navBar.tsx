@@ -27,7 +27,7 @@ export function NavBar() {
   const isHomePage = pathname === "/";
 
   return (
-    <nav className="flex items-center justify-between px-4 h-14 border-b bg-background shadow-md">
+    <nav className="flex items-center justify-between px-4 h-14 border-b bg-background shadow-md shrink-0">
       <div className="flex items-center">
         {!isHomePage && <HomeButton />}
         {title && <h1 className="ml-4 text-lg font-semibold">{title}</h1>}

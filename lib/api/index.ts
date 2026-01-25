@@ -3,6 +3,8 @@ import {
   salesInvoicesRawTable,
   salesInvoicesDerivedTable,
   methanolPricesInterpolatedView,
+  routesTable,
+  destinationsTable,
 } from "@/db/schema";
 import { and, eq, gte, isNotNull, lte, not, sql } from "drizzle-orm";
 import { getAllPeriods, Period, formatDate, parseDate } from "@/lib/utils/date";
@@ -583,4 +585,21 @@ export async function getCustomerBuyingPatternFD(
   }
 
   return { data, methanolPrices };
+}
+
+export async function getRoutes() {
+  return await db
+    .select({
+      id: routesTable.id,
+      plant: routesTable.plant,
+      city: destinationsTable.city,
+      region: destinationsTable.region,
+      distanceKm: sql<number>`${routesTable.distanceKm}`.mapWith(Number),
+    })
+    .from(routesTable)
+    .innerJoin(
+      destinationsTable,
+      eq(routesTable.destinationId, destinationsTable.id),
+    )
+    .orderBy(routesTable.plant, destinationsTable.city);
 }
