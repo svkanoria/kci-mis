@@ -218,14 +218,8 @@ function applyTransformations(
   transformers: any[] | undefined,
   record: any,
 ) {
-  // Don't use the lodash 'trim' function, it sometimes eats up trailing chars.
-  // This could be happening because of the way it handles file/string encoding.
-  const allTransformers = [
-    nullifyEmpty,
-    collapseSpaces,
-    ...(transformers ?? []),
-  ];
-  return allTransformers.reduce((acc, transformer) => {
+  const _transformers = transformers ?? [];
+  return _transformers.reduce((acc, transformer) => {
     if (acc == null) return acc;
     return transformer.length > 1 ? transformer(acc, record) : transformer(acc);
   }, value);
@@ -234,11 +228,22 @@ function applyTransformations(
 function mapAndTransformCSVRecord(record: any) {
   let mappedRecord: any = {};
 
+  // First round of transformations
   for (const [schemaColumn, csvColumn] of Object.entries(columnMapping)) {
     try {
       mappedRecord[schemaColumn] = applyTransformations(
         record[csvColumn],
-        columnTransformations[0][schemaColumn as keyof typeof columnMapping],
+        // Note:
+        // Don't use Lodash's 'trim' function here, it can eat up trailing chars
+        // such as 't', 'e' and some others. This may be a consequence of how it
+        // handles file/string encoding.
+        [
+          nullifyEmpty,
+          collapseSpaces,
+          ...(columnTransformations[0][
+            schemaColumn as keyof typeof columnMapping
+          ] ?? []),
+        ],
         record,
       );
     } catch (error) {
@@ -248,17 +253,20 @@ function mapAndTransformCSVRecord(record: any) {
     }
   }
 
+  // Subsequent rounds of transformations
   for (let i = 1; i < columnTransformations.length; i++) {
-    for (const [schemaColumn, csvColumn] of Object.entries(columnMapping)) {
+    for (const [schemaColumn, transformers] of Object.entries(
+      columnTransformations[i],
+    )) {
       try {
         mappedRecord[schemaColumn] = applyTransformations(
           mappedRecord[schemaColumn],
-          columnTransformations[i][schemaColumn as keyof typeof columnMapping],
-          record,
+          transformers,
+          mappedRecord,
         );
       } catch (error) {
         throw new Error(
-          `Could not transform column '${csvColumn}' (round ${i}): ${error}`,
+          `Could not transform column '${schemaColumn}' (round ${i}): ${error}`,
         );
       }
     }
