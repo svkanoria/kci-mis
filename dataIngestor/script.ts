@@ -1,7 +1,7 @@
 import path from "path";
 import fs from "fs";
 import { Command } from "commander";
-import { select } from "@inquirer/prompts";
+import { select, confirm } from "@inquirer/prompts";
 import { fileSelector } from "inquirer-file-selector";
 import chalk from "chalk";
 import logger, { logStyles } from "./logger";
@@ -9,6 +9,7 @@ import { computeDerivedData } from "./ops/computeDerivedData";
 import { insertSalesInvoicesFromCSV } from "./ops/insertSalesInvoicesFromCSV";
 import { insertICISMethanolPricesFromCSV } from "./ops/insertICISMethanolPricesFromCSV";
 import { computeRoutes } from "./ops/computeRoutes";
+import { deleteAllSalesData } from "./ops/deleteAllSalesData";
 
 const program = new Command();
 
@@ -26,8 +27,25 @@ async function main() {
           { name: "Full sales data", value: "Full sales" },
           { name: "Derived sales data", value: "Derived sales" },
           { name: "Methanol price data", value: "Methanol price" },
+          { name: "Delete all sales data", value: "Delete sales" },
         ],
       });
+
+      if (processingType === "Delete sales") {
+        const isConfirmed = await confirm({
+          message:
+            "Are you sure you want to delete all sales data?" +
+            " This action cannot be undone.",
+          default: false,
+        });
+
+        if (isConfirmed) {
+          await deleteAllSalesData();
+        } else {
+          console.log(chalk.yellow("Operation cancelled."));
+        }
+        return;
+      }
 
       if (
         processingType === "Full sales" ||
