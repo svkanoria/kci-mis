@@ -58,7 +58,6 @@ ARG NEXT_PUBLIC_SANITY_API_VERSION
 # Build the Next.js application
 RUN npm run build
 
-
 # ---- Production Stage ----
 # This is the final, optimized production image.
 # It starts from a clean base image and copies *only* the built assets.
