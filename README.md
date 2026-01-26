@@ -40,6 +40,8 @@ Now run the app:
 
     sudo docker compose up prod -d --build
 
+_IMPORTANT: If facing build issues in AWS, remember to first check if local build works. Sometimes, building in AWS exits with an obscure error, and trying to build locally results in the same error but throws up a much more helpful message that you can use to actually fix it._
+
 Set up the database schema:
 
     npx drizzle-kit migrate
