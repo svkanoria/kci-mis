@@ -1,20 +1,53 @@
 import { salesInvoicesRawTable } from "../../db/schema";
 import { parse } from "csv-parse";
 import fs from "fs";
-import { mapKeys, trim } from "lodash";
+import { mapKeys } from "lodash";
 import { db } from "../drizzle";
 import {
-  cleanAndTitleCase,
+  collapseSpaces,
   normalizeStrings,
   nullifyEmpty,
   removeSpecialChars,
   replaceStrings,
+  titleCase,
   transformDateFormat,
   transformNumberStr,
 } from "../utils/transformers";
 import logger, { logStyles } from "../logger";
 import { DrizzleQueryError } from "drizzle-orm";
 import chalk from "chalk";
+
+const cityMappings: [RegExp, string][] = [
+  [/Hederabad/i, "Hyderabad"],
+  [/Hyderbad/i, "Hyderabad"],
+  [/Hydrebad/i, "Hyderabad"],
+  [/Gummidipoondi.*/i, "Gummidipoondi"],
+  [/Gandhi\s+Nagar/i, "Gandhinagar"],
+  [/Dahejii/i, "Dahej II"],
+  [/Dakshin\s+Alipur/i, "Alipur Dakshin"],
+  [/Dist\s+Bharuch/i, "Bharuch Dist"],
+  [/Dist\s+Raigarh/i, "Raigarh Dist"],
+  [/East\s+Delhi/i, "Delhi East"],
+  [/Gidc\s+Ankleshwar/i, "Ankleshwar GIDC"],
+  [/Ida\s+Srikakualm/i, "Srikakulam"],
+  [/Jangareddy\s+Gudem/i, "Jangareddigudem"],
+  [/Kakinda/i, "Kakinada"],
+  [/Kalahasti\s+Andhra\s+Pradesh/i, "Kalahasti"],
+  [/Kancheepuram/i, "Kanchipuram"],
+  [/Kariapattti\s+Taluk/i, "Kariapatti Taluk"],
+  [/Mahaboobnagar/i, "Mahabubnagar"],
+  [/Naidupet/i, "Naidupeta"],
+  [/Neloore/i, "Nellore"],
+  [/North\s+West\s+Delhi/i, "Delhi North West"],
+  [/Panoliankleshwar/i, "Panoli"],
+  [/Parawada.*/i, "Parawada"],
+  [/Pune\s+Maharashtra/i, "Pune"],
+  [/Sanga\sReddy/i, "Sangareddy"],
+  [/Sikandrabad/i, "Secunderabad"],
+  [/Thiruvallore/i, "Thiruvallur"],
+  [/Vish?akh?apata?nam/i, "Visakhapatnam"],
+  [/Vizianagram/i, "Vizianagaram"],
+];
 
 // Keep keys sorted alphabetically for ease
 const columnMapping: Record<
@@ -97,81 +130,140 @@ const columnMapping: Record<
 // Keep keys sorted alphabetically for ease
 const columnTransformations: Partial<
   Record<keyof typeof columnMapping, any[]>
-> = {
-  assessableValue: [transformNumberStr],
-  basicAmount: [transformNumberStr],
-  basicRate: [transformNumberStr],
-  cgstAmount: [transformNumberStr],
-  commissionRate: [transformNumberStr],
-  commissionValue: [transformNumberStr],
-  consigneeCity: [cleanAndTitleCase, removeSpecialChars],
-  consigneeRegion: [cleanAndTitleCase, removeSpecialChars],
-  contractDate: [transformDateFormat],
-  freightByCustRate: [transformNumberStr],
-  freightByCustValue: [transformNumberStr],
-  freightByKciRate: [transformNumberStr],
-  freightByKciValue: [transformNumberStr],
-  giDate: [transformDateFormat],
-  gstTaxInvDate: [transformDateFormat],
-  igstAmount: [transformNumberStr],
-  invDate: [transformDateFormat],
-  invoiceValue: [transformNumberStr],
-  lrDate: [transformDateFormat],
-  materialDescription: [
-    normalizeStrings(["Steam", "Sodium Formate"]),
-    replaceStrings([
-      [/Para.*Formal/i, "Paraformaldehyde"],
-      [/Formaldehyde.*37.*Drums/i, "Formaldehyde-37% in Drums"],
-      [/Formaldehyde.*37/i, "Formaldehyde-37%"],
-      [/Formaldehyde.*43/i, "Formaldehyde-43%"],
-      [/Formaldehyde.*41/i, "Formaldehyde-41%"],
-      [/Formaldehyde.*40/i, "Formaldehyde-40%"],
-      [/Formaldehyde.*36.5/i, "Formaldehyde-36.5%"],
-      [/Formaldehyde.*10/i, "Formaldehyde-10%"],
-      [/Formaldehyde/i, "Formaldehyde-37%"],
-      [/Anhydrous\s*Ammonia/i, "Andyhrous Ammonia"],
-      [/Di.*Pentaerythritol/i, "Di-Pentaerythritol"],
-      [/Pentaerythritol.*TG/i, "Pentaerythritol-TG"],
-      [/Pentaerythritol.*NG/i, "Pentaerythritol-NG"],
-      [/Pentaerythritol/i, "Pentaerythritol-TG"],
-      [/Hexamine/i, "Hexamine"],
-    ]),
-  ],
-  netRealisation: [transformNumberStr],
-  netRealisationPerUnit: [transformNumberStr],
-  placeOfSupply: [cleanAndTitleCase, removeSpecialChars],
-  receiptVoucherDate: [transformDateFormat],
-  recipientCity: [cleanAndTitleCase, removeSpecialChars],
-  qty: [transformNumberStr],
-  sgstAmount: [transformNumberStr],
-  soDate: [transformDateFormat],
-  soQty: [transformNumberStr],
-  taxableValue: [transformNumberStr],
-  tcsAmount: [transformNumberStr],
-  tcsSaleAmount: [transformNumberStr],
-  ugstAmount: [transformNumberStr],
-};
+>[] = [
+  {
+    assessableValue: [transformNumberStr],
+    basicAmount: [transformNumberStr],
+    basicRate: [transformNumberStr],
+    cgstAmount: [transformNumberStr],
+    commissionRate: [transformNumberStr],
+    commissionValue: [transformNumberStr],
+    consigneeCity: [
+      titleCase,
+      removeSpecialChars,
+      replaceStrings(cityMappings),
+    ],
+    consigneeRegion: [titleCase, removeSpecialChars],
+    contractDate: [transformDateFormat],
+    freightByCustRate: [transformNumberStr],
+    freightByCustValue: [transformNumberStr],
+    freightByKciRate: [transformNumberStr],
+    freightByKciValue: [transformNumberStr],
+    giDate: [transformDateFormat],
+    gstTaxInvDate: [transformDateFormat],
+    igstAmount: [transformNumberStr],
+    invDate: [transformDateFormat],
+    invoiceValue: [transformNumberStr],
+    lrDate: [transformDateFormat],
+    materialDescription: [
+      normalizeStrings(["Steam", "Sodium Formate"]),
+      replaceStrings([
+        [/Para.*Formal/i, "Paraformaldehyde"],
+        [/Formaldehyde.*37.*Drums/i, "Formaldehyde-37% in Drums"],
+        [/Formaldehyde.*37/i, "Formaldehyde-37%"],
+        [/Formaldehyde.*43/i, "Formaldehyde-43%"],
+        [/Formaldehyde.*41/i, "Formaldehyde-41%"],
+        [/Formaldehyde.*40/i, "Formaldehyde-40%"],
+        [/Formaldehyde.*36.5/i, "Formaldehyde-36.5%"],
+        [/Formaldehyde.*10/i, "Formaldehyde-10%"],
+        [/Formaldehyde/i, "Formaldehyde-37%"],
+        [/Anhydrous\s*Ammonia/i, "Andyhrous Ammonia"],
+        [/Di.*Pentaerythritol/i, "Di-Pentaerythritol"],
+        [/Pentaerythritol.*TG/i, "Pentaerythritol-TG"],
+        [/Pentaerythritol.*NG/i, "Pentaerythritol-NG"],
+        [/Pentaerythritol/i, "Pentaerythritol-TG"],
+        [/Hexamine/i, "Hexamine"],
+      ]),
+    ],
+    netRealisation: [transformNumberStr],
+    netRealisationPerUnit: [transformNumberStr],
+    placeOfSupply: [titleCase, removeSpecialChars],
+    receiptVoucherDate: [transformDateFormat],
+    recipientCity: [
+      titleCase,
+      removeSpecialChars,
+      replaceStrings(cityMappings),
+    ],
+    qty: [transformNumberStr],
+    sgstAmount: [transformNumberStr],
+    soDate: [transformDateFormat],
+    soQty: [transformNumberStr],
+    taxableValue: [transformNumberStr],
+    tcsAmount: [transformNumberStr],
+    tcsSaleAmount: [transformNumberStr],
+    ugstAmount: [transformNumberStr],
+  },
+  {
+    consigneeRegion: [
+      (str: any, record: typeof salesInvoicesRawTable.$inferSelect) => {
+        if (record.consigneeCity === "Hyderabad" && str === "Andhra Pradesh") {
+          return "Telangana";
+        }
+        return str;
+      },
+    ],
+    placeOfSupply: [
+      (str: any, record: typeof salesInvoicesRawTable.$inferSelect) => {
+        if (record.consigneeCity === "Hyderabad" && str === "Andhra Pradesh") {
+          return "Telangana";
+        }
+        return str;
+      },
+    ],
+  },
+];
 
-function applyTransformations(value: any, transformers: any[] | undefined) {
-  const allTransformers = [nullifyEmpty, trim, ...(transformers ?? [])];
-  return allTransformers.reduce(
-    (acc, transformer) => (acc == null ? acc : transformer(acc)),
-    value,
-  );
+function applyTransformations(
+  value: any,
+  transformers: any[] | undefined,
+  record: any,
+) {
+  // Don't use the lodash 'trim' function, it sometimes eats up trailing chars.
+  // This could be happening because of the way it handles file/string encoding.
+  const allTransformers = [
+    nullifyEmpty,
+    collapseSpaces,
+    ...(transformers ?? []),
+  ];
+  return allTransformers.reduce((acc, transformer) => {
+    if (acc == null) return acc;
+    return transformer.length > 1 ? transformer(acc, record) : transformer(acc);
+  }, value);
 }
 
 function mapAndTransformCSVRecord(record: any) {
-  const mappedRecord: any = {};
+  let mappedRecord: any = {};
+
   for (const [schemaColumn, csvColumn] of Object.entries(columnMapping)) {
     try {
       mappedRecord[schemaColumn] = applyTransformations(
         record[csvColumn],
-        columnTransformations[schemaColumn as keyof typeof columnMapping],
+        columnTransformations[0][schemaColumn as keyof typeof columnMapping],
+        record,
       );
     } catch (error) {
-      throw new Error(`Could not transform column '${csvColumn}': ${error}`);
+      throw new Error(
+        `Could not transform column '${csvColumn}' (first round): ${error}`,
+      );
     }
   }
+
+  for (let i = 1; i < columnTransformations.length; i++) {
+    for (const [schemaColumn, csvColumn] of Object.entries(columnMapping)) {
+      try {
+        mappedRecord[schemaColumn] = applyTransformations(
+          mappedRecord[schemaColumn],
+          columnTransformations[i][schemaColumn as keyof typeof columnMapping],
+          record,
+        );
+      } catch (error) {
+        throw new Error(
+          `Could not transform column '${csvColumn}' (round ${i}): ${error}`,
+        );
+      }
+    }
+  }
+
   return mappedRecord;
 }
 

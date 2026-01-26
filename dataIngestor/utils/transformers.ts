@@ -126,19 +126,24 @@ export const replaceStrings =
     return str;
   };
 
-export const cleanAndTitleCase = (str: string) => {
+export const collapseSpaces = (str: string) => {
+  if (!str) return str;
+
+  return str.replace(/\s+/g, " ").trim();
+};
+
+export const titleCase = (str: string) => {
   if (!str) return str;
 
   return str
-    .replace(/\s+/g, " ")
-    .replace(
-      /\w\S*/g,
-      (txt) => txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase(),
-    );
+    .toLowerCase()
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 };
 
 export const removeSpecialChars = (str: string) => {
   if (!str) return str;
 
-  return str.replace(/[.,:;]/g, "");
+  return str.replace(/[,-;:]/g, "");
 };
