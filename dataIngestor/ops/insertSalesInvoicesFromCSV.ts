@@ -4,8 +4,10 @@ import fs from "fs";
 import { mapKeys, trim } from "lodash";
 import { db } from "../drizzle";
 import {
+  cleanAndTitleCase,
   normalizeStrings,
   nullifyEmpty,
+  removeSpecialChars,
   replaceStrings,
   transformDateFormat,
   transformNumberStr,
@@ -102,6 +104,8 @@ const columnTransformations: Partial<
   cgstAmount: [transformNumberStr],
   commissionRate: [transformNumberStr],
   commissionValue: [transformNumberStr],
+  consigneeCity: [cleanAndTitleCase, removeSpecialChars],
+  consigneeRegion: [cleanAndTitleCase, removeSpecialChars],
   contractDate: [transformDateFormat],
   freightByCustRate: [transformNumberStr],
   freightByCustValue: [transformNumberStr],
@@ -135,7 +139,9 @@ const columnTransformations: Partial<
   ],
   netRealisation: [transformNumberStr],
   netRealisationPerUnit: [transformNumberStr],
+  placeOfSupply: [cleanAndTitleCase, removeSpecialChars],
   receiptVoucherDate: [transformDateFormat],
+  recipientCity: [cleanAndTitleCase, removeSpecialChars],
   qty: [transformNumberStr],
   sgstAmount: [transformNumberStr],
   soDate: [transformDateFormat],

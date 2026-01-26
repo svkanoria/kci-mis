@@ -125,3 +125,20 @@ export const replaceStrings =
     }
     return str;
   };
+
+export const cleanAndTitleCase = (str: string) => {
+  if (!str) return str;
+
+  return str
+    .replace(/\s+/g, " ")
+    .replace(
+      /\w\S*/g,
+      (txt) => txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase(),
+    );
+};
+
+export const removeSpecialChars = (str: string) => {
+  if (!str) return str;
+
+  return str.replace(/[.,:;]/g, "");
+};
