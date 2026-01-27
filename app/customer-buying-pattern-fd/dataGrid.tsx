@@ -86,9 +86,9 @@ export const DataGrid = ({
         },
         type: "dateColumn",
         valueGetter: (params) => {
-          const finalLiftingDate = params.getValue("finalLiftingDate");
-          if (!finalLiftingDate) return "";
-          return getStartOfFY(parseDate(finalLiftingDate as string));
+          const contractDate = params.getValue("contractDate");
+          if (!contractDate) return "";
+          return getStartOfFY(parseDate(contractDate as string));
         },
       },
       {

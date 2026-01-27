@@ -29,15 +29,26 @@ export interface CommonFilterParams {
   product?: string;
 }
 
-function getRawCommonConditions(filters: CommonFilterParams) {
+function getRawCommonConditions(
+  filters: CommonFilterParams,
+  options?: { dateField?: keyof typeof salesInvoicesRawTable.$inferSelect },
+) {
   const conditions = [];
   if (filters.from) {
     conditions.push(
-      gte(salesInvoicesRawTable.invDate, formatDate(filters.from)),
+      gte(
+        salesInvoicesRawTable[options?.dateField ?? "invDate"],
+        formatDate(filters.from),
+      ),
     );
   }
   if (filters.to) {
-    conditions.push(lte(salesInvoicesRawTable.invDate, formatDate(filters.to)));
+    conditions.push(
+      lte(
+        salesInvoicesRawTable[options?.dateField ?? "invDate"],
+        formatDate(filters.to),
+      ),
+    );
   }
   if (filters.product && !filters.product.startsWith("C:")) {
     conditions.push(
@@ -456,7 +467,9 @@ export async function getLostCustomers(
 export async function getCustomerBuyingPatternFD(
   filters: Omit<CommonFilterParams, "period">,
 ) {
-  const rawConditions = getRawCommonConditions(filters);
+  const rawConditions = getRawCommonConditions(filters, {
+    dateField: "contractDate",
+  });
 
   const filteredRawSq = db
     .select()
