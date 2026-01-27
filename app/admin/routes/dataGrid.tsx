@@ -47,9 +47,8 @@ export const DataGrid = ({ routes }: { routes: Route[] }) => {
         try {
           await updateRouteDistance(id, newDistance);
         } catch (error) {
-          console.error("Failed to update distance:", error);
-          // Revert change if needed, or notify user
-          // For simplicity, we might just reload or show toast (not implemented here)
+          event.node.setDataValue("distanceKm", event.oldValue);
+          alert("Failed to update distance");
         }
       }
     }
@@ -72,6 +71,7 @@ export const DataGrid = ({ routes }: { routes: Route[] }) => {
           sortable: true,
           resizable: true,
         }}
+        rowHeight={40}
         onCellValueChanged={onCellValueChanged}
       />
     </div>

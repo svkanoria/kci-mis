@@ -55,6 +55,16 @@ export function NavBar() {
                     {user.primaryEmailAddress?.emailAddress}
                   </p>
                 </div>
+                <div className="border-t pt-2 mt-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    asChild
+                    className="w-full justify-start"
+                  >
+                    <Link href="/admin">Admin</Link>
+                  </Button>
+                </div>
                 <Button
                   variant="destructive"
                   size="sm"
