@@ -2,6 +2,8 @@ import { db } from "../drizzle";
 import { destinationsTable } from "../../db/schema";
 import { eq, isNull } from "drizzle-orm";
 import logger from "../logger";
+import fs from "fs";
+import { parse } from "csv-parse";
 
 // Nominatim usage policy requires a valid User-Agent
 const USER_AGENT = "KCI-MIS-DataIngestor/1.0";
@@ -11,8 +13,44 @@ async function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export async function populateDestinationCoords() {
+export async function populateDestinationCoords(csvFilePath?: string) {
   logger.info("Starting destination coordinates population...");
+
+  const manualCoords = new Map<string, { lat: number; lon: number }>();
+
+  if (csvFilePath) {
+    logger.info(`Loading manual coordinates from ${csvFilePath}...`);
+    try {
+      const parser = fs
+        .createReadStream(csvFilePath)
+        .pipe(parse({ columns: true, trim: true, skip_empty_lines: true }));
+
+      for await (const record of parser) {
+        const r = record as any;
+        // Known column names: city, region, latitude, longitude
+        const city = r.city;
+        const region = r.region;
+        const latStr = r.latitude;
+        const lonStr = r.longitude;
+
+        if (city && region && latStr && lonStr) {
+          const lat = parseFloat(latStr);
+          const lon = parseFloat(lonStr);
+          if (!isNaN(lat) && !isNaN(lon)) {
+            const key = `${city}|${region}`;
+            manualCoords.set(key, { lat, lon });
+          }
+        }
+      }
+      logger.info(
+        `Loaded ${manualCoords.size} manual coordinate entries from CSV.`,
+      );
+    } catch (error) {
+      logger.error(
+        `Error reading CSV file: ${error}. Proceeding without manual coordinates.`,
+      );
+    }
+  }
 
   // 1. Find destinations with null coordinates
   const destinationsToUpdate = await db
@@ -38,6 +76,24 @@ export async function populateDestinationCoords() {
 
   for (const dest of destinationsToUpdate) {
     try {
+      // Check if we have manual coordinates for this destination
+      const key = `${dest.city?.toLowerCase().trim()}|${dest.region?.toLowerCase().trim()}`;
+      if (manualCoords.has(key)) {
+        const coords = manualCoords.get(key)!;
+        await db
+          .update(destinationsTable)
+          .set({
+            coordinates: { x: coords.lon, y: coords.lat },
+          })
+          .where(eq(destinationsTable.id, dest.id));
+
+        logger.info(
+          `Updated coordinates for ${dest.city} (from CSV): (${coords.lat}, ${coords.lon})`,
+        );
+        updatedCount++;
+        continue;
+      }
+
       // Respect Nominatim's rate limit.
       // 1 request per second is a good practice, but let's try with 700ms.
       await delay(700);
@@ -63,7 +119,7 @@ export async function populateDestinationCoords() {
 
       if (!response.ok) {
         logger.error(
-          `Failed to fetch for ${dest.city}, ${dest.region}: ${response.statusText}`,
+          `Failed to fetch coords for ${dest.city}, ${dest.region}: ${response.statusText}`,
         );
         failedCount++;
         continue;

@@ -50,7 +50,23 @@ async function main() {
       }
 
       if (processingType === "Dest coords") {
-        await populateDestinationCoords();
+        const useCsv = await confirm({
+          message: "Do you want to use a CSV file for manual coordinates?",
+          default: false,
+        });
+
+        let csvFilePath: string | undefined;
+
+        if (useCsv) {
+          const selection = await fileSelector({
+            message: "Select the CSV file:",
+            filter: (item) =>
+              item.isDirectory || item.name.toLowerCase().endsWith(".csv"),
+          });
+          csvFilePath = selection.path;
+        }
+
+        await populateDestinationCoords(csvFilePath);
         return;
       }
 
