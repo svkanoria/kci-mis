@@ -61,7 +61,8 @@ async function main() {
           const selection = await fileSelector({
             message: "Select the CSV file:",
             filter: (item) =>
-              item.isDirectory || item.name.toLowerCase().endsWith(".csv"),
+              !item.name.startsWith(".") &&
+              (item.isDirectory || item.name.toLowerCase().endsWith(".csv")),
           });
           csvFilePath = selection.path;
         }
@@ -80,6 +81,7 @@ async function main() {
           const selection = await fileSelector({
             message: "Select the directory containing CSV files:",
             type: "directory",
+            filter: (item) => !item.name.startsWith("."),
           });
           dirPath = selection.path;
         }
