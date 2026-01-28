@@ -10,6 +10,7 @@ import { insertSalesInvoicesFromCSV } from "./ops/insertSalesInvoicesFromCSV";
 import { insertICISMethanolPricesFromCSV } from "./ops/insertICISMethanolPricesFromCSV";
 import { computeRoutes } from "./ops/computeRoutes";
 import { deleteAllSalesData } from "./ops/deleteAllSalesData";
+import { populateDestinationCoords } from "./ops/populateDestinationCoords";
 
 const program = new Command();
 
@@ -28,6 +29,7 @@ async function main() {
           { name: "Derived sales data", value: "Derived sales" },
           { name: "Methanol price data", value: "Methanol price" },
           { name: "Delete all sales data", value: "Delete sales" },
+          { name: "Destination coordinates", value: "Dest coords" },
         ],
       });
 
@@ -44,6 +46,11 @@ async function main() {
         } else {
           console.log(chalk.yellow("Operation cancelled."));
         }
+        return;
+      }
+
+      if (processingType === "Dest coords") {
+        await populateDestinationCoords();
         return;
       }
 

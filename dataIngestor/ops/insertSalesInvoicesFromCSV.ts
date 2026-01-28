@@ -43,7 +43,6 @@ const cityMappings: [RegExp, string][] = [
   [/Parawada.*/i, "Parawada"],
   [/Pune\s+Maharashtra/i, "Pune"],
   [/Sanga\sReddy/i, "Sangareddy"],
-  [/Sikandrabad/i, "Secunderabad"],
   [/Thiruvallore/i, "Thiruvallur"],
   [/Vish?akh?apata?nam/i, "Visakhapatnam"],
   [/Vizianagram/i, "Vizianagaram"],
