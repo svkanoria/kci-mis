@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { stringify } from "csv-stringify/sync";
 
 // Register License Key with LicenseManager
 LicenseManager.setLicenseKey(process.env.NEXT_PUBLIC_AG_GRID_LICENSE || "");
@@ -81,6 +82,23 @@ export const DataGrid = ({ destinations }: { destinations: Destination[] }) => {
     }
   };
 
+  const handleCopyCsv = () => {
+    const data = rowData.map((row) => ({
+      city: row.city,
+      region: row.region,
+      latitude: row.lat,
+      longitude: row.lng,
+    }));
+
+    const csvContent = stringify(data, {
+      header: true,
+      columns: ["city", "region", "latitude", "longitude"],
+    });
+
+    navigator.clipboard.writeText(csvContent);
+    alert("Copied to clipboard!");
+  };
+
   const colDefs = useMemo<ColDef<Destination>[]>(() => {
     return [
       { field: "city", headerName: "City", width: 150, filter: true },
@@ -126,24 +144,29 @@ export const DataGrid = ({ destinations }: { destinations: Destination[] }) => {
   }, []);
 
   return (
-    <div
-      className="grow min-h-0"
-      style={
-        {
-          "--ag-spacing": "4px",
-          "--ag-font-size": "12px",
-        } as React.CSSProperties
-      }
-    >
-      <AgGridReact
-        rowData={rowData}
-        columnDefs={colDefs}
-        defaultColDef={{
-          sortable: true,
-          resizable: true,
-        }}
-        rowHeight={40}
-      />
+    <div className="grow min-h-0 flex flex-col gap-2">
+      <div className="flex justify-end">
+        <Button onClick={handleCopyCsv}>Copy as CSV</Button>
+      </div>
+      <div
+        className="grow min-h-0"
+        style={
+          {
+            "--ag-spacing": "4px",
+            "--ag-font-size": "12px",
+          } as React.CSSProperties
+        }
+      >
+        <AgGridReact
+          rowData={rowData}
+          columnDefs={colDefs}
+          defaultColDef={{
+            sortable: true,
+            resizable: true,
+          }}
+          rowHeight={40}
+        />
+      </div>
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>

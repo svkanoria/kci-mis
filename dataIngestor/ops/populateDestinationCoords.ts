@@ -23,7 +23,7 @@ export async function populateDestinationCoords(csvFilePath?: string) {
     try {
       const parser = fs
         .createReadStream(csvFilePath)
-        .pipe(parse({ columns: true, trim: true, skip_empty_lines: true }));
+        .pipe(parse({ columns: true, skip_empty_lines: true }));
 
       for await (const record of parser) {
         const r = record as any;
@@ -77,7 +77,7 @@ export async function populateDestinationCoords(csvFilePath?: string) {
   for (const dest of destinationsToUpdate) {
     try {
       // Check if we have manual coordinates for this destination
-      const key = `${dest.city?.toLowerCase().trim()}|${dest.region?.toLowerCase().trim()}`;
+      const key = `${dest.city}|${dest.region}`;
       if (manualCoords.has(key)) {
         const coords = manualCoords.get(key)!;
         await db
