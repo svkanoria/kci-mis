@@ -11,6 +11,7 @@ import { insertICISMethanolPricesFromCSV } from "./ops/insertICISMethanolPricesF
 import { computeRoutes } from "./ops/computeRoutes";
 import { deleteAllSalesData } from "./ops/deleteAllSalesData";
 import { populateDestinationCoords } from "./ops/populateDestinationCoords";
+import { populateRouteDistances } from "./ops/populateRouteDistances";
 
 const program = new Command();
 
@@ -30,6 +31,7 @@ async function main() {
           { name: "Methanol price data", value: "Methanol price" },
           { name: "Delete all sales data", value: "Delete sales" },
           { name: "Destination coordinates", value: "Dest coords" },
+          { name: "Route distances", value: "Route distances" },
         ],
       });
 
@@ -68,6 +70,28 @@ async function main() {
         }
 
         await populateDestinationCoords(csvFilePath);
+        return;
+      }
+
+      if (processingType === "Route distances") {
+        const useCsv = await confirm({
+          message: "Do you want to use a CSV file for manual distances?",
+          default: false,
+        });
+
+        let csvFilePath: string | undefined;
+
+        if (useCsv) {
+          const selection = await fileSelector({
+            message: "Select the CSV file:",
+            filter: (item) =>
+              !item.name.startsWith(".") &&
+              (item.isDirectory || item.name.toLowerCase().endsWith(".csv")),
+          });
+          csvFilePath = selection.path;
+        }
+
+        await populateRouteDistances(csvFilePath);
         return;
       }
 

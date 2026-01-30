@@ -33,11 +33,12 @@ export const DataGrid = ({ routes }: { routes: Route[] }) => {
       city: row.city,
       region: row.region,
       distanceKm: row.distanceKm,
+      isEstimated: row.isEstimated,
     }));
 
     const csvContent = stringify(data, {
       header: true,
-      columns: ["plant", "city", "region", "distanceKm"],
+      columns: ["plant", "city", "region", "distanceKm", "isEstimated"],
     });
 
     navigator.clipboard.writeText(csvContent);

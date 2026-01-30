@@ -27,7 +27,7 @@ export async function populateDestinationCoords(csvFilePath?: string) {
 
       for await (const record of parser) {
         const r = record as any;
-        // Known column names: city, region, latitude, longitude
+        // Expected columns: city, region, latitude, longitude
         const city = r.city;
         const region = r.region;
         const latStr = r.latitude;

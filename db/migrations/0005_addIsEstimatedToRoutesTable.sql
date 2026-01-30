@@ -1,0 +1,1 @@
+ALTER TABLE "routes" ADD COLUMN "isEstimated" boolean DEFAULT false;

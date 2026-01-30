@@ -155,6 +155,7 @@ export const routesTable = pgTable(
       .references(() => destinationsTable.id)
       .notNull(),
     distanceKm: decimal(),
+    isEstimated: boolean().default(false),
   },
   (t) => [unique().on(t.plant, t.destinationId)],
 );

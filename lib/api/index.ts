@@ -608,6 +608,7 @@ export async function getRoutes() {
       city: destinationsTable.city,
       region: destinationsTable.region,
       distanceKm: sql<number>`${routesTable.distanceKm}`.mapWith(Number),
+      isEstimated: routesTable.isEstimated,
     })
     .from(routesTable)
     .innerJoin(

@@ -8,7 +8,7 @@ import { revalidatePath } from "next/cache";
 export async function updateRouteDistance(id: number, distanceKm: number) {
   await db
     .update(routesTable)
-    .set({ distanceKm: distanceKm.toString() })
+    .set({ distanceKm: distanceKm.toString(), isEstimated: false })
     .where(eq(routesTable.id, id));
 
   revalidatePath("/admin/routes");
