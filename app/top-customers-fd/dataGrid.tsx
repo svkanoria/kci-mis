@@ -388,6 +388,12 @@ export const DataGrid = ({
       groupings.includes("distChannel")
     ) {
       width = 150;
+    } else if (
+      groupings.length === 2 &&
+      groupings.includes("plant") &&
+      groupings.includes("routeDistance")
+    ) {
+      width = 170;
     }
 
     return {
@@ -450,6 +456,28 @@ export const DataGrid = ({
       {
         field: "recipientName",
         tooltipField: "recipientName",
+        width: 150,
+        hide: true,
+        pinned: "left",
+        filter: true,
+        enableRowGroup: true,
+      },
+      {
+        field: "routeDistanceBucket",
+        headerName: "Route Distance",
+        width: 140,
+        hide: true,
+        pinned: "left",
+        filter: true,
+        enableRowGroup: true,
+        valueFormatter: (params) => {
+          if (params.value < 0) return "N/A";
+          return `${params.value} - ${params.value + 100} km`;
+        },
+      },
+      {
+        field: "destination",
+        headerName: "Destination",
         width: 150,
         hide: true,
         pinned: "left",
@@ -837,6 +865,10 @@ export const DataGrid = ({
       const activeGroupCols: string[] = [];
 
       if (groupings.includes("plant")) activeGroupCols.push("plant");
+      if (groupings.includes("routeDistance"))
+        activeGroupCols.push("routeDistanceBucket");
+      if (groupings.includes("destination"))
+        activeGroupCols.push("destination");
       if (groupings.includes("distChannel"))
         activeGroupCols.push("distChannelDescription");
       if (groupings.includes("recipient"))
@@ -844,6 +876,8 @@ export const DataGrid = ({
 
       const allPotentialGroupCols = [
         "plant",
+        "routeDistanceBucket",
+        "destination",
         "distChannelDescription",
         "recipientName",
       ];

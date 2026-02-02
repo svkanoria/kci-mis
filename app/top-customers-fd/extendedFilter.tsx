@@ -55,6 +55,8 @@ export function ExtendedFilter({
               const options = [
                 { value: "recipient", label: "Recipient" },
                 { value: "distChannel", label: "Dist. Channel" },
+                { value: "destination", label: "Destination" },
+                { value: "routeDistance", label: "Route Distance" },
                 { value: "plant", label: "Plant" },
               ];
 

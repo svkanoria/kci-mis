@@ -173,6 +173,8 @@ export async function getTopCustomers(
   const groupRecipient = groupings.includes("recipient");
   const groupDistChannel = groupings.includes("distChannel");
   const groupPlant = groupings.includes("plant");
+  const groupDestination = groupings.includes("destination");
+  const groupRouteDistance = groupings.includes("routeDistance");
 
   const rawConditions = [
     ...getRawCommonConditions(filters),
@@ -228,6 +230,17 @@ export async function getTopCustomers(
       recipientName: groupRecipient
         ? filteredRawSq.recipientName
         : sql<string>`''`,
+      routeDistanceBucket: (groupRouteDistance
+        ? sql<number>`floor(COALESCE(${routesTable.distanceKm}, -1) / 100.0) * 100`.mapWith(
+            Number,
+          )
+        : sql<number>`0`
+      ).as("routeDistanceBucket"),
+      destination: groupDestination
+        ? sql<string>`${filteredRawSq.consigneeCity} || ', ' || ${filteredRawSq.consigneeRegion}`.as(
+            "destination",
+          )
+        : sql<string>`''`.as("destination"),
       consigneeName: filteredRawSq.consigneeName,
       period: (filters.period === "year"
         ? sql`date_trunc('year', ${filteredRawSq.invDate} - interval '3 months') + interval '3 months'`
@@ -253,11 +266,21 @@ export async function getTopCustomers(
       methanolPricesInterpolatedView,
       eq(filteredRawSq.contractDate, methanolPricesInterpolatedView.date),
     )
+    .leftJoin(
+      routesTable,
+      eq(salesInvoicesDerivedTable.routeId, routesTable.id),
+    )
     .where(and(...getDerivedCommonConditions(filters), isNotNull(rateCol)))
     .groupBy(
       ...(groupPlant ? [filteredRawSq.plant] : []),
       ...(groupDistChannel ? [filteredRawSq.distChannelDescription] : []),
       ...(groupRecipient ? [filteredRawSq.recipientName] : []),
+      ...(groupRouteDistance
+        ? [sql`floor(COALESCE(${routesTable.distanceKm}, -1) / 100.0) * 100`]
+        : []),
+      ...(groupDestination
+        ? [filteredRawSq.consigneeCity, filteredRawSq.consigneeRegion]
+        : []),
       filteredRawSq.consigneeName,
       sql`period`,
     )
@@ -267,6 +290,8 @@ export async function getTopCustomers(
       ...(groupRecipient ? [filteredRawSq.recipientName] : []),
       ...(groupDistChannel ? [filteredRawSq.distChannelDescription] : []),
       ...(groupPlant ? [filteredRawSq.plant] : []),
+      ...(groupRouteDistance ? [sql`"routeDistanceBucket"`] : []),
+      ...(groupDestination ? [sql`"destination"`] : []),
     );
 
   const data = processTimeSeries(
@@ -281,6 +306,8 @@ export async function getTopCustomers(
         d: r.distChannelDescription,
         r: r.recipientName,
         c: r.consigneeName,
+        rd: r.routeDistanceBucket,
+        dest: r.destination,
       }),
     (r) => ({
       qty: r.qty,
@@ -327,7 +354,7 @@ export async function getTopCustomers(
     const { slope: slopeDelta, intercept: interceptDelta } =
       calculateRegression(filteredDeltas);
 
-    const { p, d, r, c } = JSON.parse(item.key);
+    const { p, d, r, c, rd, dest } = JSON.parse(item.key);
 
     return {
       ...item,
@@ -335,6 +362,8 @@ export async function getTopCustomers(
       distChannelDescription: d,
       recipientName: r,
       consigneeName: c,
+      routeDistanceBucket: parseInt(rd),
+      destination: dest,
       // Qty related fields
       slopeQty,
       interceptQty,
