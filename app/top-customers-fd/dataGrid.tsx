@@ -394,7 +394,7 @@ export const DataGrid = ({
       groupings.includes("routeDistance")
     ) {
       width = 170;
-    }
+    } // In all other cases, the default width (of around 200+) is fine
 
     return {
       width,
@@ -445,24 +445,6 @@ export const DataGrid = ({
         enableRowGroup: true,
       },
       {
-        field: "distChannelDescription",
-        headerName: "Dist. Channel",
-        width: 150,
-        hide: true,
-        pinned: "left",
-        filter: true,
-        enableRowGroup: true,
-      },
-      {
-        field: "recipientName",
-        tooltipField: "recipientName",
-        width: 150,
-        hide: true,
-        pinned: "left",
-        filter: true,
-        enableRowGroup: true,
-      },
-      {
         field: "routeDistanceBucket",
         headerName: "Route Distance",
         width: 140,
@@ -478,6 +460,40 @@ export const DataGrid = ({
       {
         field: "destination",
         headerName: "Destination",
+        width: 150,
+        hide: true,
+        pinned: "left",
+        filter: true,
+        enableRowGroup: true,
+        cellRenderer: (params: any) => {
+          if (!params.value) return null;
+          const [city, ...regionParts] = params.value.split(", ");
+          const region = regionParts.join(", ");
+
+          if (!region) return params.value;
+
+          return (
+            <div className="flex flex-col justify-center h-full leading-tight pr-1 pt-1">
+              <span className="truncate">{city}</span>
+              <span className="truncate text-xs text-muted-foreground">
+                {region}
+              </span>
+            </div>
+          );
+        },
+      },
+      {
+        field: "distChannelDescription",
+        headerName: "Dist. Channel",
+        width: 150,
+        hide: true,
+        pinned: "left",
+        filter: true,
+        enableRowGroup: true,
+      },
+      {
+        field: "recipientName",
+        tooltipField: "recipientName",
         width: 150,
         hide: true,
         pinned: "left",
