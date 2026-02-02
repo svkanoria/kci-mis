@@ -638,6 +638,16 @@ export async function getRoutes() {
       region: destinationsTable.region,
       distanceKm: sql<number>`${routesTable.distanceKm}`.mapWith(Number),
       isEstimated: routesTable.isEstimated,
+      destinationLat: sql<
+        number | null
+      >`ST_Y(${destinationsTable.coordinates})`.mapWith((v) =>
+        v === null ? null : Number(v),
+      ),
+      destinationLng: sql<
+        number | null
+      >`ST_X(${destinationsTable.coordinates})`.mapWith((v) =>
+        v === null ? null : Number(v),
+      ),
     })
     .from(routesTable)
     .innerJoin(
@@ -662,4 +672,91 @@ export async function getDestinations() {
     })
     .from(destinationsTable)
     .orderBy(destinationsTable.city);
+}
+
+export async function getSalesByRoute(
+  filters: Omit<CommonFilterParams, "period">,
+) {
+  const rawConditions = getRawCommonConditions(filters);
+
+  const filteredRawSq = db
+    .select()
+    .from(salesInvoicesRawTable)
+    .where(
+      and(
+        ...rawConditions,
+        isNotNull(salesInvoicesRawTable.basicAmount),
+        isNotNull(salesInvoicesRawTable.contractDate),
+      ),
+    )
+    .as("filtered_raw");
+
+  const isCategoryFilter = filters.product?.startsWith("C:");
+
+  const qtyCol = isCategoryFilter
+    ? salesInvoicesDerivedTable.normQty
+    : filteredRawSq.qty;
+
+  const rateCol = isCategoryFilter
+    ? salesInvoicesDerivedTable.normBasicRate
+    : filteredRawSq.basicRate;
+
+  const aggregatedSalesSq = db
+    .select({
+      routeId: salesInvoicesDerivedTable.routeId,
+      totalQty: sql<number>`sum(${qtyCol})`.mapWith(Number).as("totalQty"),
+      totalAmount: sql<number>`sum(${filteredRawSq.basicAmount})`
+        .mapWith(Number)
+        .as("totalAmount"),
+      totalDeltaAmount:
+        sql<number>`sum((${rateCol} - (${methanolPricesInterpolatedView.dailyIcisKandlaPrice} * 500)) * ${qtyCol})`
+          .mapWith(Number)
+          .as("totalDeltaAmount"),
+    })
+    .from(filteredRawSq)
+    .leftJoin(
+      salesInvoicesDerivedTable,
+      eq(filteredRawSq.id, salesInvoicesDerivedTable.rawId),
+    )
+    .leftJoin(
+      methanolPricesInterpolatedView,
+      eq(filteredRawSq.contractDate, methanolPricesInterpolatedView.date),
+    )
+    .where(and(...getDerivedCommonConditions(filters), isNotNull(rateCol)))
+    .groupBy(salesInvoicesDerivedTable.routeId)
+    .as("aggregated_sales");
+
+  const rows = await db
+    .select({
+      routeId: aggregatedSalesSq.routeId,
+      distanceKm: sql<number>`${routesTable.distanceKm}`.mapWith(Number),
+      plant: routesTable.plant,
+      city: destinationsTable.city,
+      region: destinationsTable.region,
+      destinationLat: sql<
+        number | null
+      >`ST_Y(${destinationsTable.coordinates})`.mapWith((v) =>
+        v === null ? null : Number(v),
+      ),
+      destinationLng: sql<
+        number | null
+      >`ST_X(${destinationsTable.coordinates})`.mapWith((v) =>
+        v === null ? null : Number(v),
+      ),
+      totalQty: aggregatedSalesSq.totalQty,
+      totalAmount: aggregatedSalesSq.totalAmount,
+      totalDeltaAmount: aggregatedSalesSq.totalDeltaAmount,
+    })
+    .from(aggregatedSalesSq)
+    .leftJoin(routesTable, eq(aggregatedSalesSq.routeId, routesTable.id))
+    .leftJoin(
+      destinationsTable,
+      eq(routesTable.destinationId, destinationsTable.id),
+    );
+
+  return rows.map((row) => ({
+    ...row,
+    avgPrice: row.totalQty > 0 ? row.totalAmount / row.totalQty : null,
+    avgDelta: row.totalQty > 0 ? row.totalDeltaAmount / row.totalQty : null,
+  }));
 }
