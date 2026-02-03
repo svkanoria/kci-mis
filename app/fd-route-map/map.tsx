@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { plantCoords } from "@/lib/constants";
 import "leaflet/dist/leaflet.css";
 import {
@@ -19,6 +20,19 @@ export const Map = ({ routes }: { routes: Route[] }) => {
     1200: "blue",
     1300: "green",
   };
+
+  const groupedRoutes = useMemo(() => {
+    const groups: Record<string, Route[]> = {};
+    routes.forEach((route) => {
+      if (!route.destinationLat || !route.destinationLng) return;
+      const key = `${route.destinationLat}-${route.destinationLng}`;
+      if (!groups[key]) {
+        groups[key] = [];
+      }
+      groups[key].push(route);
+    });
+    return groups;
+  }, [routes]);
 
   return (
     <div className="h-full w-full relative z-0">
@@ -71,42 +85,64 @@ export const Map = ({ routes }: { routes: Route[] }) => {
               pathOptions={{
                 color: plantColors[route.plant] || "gray",
                 weight: 1,
-                opacity: 0.2,
+                opacity: 0.4,
               }}
             />
           );
         })}
 
         {/* Plot Destination Dots */}
-        {routes.map((route) => {
-          if (!route.destinationLat || !route.destinationLng || !route.plant)
+        {Object.values(groupedRoutes).map((group) => {
+          const representative = group[0];
+          if (
+            !representative.destinationLat ||
+            !representative.destinationLng ||
+            !representative.plant
+          )
             return null;
 
           return (
             <CircleMarker
-              key={`dest-${route.routeId}`}
-              center={[route.destinationLat, route.destinationLng]}
+              key={`dest-${representative.destinationLat}-${representative.destinationLng}`}
+              center={[
+                representative.destinationLat,
+                representative.destinationLng,
+              ]}
               pathOptions={{
-                color: plantColors[route.plant] || "gray",
-                fillColor: plantColors[route.plant] || "gray",
+                color: plantColors[representative.plant] || "gray",
+                fillColor: plantColors[representative.plant] || "gray",
                 fillOpacity: 0.8,
                 weight: 0,
               }}
               radius={4}
             >
               <Popup>
-                <strong>
-                  {route.city}, {route.region}
-                </strong>
-                <br />
-                Plant: {route.plant}
-                <br />
-                Qty: {route.totalQty?.toLocaleString()} MT
-                <br />
-                Avg Rate:
-                {route.avgPrice?.toLocaleString(undefined, {
-                  maximumFractionDigits: 0,
-                })}
+                <div className="max-h-64 overflow-y-auto">
+                  <div className="mb-2 font-bold sticky top-0 bg-white pb-1 border-b">
+                    {representative.city}, {representative.region}
+                  </div>
+                  <div className="space-y-3">
+                    {group.map((route) => (
+                      <div key={route.routeId} className="text-sm">
+                        <div
+                          className="font-semibold"
+                          style={{
+                            color: plantColors[route.plant!] || "black",
+                          }}
+                        >
+                          Plant: {route.plant}
+                        </div>
+                        <div>Qty: {route.totalQty?.toLocaleString()} MT</div>
+                        <div>
+                          Avg Rate:{" "}
+                          {route.avgPrice?.toLocaleString(undefined, {
+                            maximumFractionDigits: 0,
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </Popup>
             </CircleMarker>
           );
