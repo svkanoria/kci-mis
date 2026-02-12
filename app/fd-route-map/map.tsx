@@ -3,11 +3,13 @@
 import { useMemo } from "react";
 import { plantCoords } from "@/lib/constants";
 import "leaflet/dist/leaflet.css";
+import { divIcon } from "leaflet";
 import {
   MapContainer,
   TileLayer,
   Polyline,
   CircleMarker,
+  Marker,
   Popup,
 } from "react-leaflet";
 import { getSalesByRoute } from "@/lib/api";
@@ -33,6 +35,53 @@ export const Map = ({ routes }: { routes: Route[] }) => {
     });
     return groups;
   }, [routes]);
+
+  const createPieIcon = (plants: number[]) => {
+    const uniquePlants = Array.from(new Set(plants));
+    const count = uniquePlants.length;
+    const radius = 6;
+    const size = radius * 2;
+
+    if (count <= 1) {
+      const color = plantColors[uniquePlants[0]] || "gray";
+      return divIcon({
+        className: "",
+        html: `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+          <circle cx="${radius}" cy="${radius}" r="${radius}" fill="${color}" fill-opacity="0.8" />
+        </svg>`,
+        iconSize: [size, size],
+      });
+    }
+
+    const total = uniquePlants.length;
+    const sliceAngle = 360 / total;
+    let startAngle = 0;
+
+    const paths = uniquePlants.map((plantId) => {
+      const color = plantColors[plantId] || "gray";
+      const endAngle = startAngle + sliceAngle;
+
+      const x1 = radius + radius * Math.cos((Math.PI * startAngle) / 180);
+      const y1 = radius + radius * Math.sin((Math.PI * startAngle) / 180);
+      const x2 = radius + radius * Math.cos((Math.PI * endAngle) / 180);
+      const y2 = radius + radius * Math.sin((Math.PI * endAngle) / 180);
+
+      const largeArcFlag = sliceAngle > 180 ? 1 : 0;
+
+      const pathData = `M ${radius} ${radius} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2} Z`;
+
+      startAngle += sliceAngle;
+      return `<path d="${pathData}" fill="${color}" fill-opacity="0.8" border="none" stroke="none" />`;
+    });
+
+    return divIcon({
+      className: "",
+      html: `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="transform: rotate(-90deg)">
+        ${paths.join("")}
+      </svg>`,
+      iconSize: [size, size],
+    });
+  };
 
   return (
     <div className="h-full w-full relative z-0">
@@ -101,20 +150,17 @@ export const Map = ({ routes }: { routes: Route[] }) => {
           )
             return null;
 
+          const plants = group.map((r) => r.plant).filter(Boolean) as number[];
+          const icon = createPieIcon(plants);
+
           return (
-            <CircleMarker
+            <Marker
               key={`dest-${representative.destinationLat}-${representative.destinationLng}`}
-              center={[
+              position={[
                 representative.destinationLat,
                 representative.destinationLng,
               ]}
-              pathOptions={{
-                color: plantColors[representative.plant] || "gray",
-                fillColor: plantColors[representative.plant] || "gray",
-                fillOpacity: 0.8,
-                weight: 0,
-              }}
-              radius={4}
+              icon={icon}
             >
               <Popup>
                 <div className="max-h-64 overflow-y-auto">
@@ -144,7 +190,7 @@ export const Map = ({ routes }: { routes: Route[] }) => {
                   </div>
                 </div>
               </Popup>
-            </CircleMarker>
+            </Marker>
           );
         })}
       </MapContainer>
