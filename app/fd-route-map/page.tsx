@@ -18,7 +18,7 @@ export default async function Page({
   const routes = await getSalesByRoute({ from, to, product });
 
   return (
-    <div className="h-full flex flex-col gap-4 p-4">
+    <div className="h-[calc(100vh-(--spacing(14)))] flex flex-col gap-4 p-4">
       <HeaderTitleUpdater title="Routes - FD" />
       <ExtendedFilter
         initialFrom={from}

@@ -10,7 +10,14 @@ import { and, eq, gte, isNotNull, lte, not, sql } from "drizzle-orm";
 import { getAllPeriods, Period, formatDate, parseDate } from "@/lib/utils/date";
 import { mean, standardDeviation, sum } from "simple-statistics";
 import { calculateRegression } from "../utils/stats";
-import { startOfMonth, differenceInMonths, format, addDays } from "date-fns";
+import {
+  startOfMonth,
+  differenceInMonths,
+  format,
+  addDays,
+  max,
+  min,
+} from "date-fns";
 
 /**
  * Represents common parameters used for filtering data in API requests.
@@ -712,6 +719,14 @@ export async function getSalesByRoute(
         sql<number>`sum((${rateCol} - (${methanolPricesInterpolatedView.dailyIcisKandlaPrice} * 500)) * ${qtyCol})`
           .mapWith(Number)
           .as("totalDeltaAmount"),
+      history: sql<{ qty: number; date: string }[]>`
+          json_agg(
+            json_build_object(
+              'qty', ${qtyCol},
+              'date', ${filteredRawSq.invDate}
+            ) ORDER BY ${filteredRawSq.invDate} ASC
+          )
+        `.as("history"),
     })
     .from(filteredRawSq)
     .leftJoin(
@@ -746,6 +761,7 @@ export async function getSalesByRoute(
       totalQty: aggregatedSalesSq.totalQty,
       totalAmount: aggregatedSalesSq.totalAmount,
       totalDeltaAmount: aggregatedSalesSq.totalDeltaAmount,
+      history: aggregatedSalesSq.history,
     })
     .from(aggregatedSalesSq)
     .leftJoin(routesTable, eq(aggregatedSalesSq.routeId, routesTable.id))
@@ -754,9 +770,51 @@ export async function getSalesByRoute(
       eq(routesTable.destinationId, destinationsTable.id),
     );
 
-  return rows.map((row) => ({
-    ...row,
-    avgPrice: row.totalQty > 0 ? row.totalAmount / row.totalQty : null,
-    avgDelta: row.totalQty > 0 ? row.totalDeltaAmount / row.totalQty : null,
-  }));
+  if (rows.length === 0) {
+    return [];
+  }
+
+  const [{ minDate: minDateStr, maxDate: maxDateStr }] = await db
+    .select({
+      // At this point, we know there is at least one row, hence
+      // we are sure minDateStr and maxDateStr won't be null
+      minDate: sql<string>`min(${salesInvoicesRawTable.invDate})`,
+      maxDate: sql<string>`max(${salesInvoicesRawTable.invDate})`,
+    })
+    .from(salesInvoicesRawTable);
+  const minInvDate = filters.from
+    ? max([filters.from, new Date(minDateStr)])
+    : new Date(minDateStr);
+  const maxInvDate = filters.to
+    ? min([filters.to, new Date(maxDateStr)])
+    : new Date(maxDateStr);
+
+  return rows.map((row) => {
+    const monthlyData = new Map<string, number>();
+    row.history.forEach((item) => {
+      const monthKey = format(parseDate(item.date), "yyyy-MM");
+      monthlyData.set(monthKey, (monthlyData.get(monthKey) ?? 0) + item.qty);
+    });
+
+    const periods = getAllPeriods(
+      startOfMonth(minInvDate),
+      startOfMonth(maxInvDate),
+      "month",
+    );
+
+    const newHistory = periods.map((date) => {
+      const monthKey = format(date, "yyyy-MM");
+      return {
+        date: formatDate(date),
+        qty: monthlyData.get(monthKey) ?? 0,
+      };
+    });
+
+    return {
+      ...row,
+      history: newHistory,
+      avgPrice: row.totalQty > 0 ? row.totalAmount / row.totalQty : null,
+      avgDelta: row.totalQty > 0 ? row.totalDeltaAmount / row.totalQty : null,
+    };
+  });
 }
