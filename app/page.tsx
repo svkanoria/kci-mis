@@ -1,6 +1,12 @@
 import { Heading } from "@/components/typography/heading";
 import Link from "next/link";
-import { ArrowRight, BarChart3, Users, TrendingDown } from "lucide-react";
+import {
+  ArrowRight,
+  BarChart3,
+  Users,
+  TrendingDown,
+  Route,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HeaderTitleUpdater } from "./_components/headerTitleUpdater";
 
@@ -28,7 +34,6 @@ export default async function Home() {
           icon={<Users className="w-6 h-6" />}
           iconContainerClassName="bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground"
         />
-
         <ReportCard
           href="/lost-customers-fd"
           title="Lost Customers FD"
@@ -36,13 +41,19 @@ export default async function Home() {
           icon={<TrendingDown className="w-6 h-6" />}
           iconContainerClassName="bg-destructive/10 text-destructive group-hover:bg-destructive group-hover:text-destructive-foreground"
         />
-
         <ReportCard
-          href="/customer-buying-pattern-fd"
+          href="/buying-pattern-fd"
           title="Buying Pattern FD"
           description="View and analyse Formaldehyde customer buying patterns."
           icon={<BarChart3 className="w-6 h-6" />}
           iconContainerClassName="bg-blue-500/10 text-blue-500 group-hover:bg-blue-500 group-hover:text-white"
+        />
+        <ReportCard
+          href="/route-map-fd"
+          title="Route Map FD"
+          description="View and analyse Formaldehyde delivery routes and destinations."
+          icon={<Route className="w-6 h-6" />}
+          iconContainerClassName="bg-green-500/10 text-green-500 group-hover:bg-green-500 group-hover:text-white"
         />
       </div>
     </div>

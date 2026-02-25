@@ -1,5 +1,5 @@
 import { Heading } from "@/components/typography/heading";
-import { getTopCustomers } from "@/lib/api";
+import { getTopCustomersFD } from "@/lib/api";
 import { extractFilterParams } from "../_utils/filter";
 import { ExtendedFilter } from "./extendedFilter";
 import { DataGrid } from "./dataGrid";
@@ -28,7 +28,7 @@ export default async function Page({
       ? resolvedSearchParams.channels
       : "all";
 
-  const data = getTopCustomers({
+  const data = getTopCustomersFD({
     from,
     to,
     period,

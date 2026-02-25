@@ -1,7 +1,7 @@
-import { getCustomerBuyingPatternFD } from "@/lib/api";
+import { getBuyingPatternFD } from "@/lib/api";
 import { extractFilterParams } from "../_utils/filter";
 import { ExtendedFilter } from "./extendedFilter";
-import { DataGrid } from "@/app/customer-buying-pattern-fd/dataGrid";
+import { DataGrid } from "@/app/buying-pattern-fd/dataGrid";
 import { Suspense } from "react";
 import { HeaderTitleUpdater } from "../_components/headerTitleUpdater";
 
@@ -15,7 +15,7 @@ export default async function Page({
     product: "C:Formaldehyde",
   });
 
-  const dataPromise = getCustomerBuyingPatternFD({
+  const dataPromise = getBuyingPatternFD({
     from,
     to,
     product,
@@ -23,7 +23,7 @@ export default async function Page({
 
   return (
     <div className="flex h-full flex-col gap-4 p-3">
-      <HeaderTitleUpdater title="Customer Buying vs Methanol" />
+      <HeaderTitleUpdater title="Buying Pattern - Formaldehyde" />
       <ExtendedFilter
         initialFrom={from}
         initialTo={to}

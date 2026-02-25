@@ -9,7 +9,7 @@ import {
   GridApi,
 } from "ag-grid-enterprise";
 import { AgGridReact } from "ag-grid-react";
-import { getCustomerBuyingPatternFD } from "@/lib/api";
+import { getBuyingPatternFD } from "@/lib/api";
 import { formatIndianNumber } from "@/lib/utils/format";
 import { Input } from "@/components/ui/input";
 import { differenceInDays } from "date-fns";
@@ -21,10 +21,10 @@ LicenseManager.setLicenseKey(process.env.NEXT_PUBLIC_AG_GRID_LICENSE || "");
 
 ModuleRegistry.registerModules([AllEnterpriseModule]);
 
-type ResponseType = Awaited<ReturnType<typeof getCustomerBuyingPatternFD>>;
+type ResponseType = Awaited<ReturnType<typeof getBuyingPatternFD>>;
 type IRow = ResponseType["data"][number];
 
-const lsKey = (key: string) => `customer-buying-pattern-fd-${key}`;
+const lsKey = (key: string) => `buying-pattern-fd-${key}`;
 const GRID_SORT_KEY = lsKey("sort");
 
 export const DataGrid = ({

@@ -1,5 +1,5 @@
 import { Heading } from "@/components/typography/heading";
-import { getSalesByRoute } from "@/lib/api";
+import { getSalesByRouteFD } from "@/lib/api";
 import { Map } from "./lazyMap";
 import { extractFilterParams } from "@/app/_utils/filter";
 import { HeaderTitleUpdater } from "../_components/headerTitleUpdater";
@@ -15,11 +15,11 @@ export default async function Page({
     product: "C:Formaldehyde",
   });
 
-  const routes = await getSalesByRoute({ from, to, product });
+  const routes = await getSalesByRouteFD({ from, to, product });
 
   return (
     <div className="h-[calc(100vh-(--spacing(14)))] flex flex-col gap-4 p-4">
-      <HeaderTitleUpdater title="Routes - FD" />
+      <HeaderTitleUpdater title="Route Map - Formaldehyde" />
       <ExtendedFilter
         initialFrom={from}
         initialTo={to}
@@ -27,7 +27,7 @@ export default async function Page({
         key={`${from}-${to}-${product}`}
       />
       <div className="grow min-h-0 border rounded-lg overflow-hidden relative z-0">
-        <Map routes={routes} />
+        <Map routes={routes} from={from} to={to} product={product} />
       </div>
     </div>
   );

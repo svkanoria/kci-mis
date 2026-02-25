@@ -10,7 +10,7 @@ import {
   GridApi,
 } from "ag-grid-enterprise";
 import { AgGridReact } from "ag-grid-react";
-import { getTopCustomers } from "@/lib/api";
+import { getTopCustomersFD } from "@/lib/api";
 import { formatIndianNumber } from "@/lib/utils/format";
 import Select from "react-select";
 import { calculateRegression } from "@/lib/utils/stats";
@@ -29,7 +29,7 @@ LicenseManager.setLicenseKey(process.env.NEXT_PUBLIC_AG_GRID_LICENSE || "");
 
 ModuleRegistry.registerModules([AllEnterpriseModule]);
 
-type IRow = Awaited<ReturnType<typeof getTopCustomers>>[number];
+type IRow = Awaited<ReturnType<typeof getTopCustomersFD>>[number];
 
 const SparklineCellRenderer = (params: any) => {
   if (!params.value) return null;

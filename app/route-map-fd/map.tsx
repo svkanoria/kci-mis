@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useEffect } from "react";
 import { plantCoords } from "@/lib/constants";
+import { formatDate } from "@/lib/utils/date"; // Import formatDate
 import "leaflet/dist/leaflet.css";
 import { divIcon, LatLngBoundsExpression } from "leaflet";
 import {
@@ -13,11 +14,13 @@ import {
   Popup,
   useMap,
 } from "react-leaflet";
-import { getSalesByRoute } from "@/lib/api";
+import { getSalesByRouteFD } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { TimeDirectionButton } from "../_components/timeDirectionButton";
+import { ExternalLink } from "lucide-react";
+import Link from "next/link";
 
-type Route = Awaited<ReturnType<typeof getSalesByRoute>>[number];
+type Route = Awaited<ReturnType<typeof getSalesByRouteFD>>[number];
 
 const RouteHistoryChart = ({
   history,
@@ -210,7 +213,17 @@ const MapController = ({
   return null;
 };
 
-export const Map = ({ routes }: { routes: Route[] }) => {
+export const Map = ({
+  routes,
+  from,
+  to,
+  product,
+}: {
+  routes: Route[];
+  from?: Date;
+  to?: Date;
+  product?: string;
+}) => {
   const [heatmapMode, setHeatmapMode] = useState(false);
   const [selectedRouteId, setSelectedRouteId] = useState<number | null>(null);
 
@@ -254,6 +267,12 @@ export const Map = ({ routes }: { routes: Route[] }) => {
   const sortedRoutes = useMemo(() => {
     return [...routes].sort((a, b) => (b.totalQty || 0) - (a.totalQty || 0));
   }, [routes]);
+
+  const getDetailsUrl = (routeId: number) => {
+    return `/top-customers-fd?${from ? `from=${formatDate(from)}&` : ""}${to ? `to=${formatDate(to)}&` : ""}product=${encodeURIComponent(
+      product ?? "",
+    )}&routes=${routeId}`;
+  };
 
   const createPieIcon = (routesInGroup: Route[]) => {
     const radius = 6;
@@ -424,13 +443,22 @@ export const Map = ({ routes }: { routes: Route[] }) => {
                     <div className="space-y-3">
                       {group.map((route) => (
                         <div key={route.routeId} className="text-sm">
-                          <div
-                            className="font-semibold"
-                            style={{
-                              color: plantColors[route.plant!] || "black",
-                            }}
-                          >
-                            Plant: {route.plant}
+                          <div className="flex items-center justify-between">
+                            <div
+                              className="font-semibold"
+                              style={{
+                                color: plantColors[route.plant!] || "black",
+                              }}
+                            >
+                              Plant: {route.plant}
+                            </div>
+                            <Link
+                              href={getDetailsUrl(route.routeId!)}
+                              target="_blank"
+                              className="inline-flex items-center justify-center p-1 hover:bg-gray-200 rounded-full"
+                            >
+                              <ExternalLink className="w-4 h-4 text-gray-500" />
+                            </Link>
                           </div>
                           <div>
                             Qty:{" "}
@@ -478,6 +506,9 @@ export const Map = ({ routes }: { routes: Route[] }) => {
                 <th className="px-3 py-2 text-right font-medium text-gray-500">
                   Qty
                 </th>
+                <th className="px-3 py-2 text-center font-medium text-gray-500">
+                  Link
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -524,6 +555,16 @@ export const Map = ({ routes }: { routes: Route[] }) => {
                     {route.totalQty?.toLocaleString(undefined, {
                       maximumFractionDigits: 0,
                     })}
+                  </td>
+                  <td className="px-3 py-2 text-center">
+                    <Link
+                      href={getDetailsUrl(route.routeId!)}
+                      target="_blank"
+                      onClick={(e) => e.stopPropagation()}
+                      className="inline-flex items-center justify-center p-1 hover:bg-gray-200 rounded-full"
+                    >
+                      <ExternalLink className="w-4 h-4 text-gray-500" />
+                    </Link>
                   </td>
                 </tr>
               ))}

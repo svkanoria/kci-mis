@@ -169,7 +169,7 @@ function processTimeSeries<T, K extends string, V>(
   );
 }
 
-export async function getTopCustomers(
+export async function getTopCustomersFD(
   filters: CommonFilterParams &
     Required<Pick<CommonFilterParams, "period">> & {
       grouping: string;
@@ -500,7 +500,7 @@ export async function getLostCustomers(
   });
 }
 
-export async function getCustomerBuyingPatternFD(
+export async function getBuyingPatternFD(
   filters: Omit<CommonFilterParams, "period">,
 ) {
   const rawConditions = getRawCommonConditions(filters, {
@@ -681,7 +681,7 @@ export async function getDestinations() {
     .orderBy(destinationsTable.city);
 }
 
-export async function getSalesByRoute(
+export async function getSalesByRouteFD(
   filters: Omit<CommonFilterParams, "period">,
 ) {
   const rawConditions = getRawCommonConditions(filters);
