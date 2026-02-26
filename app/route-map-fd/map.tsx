@@ -22,6 +22,9 @@ import Link from "next/link";
 
 type Route = Awaited<ReturnType<typeof getSalesByRouteFD>>[number];
 
+const lsKey = (key: string) => `route-map-fd-${key}`;
+const HEATMAP_MODE_KEY = lsKey("heatmapMode");
+
 const RouteHistoryChart = ({
   history,
 }: {
@@ -224,8 +227,20 @@ export const Map = ({
   to?: Date;
   product?: string;
 }) => {
-  const [heatmapMode, setHeatmapMode] = useState(false);
+  const [heatmapMode, setHeatmapMode] = useState(() => {
+    // Check to ensure this runs only on the client, and not during SSR,
+    // since localStorage is not available on the server.
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem(HEATMAP_MODE_KEY);
+      return stored ? JSON.parse(stored) : false;
+    }
+    return false;
+  });
   const [selectedRouteId, setSelectedRouteId] = useState<number | null>(null);
+
+  useEffect(() => {
+    localStorage.setItem(HEATMAP_MODE_KEY, JSON.stringify(heatmapMode));
+  }, [heatmapMode]);
 
   const plantColors: Record<number, string> = {
     1100: "red",
@@ -269,9 +284,15 @@ export const Map = ({
   }, [routes]);
 
   const getDetailsUrl = (routeId: number) => {
-    return `/top-customers-fd?${from ? `from=${formatDate(from)}&` : ""}${to ? `to=${formatDate(to)}&` : ""}product=${encodeURIComponent(
-      product ?? "",
-    )}&routes=${routeId}`;
+    const params = new URLSearchParams();
+    if (from) params.set("from", formatDate(from));
+    if (to) params.set("to", formatDate(to));
+    if (product) params.set("product", product);
+
+    params.set("routes", String(routeId));
+    params.set("grouping", "plant,routeDistance,destination,distChannel");
+
+    return `/top-customers-fd?${params.toString()}`;
   };
 
   const createPieIcon = (routesInGroup: Route[]) => {
