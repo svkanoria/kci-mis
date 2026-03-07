@@ -48,9 +48,11 @@ interface GridRow {
 export const DataGrid = ({
   data,
   initialGrouping,
+  destination,
 }: {
   data: Promise<IRow[]>;
   initialGrouping?: string;
+  destination?: string;
 }) => {
   const groupedData = use(data);
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
@@ -102,6 +104,19 @@ export const DataGrid = ({
       localStorage.setItem(SELECTED_GROUPS_KEY, JSON.stringify(selectedGroups));
     }
   }, [showStats, selectedGroups, isInitialized]);
+
+  useEffect(() => {
+    if (gridApi && destination) {
+      gridApi
+        .setColumnFilterModel("destination", {
+          values: [destination],
+          filterType: "set",
+        })
+        .then(() => {
+          gridApi.onFilterChanged();
+        });
+    }
+  }, [gridApi, destination]);
 
   useEffect(() => {
     if (gridApi && showStats) {
@@ -673,8 +688,12 @@ export const DataGrid = ({
 
       gridApi.setRowGroupColumns(activeGroupCols);
       gridApi.setColumnsVisible(colsToHide, false);
+
+      if (destination) {
+        gridApi.expandAll();
+      }
     }
-  }, [gridApi, initialGrouping]);
+  }, [gridApi, initialGrouping, destination]);
 
   return (
     <div className="grow min-h-0 flex flex-col gap-2">
@@ -775,6 +794,10 @@ export const DataGrid = ({
           processUnpinnedColumns={() => []}
           onGridReady={onGridReady}
           onSortChanged={onSortChanged}
+          sideBar={{
+            toolPanels: ["filters"],
+            defaultToolPanel: "",
+          }}
         />
       </div>
     </div>

@@ -37,6 +37,11 @@ export default async function Page({
     channels,
   });
 
+  const destination =
+    typeof resolvedSearchParams.destination === "string"
+      ? resolvedSearchParams.destination
+      : undefined;
+
   return (
     <div className="flex h-full flex-col gap-4 p-3">
       <HeaderTitleUpdater title="Top Customers - Formaldehyde" />
@@ -53,6 +58,7 @@ export default async function Page({
         <DataGrid
           data={data}
           initialGrouping={grouping}
+          destination={destination}
           key={`${from}-${to}-${product}-${period}-${grouping}-${channels}`}
         />
       </Suspense>

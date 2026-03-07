@@ -283,14 +283,14 @@ export const Map = ({
     return [...routes].sort((a, b) => (b.totalQty || 0) - (a.totalQty || 0));
   }, [routes]);
 
-  const getDetailsUrl = (routeId: number) => {
+  const getDetailsUrl = (destination: string) => {
     const params = new URLSearchParams();
     if (from) params.set("from", formatDate(from));
     if (to) params.set("to", formatDate(to));
     if (product) params.set("product", product);
 
-    params.set("routes", String(routeId));
     params.set("grouping", "plant,routeDistance,destination,distChannel");
+    params.set("destination", destination);
 
     return `/top-customers-fd?${params.toString()}`;
   };
@@ -474,7 +474,9 @@ export const Map = ({
                               Plant: {route.plant}
                             </div>
                             <Link
-                              href={getDetailsUrl(route.routeId!)}
+                              href={getDetailsUrl(
+                                `${representative.city}, ${representative.region}`,
+                              )}
                               target="_blank"
                               className="inline-flex items-center justify-center p-1 hover:bg-gray-200 rounded-full"
                             >
@@ -579,7 +581,7 @@ export const Map = ({
                   </td>
                   <td className="px-3 py-2 text-center">
                     <Link
-                      href={getDetailsUrl(route.routeId!)}
+                      href={getDetailsUrl(`${route.city}, ${route.region}`)}
                       target="_blank"
                       onClick={(e) => e.stopPropagation()}
                       className="inline-flex items-center justify-center p-1 hover:bg-gray-200 rounded-full"
