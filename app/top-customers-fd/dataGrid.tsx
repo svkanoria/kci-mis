@@ -26,6 +26,7 @@ import { useTimeDirectionStore } from "@/lib/store";
 import {
   SparklineCellRenderer,
   BarSparklineCellRenderer,
+  RecipientNameCellRenderer,
 } from "./cellRenderers";
 
 // Register License Key with LicenseManager
@@ -277,12 +278,12 @@ export const DataGrid = ({
       },
       {
         field: "recipientName",
-        tooltipField: "recipientName",
         width: 150,
         hide: true,
         pinned: "left",
         filter: true,
         enableRowGroup: true,
+        cellRenderer: RecipientNameCellRenderer,
       },
       {
         field: "consigneeName",

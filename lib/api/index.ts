@@ -236,7 +236,12 @@ export async function getTopCustomersFD(
         : sql<string>`''`,
       recipientName: groupRecipient
         ? filteredRawSq.recipientName
-        : sql<string>`''`,
+        : sql<string>`COALESCE(
+            json_agg(
+              DISTINCT ${filteredRawSq.recipientName}
+              ORDER BY ${filteredRawSq.recipientName} ASC
+            )::text, 
+            '')`,
       routeDistanceBucket: (groupRouteDistance
         ? sql<number>`floor(COALESCE(${routesTable.distanceKm}, -1) / 100.0) * 100`.mapWith(
             Number,
