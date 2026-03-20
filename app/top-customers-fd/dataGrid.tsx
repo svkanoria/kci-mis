@@ -27,6 +27,7 @@ import {
   SparklineCellRenderer,
   BarSparklineCellRenderer,
   RecipientNameCellRenderer,
+  ConsigneeNameCellRenderer,
 } from "./cellRenderers";
 
 // Register License Key with LicenseManager
@@ -292,6 +293,7 @@ export const DataGrid = ({
         pinned: "left",
         filter: true,
         enableRowGroup: true,
+        cellRenderer: ConsigneeNameCellRenderer,
         cellStyle: (params) => {
           if (
             params.data &&
