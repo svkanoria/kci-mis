@@ -1,6 +1,6 @@
 import { Heading } from "@/components/typography/heading";
 import Link from "next/link";
-import { ArrowRight, MapPin, Route } from "lucide-react";
+import { ArrowRight, MapPin, Route, Database } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HeaderTitleUpdater } from "../_components/headerTitleUpdater";
 
@@ -32,6 +32,12 @@ export default function AdminPage() {
           title="Destinations"
           description="Manage delivery destinations and coordinates."
           icon={<MapPin className="w-6 h-6" />}
+        />
+        <AdminCard
+          href="/admin/data-diagnostics"
+          title="Data Diagnostics"
+          description="View data health and completeness status."
+          icon={<Database className="w-6 h-6" />}
         />
       </div>
     </div>
