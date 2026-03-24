@@ -26,20 +26,23 @@ export default async function Home() {
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <Section title="All Products">
+        <ReportCard
+          href="/lost-customers"
+          title="Lost Customers"
+          description="View customers lost over time."
+          icon={<TrendingDown className="w-6 h-6" />}
+          iconContainerClassName="bg-destructive/10 text-destructive group-hover:bg-destructive group-hover:text-destructive-foreground"
+        />
+      </Section>
+
+      <Section title="Formaldehyde">
         <ReportCard
           href="/top-customers-fd"
           title="Top Customers FD"
           description="View and analyse top performing Formaldehyde customers."
           icon={<Users className="w-6 h-6" />}
           iconContainerClassName="bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground"
-        />
-        <ReportCard
-          href="/lost-customers-fd"
-          title="Lost Customers FD"
-          description="View Formaldehyde customers lost over time."
-          icon={<TrendingDown className="w-6 h-6" />}
-          iconContainerClassName="bg-destructive/10 text-destructive group-hover:bg-destructive group-hover:text-destructive-foreground"
         />
         <ReportCard
           href="/buying-pattern-fd"
@@ -55,7 +58,23 @@ export default async function Home() {
           icon={<Route className="w-6 h-6" />}
           iconContainerClassName="bg-green-500/10 text-green-500 group-hover:bg-green-500 group-hover:text-white"
         />
-      </div>
+      </Section>
+    </div>
+  );
+}
+
+interface SectionProps {
+  title: string;
+  children: React.ReactNode;
+}
+
+function Section({ title, children }: SectionProps) {
+  return (
+    <div className="not-last:mb-6">
+      <Heading level="h2" className="mb-2">
+        {title}
+      </Heading>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">{children}</div>
     </div>
   );
 }

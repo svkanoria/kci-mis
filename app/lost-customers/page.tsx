@@ -21,7 +21,7 @@ export default async function Page({
 
   return (
     <div className="flex h-full flex-col gap-4 p-3">
-      <HeaderTitleUpdater title="Lost Customers - Formaldehyde" />
+      <HeaderTitleUpdater title="Lost Customers" />
       <ExtendedFilter initialProduct={product} key={`${product}`} />
       <Suspense fallback={<div>Loading...</div>}>
         <DataGrid data={data} key={`${product}`} />

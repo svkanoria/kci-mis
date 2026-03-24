@@ -179,9 +179,9 @@ export function Filter<T extends FilterFormValues = FilterFormValues>({
               { value: "Formaldehyde-36.5%", label: "Formaldehyde-36.5%" },
               { value: "Formaldehyde-37% in Drums", label: "FD-37% in Drums" },
               { value: "C:Hexamine", label: "Hexamine" },
-              { value: "C:Penta", label: "Penta (All)" },
-              { value: "Penta-TG", label: "Penta-TG" },
-              { value: "Penta-NG", label: "Penta-NG" },
+              { value: "C:Pentaerythritol", label: "Penta (All)" },
+              { value: "Pentaerythritol-TG", label: "Penta-TG" },
+              { value: "Pentaerythritol-NG", label: "Penta-NG" },
               { value: "DiPenta", label: "DiPenta" },
             ];
             const filteredOptions = productFilter
