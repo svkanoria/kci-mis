@@ -26,9 +26,11 @@ import { useTimeDirectionStore } from "@/lib/store";
 import {
   SparklineCellRenderer,
   BarSparklineCellRenderer,
+} from "./cellRenderers";
+import {
   RecipientNameCellRenderer,
   ConsigneeNameCellRenderer,
-} from "./cellRenderers";
+} from "@/app/_utils/cellRenderers";
 
 // Register License Key with LicenseManager
 LicenseManager.setLicenseKey(process.env.NEXT_PUBLIC_AG_GRID_LICENSE || "");
@@ -294,16 +296,6 @@ export const DataGrid = ({
         filter: true,
         enableRowGroup: true,
         cellRenderer: ConsigneeNameCellRenderer,
-        cellStyle: (params) => {
-          if (
-            params.data &&
-            params.data.consigneeName === params.data.recipientName &&
-            params.data.distChannelDescription?.toLowerCase() === "dealer"
-          ) {
-            return { color: "#ef4444" };
-          }
-          return null;
-        },
       },
       {
         field: "totalAmount",

@@ -14,6 +14,7 @@ import { formatIndianNumber } from "@/lib/utils/format";
 import { Input } from "@/components/ui/input";
 import { TimeDirectionButton } from "@/app/_components/timeDirectionButton";
 import { useTimeDirectionStore } from "@/lib/store";
+import { ConsigneeNameCellRenderer } from "../_utils/cellRenderers";
 
 // Register License Key with LicenseManager
 LicenseManager.setLicenseKey(process.env.NEXT_PUBLIC_AG_GRID_LICENSE || "");
@@ -178,6 +179,7 @@ export const DataGrid = ({ data }: { data: Promise<ResponseType> }) => {
         tooltipField: "consigneeName",
         width: 300,
         filter: "agTextColumnFilter",
+        cellRenderer: ConsigneeNameCellRenderer,
       },
       {
         field: "lastInvDate",
@@ -255,7 +257,7 @@ export const DataGrid = ({ data }: { data: Promise<ResponseType> }) => {
           columnDefs={colDefs}
           defaultColDef={defaultColDef}
           headerHeight={60}
-          rowHeight={40}
+          rowHeight={45}
           pagination
           rowGroupPanelShow="always"
           suppressAggFuncInHeader

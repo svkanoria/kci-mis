@@ -29,6 +29,10 @@ export async function getLostCustomers(
   const rows = await db
     .select({
       consigneeName: filteredRawSq.consigneeName,
+      recipientName: sql<string>`json_agg(
+        DISTINCT ${filteredRawSq.recipientName}
+        ORDER BY ${filteredRawSq.recipientName} ASC
+      )::text`,
       lastInvDate: sql<string>`max(${filteredRawSq.invDate})`.as("lastInvDate"),
       qty: sql<number>`sum(${qtyCol})`.mapWith(Number).as("qty"),
       history: sql<{ qty: number; date: string }[]>`
