@@ -29,6 +29,10 @@ export async function getLostCustomers(
   const rows = await db
     .select({
       consigneeName: filteredRawSq.consigneeName,
+      distChannelDescription: sql<string>`json_agg(
+        DISTINCT ${filteredRawSq.distChannelDescription}
+        ORDER BY ${filteredRawSq.distChannelDescription} ASC
+      )::text`,
       recipientName: sql<string>`json_agg(
         DISTINCT ${filteredRawSq.recipientName}
         ORDER BY ${filteredRawSq.recipientName} ASC

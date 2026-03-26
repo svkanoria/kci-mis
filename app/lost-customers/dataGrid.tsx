@@ -182,6 +182,24 @@ export const DataGrid = ({ data }: { data: Promise<ResponseType> }) => {
         cellRenderer: ConsigneeNameCellRenderer,
       },
       {
+        field: "distChannelDescription",
+        headerName: "Dist Channel",
+        width: 200,
+        filter: "agSetColumnFilter",
+        valueFormatter: (params) => {
+          if (!params.value) return "";
+          try {
+            const arr = JSON.parse(params.value);
+            if (Array.isArray(arr)) {
+              return arr.join(", ");
+            }
+            return params.value;
+          } catch {
+            return params.value;
+          }
+        },
+      },
+      {
         field: "lastInvDate",
         headerName: "Last Inv Date",
         width: 120,
