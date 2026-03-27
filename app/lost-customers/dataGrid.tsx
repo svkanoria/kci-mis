@@ -123,6 +123,57 @@ const BarSparklineCellRenderer = (params: any) => {
   );
 };
 
+const ChannelsCellRenderer = (params: any) => {
+  const value = params.value;
+  if (!value) return null;
+
+  let items: string[] = [];
+  if (Array.isArray(value)) {
+    items = value;
+  } else if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) {
+        items = parsed;
+      } else {
+        items = [value];
+      }
+    } catch (e) {
+      items = [value];
+    }
+  }
+
+  if (items.length === 0) return null;
+
+  const getBadgeClass = (item: string) => {
+    switch (item) {
+      case "Direct":
+        return "bg-green-100 text-green-800";
+      case "Agent":
+        return "bg-blue-100 text-blue-800";
+      case "Dealer":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-1 h-full">
+      {items.map((item, index) => (
+        <span
+          key={index}
+          className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium ${getBadgeClass(
+            item,
+          )}`}
+        >
+          {item}
+        </span>
+      ))}
+    </div>
+  );
+};
+
 export const DataGrid = ({ data }: { data: Promise<ResponseType> }) => {
   const rows = use(data);
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
@@ -182,22 +233,11 @@ export const DataGrid = ({ data }: { data: Promise<ResponseType> }) => {
         cellRenderer: ConsigneeNameCellRenderer,
       },
       {
-        field: "distChannelDescription",
-        headerName: "Dist Channel",
+        field: "channels",
+        headerName: "Channels",
         width: 200,
         filter: "agSetColumnFilter",
-        valueFormatter: (params) => {
-          if (!params.value) return "";
-          try {
-            const arr = JSON.parse(params.value);
-            if (Array.isArray(arr)) {
-              return arr.join(", ");
-            }
-            return params.value;
-          } catch {
-            return params.value;
-          }
-        },
+        cellRenderer: ChannelsCellRenderer,
       },
       {
         field: "lastInvDate",

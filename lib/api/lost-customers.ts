@@ -29,21 +29,18 @@ export async function getLostCustomers(
   const rows = await db
     .select({
       consigneeName: filteredRawSq.consigneeName,
-      distChannelDescription: sql<string>`json_agg(
-        DISTINCT ${filteredRawSq.distChannelDescription}
-        ORDER BY ${filteredRawSq.distChannelDescription} ASC
-      )::text`,
       recipientName: sql<string>`json_agg(
         DISTINCT ${filteredRawSq.recipientName}
         ORDER BY ${filteredRawSq.recipientName} ASC
       )::text`,
       lastInvDate: sql<string>`max(${filteredRawSq.invDate})`.as("lastInvDate"),
       qty: sql<number>`sum(${qtyCol})`.mapWith(Number).as("qty"),
-      history: sql<{ qty: number; date: string }[]>`
+      history: sql<{ qty: number; date: string; channel: string }[]>`
         json_agg(
           json_build_object(
             'qty', ${qtyCol},
-            'date', ${filteredRawSq.invDate}
+            'date', ${filteredRawSq.invDate},
+            'channel', ${filteredRawSq.distChannelDescription}
           ) ORDER BY ${filteredRawSq.invDate} ASC
         )
       `.as("history"),
@@ -111,12 +108,16 @@ export async function getLostCustomers(
     const avgActiveMonthQty =
       activeHistory.reduce((sum, h) => sum + h.qty, 0) / activeHistory.length;
 
+    const channels = row.history.map((h) => h.channel).filter(Boolean);
+    const uniqueChannels = Array.from(new Set(channels)) as string[];
+
     return {
       ...row,
       lastInvDate,
       status,
       avgActiveMonthQty,
       history: newHistory,
+      channels: uniqueChannels,
     };
   });
 }
