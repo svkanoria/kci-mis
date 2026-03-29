@@ -4,3 +4,4 @@ export * from "./buying-pattern";
 export * from "./routes";
 export * from "./destinations";
 export * from "./sales-by-route";
+export * from "./distribution-pattern";

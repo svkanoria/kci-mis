@@ -6,6 +6,7 @@ import {
   Users,
   TrendingDown,
   Route,
+  Truck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HeaderTitleUpdater } from "./_components/headerTitleUpdater";
@@ -33,6 +34,13 @@ export default async function Home() {
           description="View customers lost over time."
           icon={<TrendingDown className="w-6 h-6" />}
           iconContainerClassName="bg-destructive/10 text-destructive group-hover:bg-destructive group-hover:text-destructive-foreground"
+        />
+        <ReportCard
+          href="/distribution-pattern"
+          title="Distribution Pattern"
+          description="View changes in distribution channels over time."
+          icon={<Truck className="w-6 h-6" />}
+          iconContainerClassName="bg-orange-500/10 text-orange-500 group-hover:bg-orange-500 group-hover:text-white"
         />
       </Section>
 
