@@ -81,7 +81,13 @@ export async function getLostCustomers(
     else if (monthsSinceLastInvoice >= 3) status = 3;
 
     if (!row.history || row.history.length === 0) {
-      return { ...row, lastInvDate, status, history: [] };
+      return {
+        ...row,
+        lastInvDate,
+        status,
+        history: [],
+        channels: {} as Record<string, { qty: number; lastInvDate: Date }>,
+      };
     }
 
     const monthlyData = new Map<string, number>();
@@ -108,8 +114,18 @@ export async function getLostCustomers(
     const avgActiveMonthQty =
       activeHistory.reduce((sum, h) => sum + h.qty, 0) / activeHistory.length;
 
-    const channels = row.history.map((h) => h.channel).filter(Boolean);
-    const uniqueChannels = Array.from(new Set(channels)) as string[];
+    const channelsMap: Record<string, { qty: number; lastInvDate: Date }> = {};
+    row.history.forEach((h) => {
+      if (!h.channel) return;
+      const hDate = parseDate(h.date);
+      if (!channelsMap[h.channel]) {
+        channelsMap[h.channel] = { qty: 0, lastInvDate: hDate };
+      }
+      channelsMap[h.channel].qty += h.qty;
+      if (hDate > channelsMap[h.channel].lastInvDate) {
+        channelsMap[h.channel].lastInvDate = hDate;
+      }
+    });
 
     return {
       ...row,
@@ -117,7 +133,7 @@ export async function getLostCustomers(
       status,
       avgActiveMonthQty,
       history: newHistory,
-      channels: uniqueChannels,
+      channels: channelsMap,
     };
   });
 }
