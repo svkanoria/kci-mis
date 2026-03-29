@@ -11,7 +11,7 @@ import {
 import { AgGridReact } from "ag-grid-react";
 import { getDistributionPattern } from "@/lib/api";
 import { Input } from "@/components/ui/input";
-import { ConsigneeNameCellRenderer } from "../_utils/cellRenderers";
+import { formatIndianNumber } from "@/lib/utils/format";
 
 // Register License Key with LicenseManager
 LicenseManager.setLicenseKey(process.env.NEXT_PUBLIC_AG_GRID_LICENSE || "");
@@ -60,7 +60,6 @@ export const DataGrid = ({ data }: { data: Promise<ResponseType> }) => {
         tooltipField: "consigneeName",
         width: 300,
         filter: "agTextColumnFilter",
-        // cellRenderer: ConsigneeNameCellRenderer,
       },
       {
         field: "invDate",
@@ -80,14 +79,22 @@ export const DataGrid = ({ data }: { data: Promise<ResponseType> }) => {
       {
         field: "prevDistChannelDescription",
         headerName: "Previous Channel",
-        width: 200,
+        width: 130,
         filter: "agSetColumnFilter",
       },
       {
         field: "distChannelDescription",
         headerName: "New Channel",
-        width: 200,
+        width: 130,
         filter: "agSetColumnFilter",
+      },
+      {
+        field: "avgQtyL6M",
+        headerName: "Avg 6M Qty",
+        width: 120,
+        type: "numericColumn",
+        filter: "agNumberColumnFilter",
+        valueFormatter: (params) => formatIndianNumber(params.value),
       },
     ];
   }, []);

@@ -21,6 +21,7 @@ export async function getDistributionPattern(
   const orderedSalesSq = db
     .select({
       id: filteredRawSq.id,
+      consigneeId: filteredRawSq.consignee,
       consigneeName: filteredRawSq.consigneeName,
       distChannelDescription: filteredRawSq.distChannelDescription,
       invDate: filteredRawSq.invDate,
@@ -37,14 +38,35 @@ export async function getDistributionPattern(
     .where(and(...getDerivedCommonConditions(filters)))
     .as("ordered_sales");
 
+  const sixMonthsQtySq = db
+    .select({
+      consigneeId: salesInvoicesRawTable.consignee,
+      avgQtyL6M: sql<number>`SUM(${salesInvoicesRawTable.qty}) / 6`
+        .mapWith(Number)
+        .as("avg_qty_l6m"),
+    })
+    .from(salesInvoicesRawTable)
+    .where(
+      sql`${salesInvoicesRawTable.invDate} >= (SELECT MAX(${salesInvoicesRawTable.invDate}) - INTERVAL '6 months' FROM ${salesInvoicesRawTable})`,
+    )
+    .groupBy(salesInvoicesRawTable.consignee)
+    .as("six_months_qty");
+
   const result = await db
     .select({
       consigneeName: orderedSalesSq.consigneeName,
       distChannelDescription: orderedSalesSq.distChannelDescription,
       invDate: orderedSalesSq.invDate,
       prevDistChannelDescription: orderedSalesSq.prevDistChannelDescription,
+      avgQtyL6M: sql<number>`COALESCE(${sixMonthsQtySq.avgQtyL6M}, 0)`.mapWith(
+        Number,
+      ),
     })
     .from(orderedSalesSq)
+    .leftJoin(
+      sixMonthsQtySq,
+      eq(orderedSalesSq.consigneeId, sixMonthsQtySq.consigneeId),
+    )
     .where(
       and(
         sql`${orderedSalesSq.prevDistChannelDescription} IS NOT NULL`,
