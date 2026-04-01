@@ -1,7 +1,11 @@
 "use client";
 
 import { useMemo, useState, use } from "react";
-import { ModuleRegistry, SortChangedEvent } from "ag-grid-community";
+import {
+  ModuleRegistry,
+  SortChangedEvent,
+  ICellRendererParams,
+} from "ag-grid-community";
 import {
   AllEnterpriseModule,
   LicenseManager,
@@ -24,12 +28,42 @@ type IRow = ResponseType[number];
 const lsKey = (key: string) => `distribution-pattern-${key}`;
 const GRID_SORT_KEY = lsKey("sort");
 
+const ChannelWithRecipientRenderer = (params: ICellRendererParams<IRow>) => {
+  const channel = params.value;
+
+  if (!params.data) {
+    return <span>{channel}</span>;
+  }
+
+  const isPrev = params.colDef?.field === "prevDistChannelDescription";
+  const recipientName = isPrev
+    ? params.data.prevRecipientName
+    : params.data.recipientName;
+
+  if (!recipientName) {
+    return <span>{channel}</span>;
+  }
+
+  return (
+    <div className="flex flex-col justify-center h-full w-full pr-1 pt-1.25">
+      <span className="truncate leading-tight font-medium" title={channel}>
+        {channel}
+      </span>
+      <div className="flex items-center gap-1 text-[10px] text-muted-foreground w-full -mt-0.5">
+        <span className="truncate" title={recipientName}>
+          {recipientName}
+        </span>
+      </div>
+    </div>
+  );
+};
+
 export const DataGrid = ({ data }: { data: Promise<ResponseType> }) => {
   const rows = use(data);
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
   const [quickFilterText, setQuickFilterText] = useState("");
 
-  const onGridReady = (params: any) => {
+  const onGridReady = (params: import("ag-grid-community").GridReadyEvent) => {
     setGridApi(params.api);
     const savedSort = localStorage.getItem(GRID_SORT_KEY);
     if (savedSort) {
@@ -81,17 +115,19 @@ export const DataGrid = ({ data }: { data: Promise<ResponseType> }) => {
         headerName: "Previous Channel",
         width: 130,
         filter: "agSetColumnFilter",
+        cellRenderer: ChannelWithRecipientRenderer,
       },
       {
         field: "distChannelDescription",
         headerName: "New Channel",
         width: 130,
         filter: "agSetColumnFilter",
+        cellRenderer: ChannelWithRecipientRenderer,
       },
       {
         field: "avgQtyL6M",
-        headerName: "Avg 6M Qty",
-        width: 120,
+        headerName: "Avg Monthly Qty (Last 6M)",
+        width: 125,
         type: "numericColumn",
         filter: "agNumberColumnFilter",
         valueFormatter: (params) => formatIndianNumber(params.value),

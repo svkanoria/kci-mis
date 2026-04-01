@@ -23,8 +23,13 @@ export async function getDistributionPattern(
       id: filteredRawSq.id,
       consigneeId: filteredRawSq.consignee,
       consigneeName: filteredRawSq.consigneeName,
+      recipientName: filteredRawSq.recipientName,
       distChannelDescription: filteredRawSq.distChannelDescription,
       invDate: filteredRawSq.invDate,
+      prevRecipientName:
+        sql<string>`LAG(${filteredRawSq.recipientName}) OVER (PARTITION BY ${filteredRawSq.consigneeName} ORDER BY ${filteredRawSq.invDate} ASC, ${filteredRawSq.id} ASC)`.as(
+          "prevRecipientName",
+        ),
       prevDistChannelDescription:
         sql<string>`LAG(${filteredRawSq.distChannelDescription}) OVER (PARTITION BY ${filteredRawSq.consigneeName} ORDER BY ${filteredRawSq.invDate} ASC, ${filteredRawSq.id} ASC)`.as(
           "prevDistChannelDescription",
@@ -55,8 +60,10 @@ export async function getDistributionPattern(
   const result = await db
     .select({
       consigneeName: orderedSalesSq.consigneeName,
+      recipientName: orderedSalesSq.recipientName,
       distChannelDescription: orderedSalesSq.distChannelDescription,
       invDate: orderedSalesSq.invDate,
+      prevRecipientName: orderedSalesSq.prevRecipientName,
       prevDistChannelDescription: orderedSalesSq.prevDistChannelDescription,
       avgQtyL6M: sql<number>`COALESCE(${sixMonthsQtySq.avgQtyL6M}, 0)`.mapWith(
         Number,
