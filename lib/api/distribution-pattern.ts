@@ -1,5 +1,5 @@
 import { db } from "@/db/drizzle";
-import { and, asc, desc, eq, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, sql } from "drizzle-orm";
 import {
   CommonFilterParams,
   getDerivedCommonConditions,
@@ -43,7 +43,19 @@ export async function getDistributionPattern(
     .where(and(...getDerivedCommonConditions(filters)))
     .as("ordered_sales");
 
-  const sixMonthsQtySq = db
+  const aggregatesSq = db
+    .select({
+      consigneeId: salesInvoicesRawTable.consignee,
+      lastInvDate: sql<string>`max(${salesInvoicesRawTable.invDate})`.as(
+        "lastInvDate",
+      ),
+      invCount: count().as("invCount"),
+    })
+    .from(salesInvoicesRawTable)
+    .groupBy(salesInvoicesRawTable.consignee)
+    .as("aggregates");
+
+  const sixMonthQtySq = db
     .select({
       consigneeId: salesInvoicesRawTable.consignee,
       avgQtyL6M: sql<number>`SUM(${salesInvoicesRawTable.qty}) / 6`
@@ -66,14 +78,20 @@ export async function getDistributionPattern(
       invDate: orderedSalesSq.invDate,
       prevRecipientName: orderedSalesSq.prevRecipientName,
       prevDistChannelDescription: orderedSalesSq.prevDistChannelDescription,
-      avgQtyL6M: sql<number>`COALESCE(${sixMonthsQtySq.avgQtyL6M}, 0)`.mapWith(
+      avgQtyL6M: sql<number>`COALESCE(${sixMonthQtySq.avgQtyL6M}, 0)`.mapWith(
         Number,
       ),
+      lastInvDate: aggregatesSq.lastInvDate,
+      invCount: aggregatesSq.invCount,
     })
     .from(orderedSalesSq)
     .leftJoin(
-      sixMonthsQtySq,
-      eq(orderedSalesSq.consigneeId, sixMonthsQtySq.consigneeId),
+      aggregatesSq,
+      eq(orderedSalesSq.consigneeId, aggregatesSq.consigneeId),
+    )
+    .leftJoin(
+      sixMonthQtySq,
+      eq(orderedSalesSq.consigneeId, sixMonthQtySq.consigneeId),
     )
     .where(
       and(

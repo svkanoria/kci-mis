@@ -112,6 +112,20 @@ export const DataGrid = ({ data }: { data: Promise<ResponseType> }) => {
         },
       },
       {
+        field: "lastInvDate",
+        headerName: "Last Inv Date",
+        width: 120,
+        filter: "agDateColumnFilter",
+        valueFormatter: (params) => {
+          if (!params.value) return "";
+          return new Date(params.value).toLocaleDateString("en-IN", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          });
+        },
+      },
+      {
         field: "distChannelDescription",
         headerName: "New Channel",
         width: 160,
@@ -135,8 +149,15 @@ export const DataGrid = ({ data }: { data: Promise<ResponseType> }) => {
       },
       {
         field: "switchCount",
-        headerName: "Switch Count",
-        width: 110,
+        headerName: "# Switches",
+        width: 100,
+        type: "numericColumn",
+        filter: "agNumberColumnFilter",
+      },
+      {
+        field: "invCount",
+        headerName: "# Invoices",
+        width: 100,
         type: "numericColumn",
         filter: "agNumberColumnFilter",
       },
@@ -147,9 +168,6 @@ export const DataGrid = ({ data }: { data: Promise<ResponseType> }) => {
     return {
       detailGridOptions: {
         rowHeight: 45,
-        pagination: true,
-        paginationPageSize: 5,
-        paginationPageSizeSelector: false,
         columnDefs: [
           {
             field: "invDate",
@@ -206,7 +224,7 @@ export const DataGrid = ({ data }: { data: Promise<ResponseType> }) => {
       >
         <AgGridReact
           masterDetail={true}
-          detailRowAutoHeight={true}
+          isRowMaster={(dataItem) => dataItem.history?.length}
           detailCellRendererParams={detailCellRendererParams}
           quickFilterText={quickFilterText}
           rowData={rows}
