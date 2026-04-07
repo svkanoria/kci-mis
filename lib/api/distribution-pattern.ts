@@ -1,5 +1,5 @@
 import { db } from "@/db/drizzle";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, sql } from "drizzle-orm";
 import {
   CommonFilterParams,
   getDerivedCommonConditions,
@@ -57,8 +57,9 @@ export async function getDistributionPattern(
     .groupBy(salesInvoicesRawTable.consignee)
     .as("six_months_qty");
 
-  const result = await db
+  const rows = await db
     .select({
+      consigneeId: orderedSalesSq.consigneeId,
       consigneeName: orderedSalesSq.consigneeName,
       recipientName: orderedSalesSq.recipientName,
       distChannelDescription: orderedSalesSq.distChannelDescription,
@@ -80,7 +81,43 @@ export async function getDistributionPattern(
         sql`${orderedSalesSq.distChannelDescription} != ${orderedSalesSq.prevDistChannelDescription}`,
       ),
     )
-    .orderBy(desc(orderedSalesSq.invDate), desc(orderedSalesSq.id));
+    .orderBy(
+      asc(orderedSalesSq.consigneeName),
+      desc(orderedSalesSq.invDate),
+      desc(orderedSalesSq.id),
+    );
+
+  type ResultRow = (typeof rows)[number] & {
+    history: Pick<
+      (typeof rows)[number],
+      | "recipientName"
+      | "distChannelDescription"
+      | "invDate"
+      | "prevRecipientName"
+      | "prevDistChannelDescription"
+    >[];
+    switchCount: number;
+  };
+
+  let result: ResultRow[] = [];
+  let currConsigneeName: string | undefined;
+  for (const row of rows) {
+    if (row.consigneeName !== currConsigneeName) {
+      currConsigneeName = row.consigneeName;
+      const resultRow = { ...row, history: [], switchCount: 1 };
+      result.push(resultRow);
+    } else {
+      const lastEntry = result[result.length - 1]!;
+      lastEntry.history.push({
+        recipientName: row.recipientName,
+        distChannelDescription: row.distChannelDescription,
+        invDate: row.invDate,
+        prevRecipientName: row.prevRecipientName,
+        prevDistChannelDescription: row.prevDistChannelDescription,
+      });
+      lastEntry.switchCount = lastEntry.switchCount + 1;
+    }
+  }
 
   return result;
 }

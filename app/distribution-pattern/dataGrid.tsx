@@ -94,6 +94,7 @@ export const DataGrid = ({ data }: { data: Promise<ResponseType> }) => {
         tooltipField: "consigneeName",
         width: 300,
         filter: "agTextColumnFilter",
+        cellRenderer: "agGroupCellRenderer",
       },
       {
         field: "invDate",
@@ -111,16 +112,16 @@ export const DataGrid = ({ data }: { data: Promise<ResponseType> }) => {
         },
       },
       {
-        field: "prevDistChannelDescription",
-        headerName: "Previous Channel",
-        width: 130,
+        field: "distChannelDescription",
+        headerName: "New Channel",
+        width: 160,
         filter: "agSetColumnFilter",
         cellRenderer: ChannelWithRecipientRenderer,
       },
       {
-        field: "distChannelDescription",
-        headerName: "New Channel",
-        width: 130,
+        field: "prevDistChannelDescription",
+        headerName: "Previous Channel",
+        width: 160,
         filter: "agSetColumnFilter",
         cellRenderer: ChannelWithRecipientRenderer,
       },
@@ -132,7 +133,55 @@ export const DataGrid = ({ data }: { data: Promise<ResponseType> }) => {
         filter: "agNumberColumnFilter",
         valueFormatter: (params) => formatIndianNumber(params.value),
       },
+      {
+        field: "switchCount",
+        headerName: "Switch Count",
+        width: 110,
+        type: "numericColumn",
+        filter: "agNumberColumnFilter",
+      },
     ];
+  }, []);
+
+  const detailCellRendererParams = useMemo(() => {
+    return {
+      detailGridOptions: {
+        rowHeight: 45,
+        pagination: true,
+        paginationPageSize: 5,
+        paginationPageSizeSelector: false,
+        columnDefs: [
+          {
+            field: "invDate",
+            headerName: "Invoice Date",
+            width: 150,
+            valueFormatter: (params: any) => {
+              if (!params.value) return "";
+              return new Date(params.value).toLocaleDateString("en-IN", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+              });
+            },
+          },
+          {
+            field: "distChannelDescription",
+            headerName: "New Channel",
+            width: 220,
+            cellRenderer: ChannelWithRecipientRenderer,
+          },
+          {
+            field: "prevDistChannelDescription",
+            headerName: "Previous Channel",
+            width: 220,
+            cellRenderer: ChannelWithRecipientRenderer,
+          },
+        ],
+      },
+      getDetailRowData: (params: any) => {
+        params.successCallback(params.data.history || []);
+      },
+    };
   }, []);
 
   return (
@@ -156,6 +205,9 @@ export const DataGrid = ({ data }: { data: Promise<ResponseType> }) => {
         }
       >
         <AgGridReact
+          masterDetail={true}
+          detailRowAutoHeight={true}
+          detailCellRendererParams={detailCellRendererParams}
           quickFilterText={quickFilterText}
           rowData={rows}
           columnDefs={colDefs}
