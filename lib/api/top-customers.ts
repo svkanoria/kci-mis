@@ -74,6 +74,26 @@ export async function getTopCustomersFD(
     ? salesInvoicesDerivedTable.normBasicRate
     : filteredRawSq.basicRate;
 
+  let recipientNames: Map<string, string> = new Map();
+  if (!groupRecipient) {
+    const recipientNamesArray = await db
+      .select({
+        consigneeName: filteredRawSq.consigneeName,
+        recipientName: sql<string>`COALESCE(
+            json_agg(
+              DISTINCT ${filteredRawSq.recipientName}
+              ORDER BY ${filteredRawSq.recipientName} ASC
+            )::text, 
+            '')`,
+      })
+      .from(filteredRawSq)
+      .groupBy(filteredRawSq.consigneeName);
+
+    recipientNamesArray.forEach((row) => {
+      recipientNames.set(row.consigneeName, row.recipientName);
+    });
+  }
+
   const rows = await db
     .select({
       plant: groupPlant ? filteredRawSq.plant : sql<number>`0`,
@@ -82,12 +102,7 @@ export async function getTopCustomersFD(
         : sql<string>`''`,
       recipientName: groupRecipient
         ? filteredRawSq.recipientName
-        : sql<string>`COALESCE(
-            json_agg(
-              DISTINCT ${filteredRawSq.recipientName}
-              ORDER BY ${filteredRawSq.recipientName} ASC
-            )::text, 
-            '')`,
+        : sql<string>`''`,
       routeDistanceBucket: (groupRouteDistance
         ? sql<number>`floor(COALESCE(${routesTable.distanceKm}, -1) / 100.0) * 100`.mapWith(
             Number,
@@ -218,7 +233,7 @@ export async function getTopCustomersFD(
       ...item,
       plant: parseInt(p),
       distChannelDescription: d,
-      recipientName: r,
+      recipientName: r === "" ? recipientNames.get(c) || "" : r,
       consigneeName: c,
       routeDistanceBucket: parseInt(rd),
       destination: dest,
