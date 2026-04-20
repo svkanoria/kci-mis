@@ -778,7 +778,7 @@ export const DataGrid = ({
           defaultColDef={defaultColDef}
           autoGroupColumnDef={autoGroupColumnDef}
           headerHeight={60}
-          rowHeight={45}
+          rowHeight={47}
           grandTotalRow="top"
           pagination
           rowGroupPanelShow="always"

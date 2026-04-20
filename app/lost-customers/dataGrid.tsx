@@ -368,7 +368,7 @@ export const DataGrid = ({ data }: { data: Promise<ResponseType> }) => {
           columnDefs={colDefs}
           defaultColDef={defaultColDef}
           headerHeight={60}
-          rowHeight={45}
+          rowHeight={47}
           pagination
           rowGroupPanelShow="always"
           suppressAggFuncInHeader
