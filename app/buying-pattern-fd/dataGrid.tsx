@@ -12,7 +12,7 @@ import { AgGridReact } from "ag-grid-react";
 import { getBuyingPatternFD } from "@/lib/api";
 import { formatIndianNumber } from "@/lib/utils/format";
 import { Input } from "@/components/ui/input";
-import { differenceInDays } from "date-fns";
+import { differenceInDays, startOfQuarter } from "date-fns";
 import { getStartOfFY, parseDate } from "@/lib/utils/date";
 import { TimeDirectionButton } from "../_components/timeDirectionButton";
 
@@ -76,6 +76,7 @@ export const DataGrid = ({
         rowGroupIndex: 0,
         enableRowGroup: true,
         pinned: "left",
+        sort: "desc",
         valueFormatter: (params) => {
           const date = params.value;
           if (!date) return "";
@@ -89,6 +90,30 @@ export const DataGrid = ({
           const contractDate = params.getValue("contractDate");
           if (!contractDate) return "";
           return getStartOfFY(parseDate(contractDate as string));
+        },
+      },
+      {
+        headerName: "Qtr",
+        width: 90,
+        hide: true,
+        rowGroup: true,
+        rowGroupIndex: 0,
+        enableRowGroup: true,
+        pinned: "left",
+        sort: "desc",
+        valueFormatter: (params) => {
+          const date = params.value;
+          if (!date) return "";
+          return date.toLocaleDateString(undefined, {
+            year: "2-digit",
+            month: "short",
+          });
+        },
+        type: "dateColumn",
+        valueGetter: (params) => {
+          const contractDate = params.getValue("contractDate");
+          if (!contractDate) return "";
+          return startOfQuarter(parseDate(contractDate as string));
         },
       },
       {
@@ -523,7 +548,7 @@ export const DataGrid = ({
           defaultColDef={defaultColDef}
           autoGroupColumnDef={autoGroupColumnDef}
           headerHeight={40}
-          rowHeight={47}
+          rowHeight={45}
           grandTotalRow="top"
           pagination
           rowGroupPanelShow="always"
