@@ -14,15 +14,15 @@ import {
   Popup,
   useMap,
 } from "react-leaflet";
-import { getSalesByRouteFD } from "@/lib/api";
+import { getSalesByRoute } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { TimeDirectionButton } from "../_components/timeDirectionButton";
 import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 
-type Route = Awaited<ReturnType<typeof getSalesByRouteFD>>[number];
+type Route = Awaited<ReturnType<typeof getSalesByRoute>>[number];
 
-const lsKey = (key: string) => `route-map-fd-${key}`;
+const lsKey = (key: string) => `route-map-${key}`;
 const HEATMAP_MODE_KEY = lsKey("heatmapMode");
 
 const RouteHistoryChart = ({

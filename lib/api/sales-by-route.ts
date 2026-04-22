@@ -9,15 +9,21 @@ import {
 import { and, eq, isNotNull, sql } from "drizzle-orm";
 import { getAllPeriods, formatDate, parseDate } from "@/lib/utils/date";
 import { startOfMonth, format, max, min } from "date-fns";
+import { match } from "ts-pattern";
 import {
   CommonFilterParams,
   getRawCommonConditions,
   getDerivedCommonConditions,
+  DeltaType,
+  inferDeltaType,
 } from "./utils";
 
-export async function getSalesByRouteFD(
+export async function getSalesByRoute(
   filters: Omit<CommonFilterParams, "period">,
+  deltaType: DeltaType | null = null,
 ) {
+  const resolvedDeltaType = deltaType ?? inferDeltaType(filters.product);
+
   const rawConditions = getRawCommonConditions(filters);
 
   const filteredRawSq = db
@@ -42,17 +48,26 @@ export async function getSalesByRouteFD(
     ? salesInvoicesDerivedTable.normBasicRate
     : filteredRawSq.basicRate;
 
-  const aggregatedSalesSq = db
+  const baseQuery = db
     .select({
       routeId: salesInvoicesDerivedTable.routeId,
       totalQty: sql<number>`sum(${qtyCol})`.mapWith(Number).as("totalQty"),
       totalAmount: sql<number>`sum(${filteredRawSq.basicAmount})`
         .mapWith(Number)
         .as("totalAmount"),
-      totalDeltaAmount:
-        sql<number>`sum((${rateCol} - (${methanolPricesInterpolatedView.dailyIcisKandlaPrice} * 500)) * ${qtyCol})`
-          .mapWith(Number)
-          .as("totalDeltaAmount"),
+      totalDeltaAmount: match(resolvedDeltaType)
+        .with("FormaldehydeNorms", () =>
+          sql<number>`sum((${rateCol} - (${methanolPricesInterpolatedView.dailyIcisKandlaPrice} * 500)) * ${qtyCol})`.mapWith(
+            Number,
+          ),
+        )
+        .with("HexamineNorms", () =>
+          sql<number>`sum((${rateCol} - (${methanolPricesInterpolatedView.dailyIcisKandlaPrice} * 3600 * 0.43)) * ${qtyCol})`.mapWith(
+            Number,
+          ),
+        )
+        .otherwise(() => sql<number | null>`null`)
+        .as("totalDeltaAmount"),
       history: sql<{ qty: number; date: string }[]>`
           json_agg(
             json_build_object(
@@ -66,11 +81,18 @@ export async function getSalesByRouteFD(
     .leftJoin(
       salesInvoicesDerivedTable,
       eq(filteredRawSq.id, salesInvoicesDerivedTable.rawId),
+    );
+
+  const queryWithOptionalJoins = match(resolvedDeltaType)
+    .with("FormaldehydeNorms", "HexamineNorms", () =>
+      baseQuery.leftJoin(
+        methanolPricesInterpolatedView,
+        eq(filteredRawSq.contractDate, methanolPricesInterpolatedView.date),
+      ),
     )
-    .leftJoin(
-      methanolPricesInterpolatedView,
-      eq(filteredRawSq.contractDate, methanolPricesInterpolatedView.date),
-    )
+    .otherwise(() => baseQuery);
+
+  const aggregatedSalesSq = queryWithOptionalJoins
     .where(and(...getDerivedCommonConditions(filters), isNotNull(rateCol)))
     .groupBy(salesInvoicesDerivedTable.routeId)
     .as("aggregated_sales");
@@ -148,7 +170,10 @@ export async function getSalesByRouteFD(
       ...row,
       history: newHistory,
       avgPrice: row.totalQty > 0 ? row.totalAmount / row.totalQty : null,
-      avgDelta: row.totalQty > 0 ? row.totalDeltaAmount / row.totalQty : null,
+      avgDelta:
+        row.totalQty > 0 && row.totalDeltaAmount !== null
+          ? row.totalDeltaAmount / row.totalQty
+          : null,
     };
   });
 }

@@ -49,6 +49,13 @@ export default async function Home() {
           icon={<Truck className="w-6 h-6" />}
           iconContainerClassName="bg-orange-500/10 text-orange-500 group-hover:bg-orange-500 group-hover:text-white"
         />
+        <ReportCard
+          href="/route-map"
+          title="Route Map"
+          description="View and analyse delivery routes and destinations."
+          icon={<Route className="w-6 h-6" />}
+          iconContainerClassName="bg-green-500/10 text-green-500 group-hover:bg-green-500 group-hover:text-white"
+        />
       </Section>
 
       <Section title="Formaldehyde">
@@ -58,13 +65,6 @@ export default async function Home() {
           description="View and analyse Formaldehyde customer buying patterns."
           icon={<BarChart3 className="w-6 h-6" />}
           iconContainerClassName="bg-blue-500/10 text-blue-500 group-hover:bg-blue-500 group-hover:text-white"
-        />
-        <ReportCard
-          href="/route-map-fd"
-          title="Route Map FD"
-          description="View and analyse Formaldehyde delivery routes and destinations."
-          icon={<Route className="w-6 h-6" />}
-          iconContainerClassName="bg-green-500/10 text-green-500 group-hover:bg-green-500 group-hover:text-white"
         />
       </Section>
     </div>

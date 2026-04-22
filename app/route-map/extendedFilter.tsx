@@ -7,13 +7,5 @@ import {
 } from "@/app/_components/filter";
 
 export function ExtendedFilter(props: FilterProps<FilterFormValues>) {
-  return (
-    <Filter
-      {...props}
-      hidePeriod
-      productFilter={({ value }) =>
-        value.includes("Formaldehyde") || value.includes("FD")
-      }
-    />
-  );
+  return <Filter {...props} hidePeriod />;
 }
