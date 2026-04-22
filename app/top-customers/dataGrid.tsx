@@ -39,7 +39,7 @@ ModuleRegistry.registerModules([AllEnterpriseModule]);
 
 type IRow = Awaited<ReturnType<typeof getTopCustomers>>[number];
 
-const lsKey = (key: string) => `top-customers-fd-${key}`;
+const lsKey = (key: string) => `top-customers-${key}`;
 const SHOW_STATS_KEY = lsKey("showStats");
 const SELECTED_GROUPS_KEY = lsKey("selectedGroups");
 const GRID_SORT_KEY = lsKey("sort");

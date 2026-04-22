@@ -292,7 +292,7 @@ export const Map = ({
     params.set("grouping", "plant,routeDistance,destination,distChannel");
     params.set("destination", destination);
 
-    return `/top-customers-fd?${params.toString()}`;
+    return `/top-customers?${params.toString()}`;
   };
 
   const createPieIcon = (routesInGroup: Route[]) => {

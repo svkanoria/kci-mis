@@ -29,6 +29,13 @@ export default async function Home() {
 
       <Section title="All Products">
         <ReportCard
+          href="/top-customers"
+          title="Top Customers"
+          description="View and analyse top performing customers."
+          icon={<Users className="w-6 h-6" />}
+          iconContainerClassName="bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground"
+        />
+        <ReportCard
           href="/lost-customers"
           title="Lost Customers"
           description="View customers lost over time."
@@ -45,13 +52,6 @@ export default async function Home() {
       </Section>
 
       <Section title="Formaldehyde">
-        <ReportCard
-          href="/top-customers-fd"
-          title="Top Customers FD"
-          description="View and analyse top performing Formaldehyde customers."
-          icon={<Users className="w-6 h-6" />}
-          iconContainerClassName="bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground"
-        />
         <ReportCard
           href="/buying-pattern-fd"
           title="Buying Pattern FD"
