@@ -22,6 +22,8 @@ OR
 
     $ docker compose up prod
 
+Note that the dev instance is available on localhost port 3000, and the prod instance is available on localhost port 3001.
+
 ### Load CSV data into the database
 
 Upload the data using our data ingestor service:
@@ -52,6 +54,8 @@ Run the data ingestor script. For this, you first have to upload the data files 
     chmod 400 ~/Desktop/kci-mis.pem
     # Copy the files to EC2
     scp -i ~/Desktop/kci-mis.pem -r ~/Desktop/MIS/* ubuntu@13.205.115.187:/home/ubuntu/data
+
+The `scp` command updates the destination folder, but does not remove any old files from it. If you want to completely replace the contents of the destination folder, simply delete it before running the `scp` command.
 
 Congratulations, the app has now been populated with data, and is ready to be viewed!!
 
