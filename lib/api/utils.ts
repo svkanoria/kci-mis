@@ -152,3 +152,18 @@ export function processTimeSeries<T, K extends string, V>(
       },
   );
 }
+
+export type DeltaType =
+  | "FormaldehydeNorms"
+  | "HexamineNorms"
+  | "HexamineImports";
+
+export function inferDeltaType(productName?: string): DeltaType | null {
+  if (!productName) return null;
+  if (productName.includes("Formaldehyde")) {
+    return "FormaldehydeNorms";
+  } else if (productName.includes("Hexamine")) {
+    return "HexamineNorms";
+  }
+  return null;
+}

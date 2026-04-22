@@ -100,9 +100,6 @@ export function ExtendedFilter({
           />
         </>
       )}
-      productFilter={({ value }) =>
-        value.includes("Formaldehyde") || value.includes("FD")
-      }
     />
   );
 }

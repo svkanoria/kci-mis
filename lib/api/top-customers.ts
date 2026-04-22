@@ -8,19 +8,23 @@ import {
 import { and, eq, isNotNull, not, sql } from "drizzle-orm";
 import { mean, standardDeviation, sum } from "simple-statistics";
 import { calculateRegression } from "@/lib/utils/stats";
+import { match } from "ts-pattern";
 import {
   CommonFilterParams,
   getRawCommonConditions,
   getDerivedCommonConditions,
   processTimeSeries,
+  DeltaType,
+  inferDeltaType,
 } from "./utils";
 
-export async function getTopCustomersFD(
+export async function getTopCustomers(
   filters: CommonFilterParams &
     Required<Pick<CommonFilterParams, "period">> & {
       grouping: string;
       channels: string;
     },
+  deltaType: DeltaType | null = null,
 ) {
   const groupings = filters.grouping.split(",");
   const groupRecipient = groupings.includes("recipient");
@@ -51,6 +55,8 @@ export async function getTopCustomersFD(
           ]
         : []),
   ];
+
+  const effectiveDeltaType = deltaType ?? inferDeltaType(filters.product);
 
   const filteredRawSq = db
     .select()
@@ -94,7 +100,7 @@ export async function getTopCustomersFD(
     });
   }
 
-  const rows = await db
+  const baseQuery = db
     .select({
       plant: groupPlant ? filteredRawSq.plant : sql<number>`0`,
       distChannelDescription: groupDistChannel
@@ -125,20 +131,36 @@ export async function getTopCustomersFD(
       amount: sql<number>`sum(${filteredRawSq.basicAmount})`
         .mapWith(Number)
         .as("amount"),
-      deltaAmount:
-        sql<number>`sum((${rateCol} - (${methanolPricesInterpolatedView.dailyIcisKandlaPrice} * 500)) * ${filteredRawSq.qty})`
-          .mapWith(Number)
-          .as("deltaAmount"),
+      deltaAmount: match(effectiveDeltaType)
+        .with("FormaldehydeNorms", () =>
+          sql<number>`sum((${rateCol} - (${methanolPricesInterpolatedView.dailyIcisKandlaPrice} * 500)) * ${filteredRawSq.qty})`.mapWith(
+            Number,
+          ),
+        )
+        .with("HexamineNorms", () =>
+          sql<number>`sum((${rateCol} - (${methanolPricesInterpolatedView.dailyIcisKandlaPrice} * 3600 * 0.43)) * ${filteredRawSq.qty})`.mapWith(
+            Number,
+          ),
+        )
+        .otherwise(() => sql<number | null>`null`)
+        .as("deltaAmount"),
     })
     .from(filteredRawSq)
     .leftJoin(
       salesInvoicesDerivedTable,
       eq(filteredRawSq.id, salesInvoicesDerivedTable.rawId),
+    );
+
+  const queryWithOptionalJoins = match(effectiveDeltaType)
+    .with("FormaldehydeNorms", "HexamineNorms", () =>
+      baseQuery.leftJoin(
+        methanolPricesInterpolatedView,
+        eq(filteredRawSq.contractDate, methanolPricesInterpolatedView.date),
+      ),
     )
-    .leftJoin(
-      methanolPricesInterpolatedView,
-      eq(filteredRawSq.contractDate, methanolPricesInterpolatedView.date),
-    )
+    .otherwise(() => baseQuery);
+
+  const rows = await queryWithOptionalJoins
     .leftJoin(
       routesTable,
       eq(salesInvoicesDerivedTable.routeId, routesTable.id),
@@ -186,7 +208,7 @@ export async function getTopCustomersFD(
       qty: r.qty,
       amount: r.amount,
       rate: r.qty > 0 ? r.amount / r.qty : null,
-      delta: r.qty > 0 ? r.deltaAmount / r.qty : null,
+      delta: r.qty > 0 && r.deltaAmount !== null ? r.deltaAmount / r.qty : null,
     }),
   );
 
@@ -211,21 +233,30 @@ export async function getTopCustomersFD(
     const stdDevRate =
       filteredRates.length > 0 ? standardDeviation(filteredRates) : 0;
 
-    const totalDeltaAmount = item.series.reduce(
-      (sum, s) => sum + (s.value.delta ?? 0) * s.value.qty,
-      0,
-    );
-    // Delta related fields
-    const avgDelta = totalQty > 0 ? totalDeltaAmount / totalQty : null;
-    const filteredDeltas = deltas.filter((d) => d !== null);
-    const stdDevDelta =
-      filteredDeltas.length > 0 ? standardDeviation(filteredDeltas) : 0;
-    const cvDelta =
-      avgDelta !== null && avgDelta !== 0
-        ? stdDevDelta / Math.abs(avgDelta)
-        : 0;
-    const { slope: slopeDelta, intercept: interceptDelta } =
-      calculateRegression(filteredDeltas);
+    let totalDeltaAmount: number | null = null;
+    let avgDelta: number | null = null;
+    let stdDevDelta: number | null = null;
+    let cvDelta: number | null = null;
+    let slopeDelta: number | null = null;
+    let interceptDelta: number | null = null;
+
+    if (effectiveDeltaType) {
+      totalDeltaAmount = item.series.reduce(
+        (sum, s) => sum + (s.value.delta ?? 0) * s.value.qty,
+        0,
+      );
+      avgDelta = totalQty > 0 ? totalDeltaAmount / totalQty : null;
+      const filteredDeltas = deltas.filter((d) => d !== null);
+      stdDevDelta =
+        filteredDeltas.length > 0 ? standardDeviation(filteredDeltas) : 0;
+      cvDelta =
+        avgDelta !== null && avgDelta !== 0
+          ? stdDevDelta / Math.abs(avgDelta)
+          : 0;
+      const regression = calculateRegression(filteredDeltas);
+      slopeDelta = regression.slope;
+      interceptDelta = regression.intercept;
+    }
 
     const { p, d, r, c, rd, dest } = JSON.parse(item.key);
 
