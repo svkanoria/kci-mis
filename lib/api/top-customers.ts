@@ -16,7 +16,10 @@ import {
   processTimeSeries,
   DeltaType,
   inferDeltaType,
+  getDeltaAmountSql,
+  addDeltaAmountJoinsToQuery,
 } from "./utils";
+import { add } from "lodash";
 
 export async function getTopCustomers(
   filters: CommonFilterParams &
@@ -131,19 +134,9 @@ export async function getTopCustomers(
       amount: sql<number>`sum(${filteredRawSq.basicAmount})`
         .mapWith(Number)
         .as("amount"),
-      deltaAmount: match(effectiveDeltaType)
-        .with("FormaldehydeNorms", () =>
-          sql<number>`sum((${rateCol} - (${methanolPricesInterpolatedView.dailyIcisKandlaPrice} * 500)) * ${filteredRawSq.qty})`.mapWith(
-            Number,
-          ),
-        )
-        .with("HexamineNorms", () =>
-          sql<number>`sum((${rateCol} - (${methanolPricesInterpolatedView.dailyIcisKandlaPrice} * 3600 * 0.43)) * ${filteredRawSq.qty})`.mapWith(
-            Number,
-          ),
-        )
-        .otherwise(() => sql<number | null>`null`)
-        .as("deltaAmount"),
+      deltaAmount: getDeltaAmountSql(effectiveDeltaType, rateCol, qtyCol).as(
+        "deltaAmount",
+      ),
     })
     .from(filteredRawSq)
     .leftJoin(
@@ -151,14 +144,11 @@ export async function getTopCustomers(
       eq(filteredRawSq.id, salesInvoicesDerivedTable.rawId),
     );
 
-  const queryWithOptionalJoins = match(effectiveDeltaType)
-    .with("FormaldehydeNorms", "HexamineNorms", () =>
-      baseQuery.leftJoin(
-        methanolPricesInterpolatedView,
-        eq(filteredRawSq.contractDate, methanolPricesInterpolatedView.date),
-      ),
-    )
-    .otherwise(() => baseQuery);
+  const queryWithOptionalJoins = addDeltaAmountJoinsToQuery(
+    baseQuery,
+    effectiveDeltaType,
+    filteredRawSq.contractDate,
+  );
 
   const rows = await queryWithOptionalJoins
     .leftJoin(

@@ -16,13 +16,16 @@ import {
   getDerivedCommonConditions,
   DeltaType,
   inferDeltaType,
+  getDeltaAmountSql,
+  addDeltaAmountJoinsToQuery,
 } from "./utils";
+import { get } from "lodash";
 
 export async function getSalesByRoute(
   filters: Omit<CommonFilterParams, "period">,
   deltaType: DeltaType | null = null,
 ) {
-  const resolvedDeltaType = deltaType ?? inferDeltaType(filters.product);
+  const effectiveDeltaType = deltaType ?? inferDeltaType(filters.product);
 
   const rawConditions = getRawCommonConditions(filters);
 
@@ -55,19 +58,11 @@ export async function getSalesByRoute(
       totalAmount: sql<number>`sum(${filteredRawSq.basicAmount})`
         .mapWith(Number)
         .as("totalAmount"),
-      totalDeltaAmount: match(resolvedDeltaType)
-        .with("FormaldehydeNorms", () =>
-          sql<number>`sum((${rateCol} - (${methanolPricesInterpolatedView.dailyIcisKandlaPrice} * 500)) * ${qtyCol})`.mapWith(
-            Number,
-          ),
-        )
-        .with("HexamineNorms", () =>
-          sql<number>`sum((${rateCol} - (${methanolPricesInterpolatedView.dailyIcisKandlaPrice} * 3600 * 0.43)) * ${qtyCol})`.mapWith(
-            Number,
-          ),
-        )
-        .otherwise(() => sql<number | null>`null`)
-        .as("totalDeltaAmount"),
+      totalDeltaAmount: getDeltaAmountSql(
+        effectiveDeltaType,
+        rateCol,
+        qtyCol,
+      ).as("totalDeltaAmount"),
       history: sql<{ qty: number; date: string }[]>`
           json_agg(
             json_build_object(
@@ -83,14 +78,11 @@ export async function getSalesByRoute(
       eq(filteredRawSq.id, salesInvoicesDerivedTable.rawId),
     );
 
-  const queryWithOptionalJoins = match(resolvedDeltaType)
-    .with("FormaldehydeNorms", "HexamineNorms", () =>
-      baseQuery.leftJoin(
-        methanolPricesInterpolatedView,
-        eq(filteredRawSq.contractDate, methanolPricesInterpolatedView.date),
-      ),
-    )
-    .otherwise(() => baseQuery);
+  const queryWithOptionalJoins = addDeltaAmountJoinsToQuery(
+    baseQuery,
+    effectiveDeltaType,
+    filteredRawSq.contractDate,
+  );
 
   const aggregatedSalesSq = queryWithOptionalJoins
     .where(and(...getDerivedCommonConditions(filters), isNotNull(rateCol)))

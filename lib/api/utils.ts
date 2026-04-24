@@ -1,5 +1,9 @@
-import { salesInvoicesRawTable, salesInvoicesDerivedTable } from "@/db/schema";
-import { gte, lte, eq } from "drizzle-orm";
+import {
+  salesInvoicesRawTable,
+  salesInvoicesDerivedTable,
+  methanolPricesInterpolatedView,
+} from "@/db/schema";
+import { gte, lte, eq, sql, AnyColumn } from "drizzle-orm";
 import { Period, formatDate, getAllPeriods } from "../utils/date";
 
 /**
@@ -156,14 +160,67 @@ export function processTimeSeries<T, K extends string, V>(
 export type DeltaType =
   | "FormaldehydeNorms"
   | "HexamineNorms"
-  | "HexamineImports";
+  | "PentaerythritolNorms";
 
 export function inferDeltaType(productName?: string): DeltaType | null {
   if (!productName) return null;
-  if (productName.includes("Formaldehyde")) {
+  if (
+    productName.startsWith("C:Formaldehyde") ||
+    productName.startsWith("Formaldehyde")
+  ) {
     return "FormaldehydeNorms";
   } else if (productName.includes("Hexamine")) {
     return "HexamineNorms";
+  } else if (
+    productName.startsWith("C:Pentaerythritol") ||
+    productName.startsWith("Pentaerythritol")
+  ) {
+    return "PentaerythritolNorms";
   }
   return null;
+}
+
+export function getDeltaAmountSql(
+  deltaType: DeltaType | null,
+  rateCol: AnyColumn,
+  qtyCol: AnyColumn,
+) {
+  const methanolPriceCol = methanolPricesInterpolatedView.dailyIcisKandlaPrice;
+
+  switch (deltaType) {
+    case "FormaldehydeNorms":
+      return sql<number>`sum((${rateCol} - (${methanolPriceCol} * 500)) * ${qtyCol})`.mapWith(
+        Number,
+      );
+    case "HexamineNorms":
+      return sql<number>`sum((${rateCol} - (${methanolPriceCol} * 3600 * 0.43)) * ${qtyCol})`.mapWith(
+        Number,
+      );
+    case "PentaerythritolNorms":
+      return sql<number>`sum((${rateCol} - (${methanolPriceCol} * 1115 / 0.37 * 0.43)) * ${qtyCol})`.mapWith(
+        Number,
+      );
+    default:
+      return sql<number | null>`null`;
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function addDeltaAmountJoinsToQuery<
+  T extends {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    leftJoin: (...args: any[]) => any;
+  },
+>(baseQuery: T, deltaType: DeltaType | null, baseQueryJoinCol: AnyColumn) {
+  switch (deltaType) {
+    case "FormaldehydeNorms":
+    case "HexamineNorms":
+    case "PentaerythritolNorms":
+      return baseQuery.leftJoin(
+        methanolPricesInterpolatedView,
+        eq(baseQueryJoinCol, methanolPricesInterpolatedView.date),
+      ) as ReturnType<T["leftJoin"]>;
+    default:
+      return baseQuery;
+  }
 }
