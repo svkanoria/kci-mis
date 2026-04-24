@@ -41,6 +41,7 @@ type IRow = Awaited<ReturnType<typeof getTopCustomers>>[number];
 
 const lsKey = (key: string) => `top-customers-${key}`;
 const SHOW_STATS_KEY = lsKey("showStats");
+const SHOW_QTY_AS_PERC_KEY = lsKey("showQtyAsPerc");
 const SELECTED_GROUPS_KEY = lsKey("selectedGroups");
 const GRID_SORT_KEY = lsKey("sort");
 
@@ -61,6 +62,7 @@ export const DataGrid = ({
   const groupedData = use(data);
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
   const [showStats, setShowStats] = useState(false);
+  const [showQtyAsPerc, setShowQtyAsPerc] = useState(false);
   const { isTimeFlipped } = useTimeDirectionStore();
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -88,6 +90,11 @@ export const DataGrid = ({
       setShowStats(storedShowStats === "true");
     }
 
+    const storedShowQtyAsPerc = localStorage.getItem(SHOW_QTY_AS_PERC_KEY);
+    if (storedShowQtyAsPerc !== null) {
+      setShowQtyAsPerc(storedShowQtyAsPerc === "true");
+    }
+
     const storedSelectedGroups = localStorage.getItem(SELECTED_GROUPS_KEY);
     if (storedSelectedGroups) {
       try {
@@ -105,9 +112,10 @@ export const DataGrid = ({
   useEffect(() => {
     if (isInitialized) {
       localStorage.setItem(SHOW_STATS_KEY, String(showStats));
+      localStorage.setItem(SHOW_QTY_AS_PERC_KEY, String(showQtyAsPerc));
       localStorage.setItem(SELECTED_GROUPS_KEY, JSON.stringify(selectedGroups));
     }
-  }, [showStats, selectedGroups, isInitialized]);
+  }, [showStats, showQtyAsPerc, selectedGroups, isInitialized]);
 
   useEffect(() => {
     if (gridApi && destination) {
@@ -213,6 +221,18 @@ export const DataGrid = ({
     });
   }, [groupedData]);
 
+  const colTotals = useMemo(() => {
+    const totals: Record<string, number> = { totalQty: 0 };
+    rowData.forEach((row) => {
+      totals["totalQty"] =
+        (totals["totalQty"] ?? 0) + (Number(row.totalQty) || 0);
+      periods.forEach((p) => {
+        totals[p] = (totals[p] ?? 0) + (Number(row[p]) || 0);
+      });
+    });
+    return totals;
+  }, [rowData, periods]);
+
   const colDefs = useMemo<ColDef<GridRow>[]>(() => {
     const showQty = selectedGroups.includes("qty");
     const showRate = selectedGroups.includes("rate");
@@ -317,7 +337,14 @@ export const DataGrid = ({
         pinned: "left",
         filter: "agMultiColumnFilter",
         aggFunc: "sum",
-        valueFormatter: (params) => formatIndianNumber(params.value),
+        valueFormatter: (params) => {
+          if (showQtyAsPerc) {
+            const total = colTotals["totalQty"];
+            if (!total) return formatIndianNumber(params.value);
+            return ((params.value / total) * 100).toFixed(1) + "%";
+          }
+          return formatIndianNumber(params.value);
+        },
         cellStyle: qtyStyle,
       },
       {
@@ -574,7 +601,14 @@ export const DataGrid = ({
         hide: !showQty,
         sortable: false,
         aggFunc: "sum",
-        valueFormatter: (params) => formatIndianNumber(params.value),
+        valueFormatter: (params) => {
+          if (showQtyAsPerc) {
+            const total = colTotals[period];
+            if (!total) return formatIndianNumber(params.value);
+            return ((params.value / total) * 100).toFixed(1) + "%";
+          }
+          return formatIndianNumber(params.value);
+        },
         cellStyle: qtyStyle,
       });
 
@@ -652,7 +686,14 @@ export const DataGrid = ({
       });
     });
     return defs;
-  }, [periods, selectedGroups, showStats, isTimeFlipped]);
+  }, [
+    periods,
+    selectedGroups,
+    showStats,
+    showQtyAsPerc,
+    colTotals,
+    isTimeFlipped,
+  ]);
 
   useEffect(() => {
     if (gridApi) {
@@ -701,6 +742,17 @@ export const DataGrid = ({
           />
         </div>
         <div className="flex items-center gap-4">
+          {selectedGroups.includes("qty") && (
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showQtyAsPerc}
+                onChange={(e) => setShowQtyAsPerc(e.target.checked)}
+                className="rounded border-gray-300"
+              />
+              Qty as %
+            </label>
+          )}
           {selectedGroups.length > 0 && (
             <div className="flex items-center gap-2">
               <label className="flex items-center gap-2 text-sm cursor-pointer">
