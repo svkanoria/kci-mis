@@ -61,7 +61,7 @@ const query = `*[_type == "helpArticle"]{ _id, title, content }`;
 
 type HelpArticle = { _id: string; title: string; content: any };
 
-export function HelpModal({ children }: { children: React.ReactNode }) {
+export function HelpSheet({ children }: { children: React.ReactNode }) {
   const [articles, setArticles] = useState<HelpArticle[] | null>(null);
   const [loading, setLoading] = useState(false);
 

@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { HomeButton } from "./homeButton";
-import { HelpModal } from "./helpModal";
+import { HelpSheet } from "./helpSheet";
 import { User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -94,7 +94,7 @@ export function NavBar() {
                   </p>
                 </div>
                 <div className="border-t pt-2 mt-2 flex flex-col gap-1">
-                  <HelpModal>
+                  <HelpSheet>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -102,7 +102,7 @@ export function NavBar() {
                     >
                       Help
                     </Button>
-                  </HelpModal>
+                  </HelpSheet>
                   <Button
                     variant="ghost"
                     size="sm"
