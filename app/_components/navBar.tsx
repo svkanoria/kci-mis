@@ -1,8 +1,9 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { HomeButton } from "./homeButton";
-import { User, HelpCircle } from "lucide-react";
+import { User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -23,6 +24,24 @@ export function NavBar() {
   const { user } = useUser();
   const { signOut } = useClerk();
   const { title } = useHeaderTitleStore();
+  const [minDate, setMinDate] = useState<string | null>(null);
+  const [maxDate, setMaxDate] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/sales-date-range")
+      .then((res) => res.json())
+      .then((data) => {
+        const fmt = (val: string) =>
+          new Date(val).toLocaleDateString("en-GB", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          });
+        if (data.maxDate) setMaxDate(fmt(data.maxDate));
+        if (data.minDate) setMinDate(fmt(data.minDate));
+      })
+      .catch(() => {});
+  }, []);
 
   const isHomePage = pathname === "/";
 
@@ -32,13 +51,31 @@ export function NavBar() {
         {!isHomePage && <HomeButton />}
         {title && <h1 className="ml-4 text-lg font-semibold">{title}</h1>}
       </div>
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon" asChild title="Help">
-          <Link href="/help">
-            <HelpCircle className="h-5 w-5" />
-            <span className="sr-only">Help</span>
-          </Link>
-        </Button>
+      <div className="flex items-center gap-4">
+        {(maxDate || minDate) && (
+          <div className="hidden sm:grid grid-cols-[auto_auto] gap-x-3 gap-y-0.5 items-center">
+            {maxDate && (
+              <>
+                <span className="text-xs text-muted-foreground leading-tight">
+                  Latest
+                </span>
+                <span className="text-xs text-muted-foreground leading-tight font-medium text-right">
+                  {maxDate}
+                </span>
+              </>
+            )}
+            {minDate && (
+              <>
+                <span className="text-xs text-muted-foreground/60 leading-tight">
+                  Since
+                </span>
+                <span className="text-xs text-muted-foreground/60 leading-tight text-right">
+                  {minDate}
+                </span>
+              </>
+            )}
+          </div>
+        )}
         {user && (
           <Popover>
             <PopoverTrigger asChild>
@@ -55,7 +92,15 @@ export function NavBar() {
                     {user.primaryEmailAddress?.emailAddress}
                   </p>
                 </div>
-                <div className="border-t pt-2 mt-2">
+                <div className="border-t pt-2 mt-2 flex flex-col gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    asChild
+                    className="w-full justify-start"
+                  >
+                    <Link href="/help">Help</Link>
+                  </Button>
                   <Button
                     variant="ghost"
                     size="sm"
