@@ -94,7 +94,7 @@ export function NavBar() {
                   </p>
                 </div>
                 <div className="border-t pt-2 mt-2 flex flex-col gap-1">
-                  <HelpSheet>
+                  <HelpSheet page={pathname.slice(1) || undefined}>
                     <Button
                       variant="ghost"
                       size="sm"
