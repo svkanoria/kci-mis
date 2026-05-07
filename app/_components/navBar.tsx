@@ -78,6 +78,13 @@ export function NavBar() {
           </div>
         )}
         {user && (
+          <HelpSheet page={pathname.slice(1) || undefined}>
+            <Button variant="outline" className="rounded-full">
+              Help
+            </Button>
+          </HelpSheet>
+        )}
+        {user && (
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" size="icon" className="rounded-full">
@@ -94,15 +101,6 @@ export function NavBar() {
                   </p>
                 </div>
                 <div className="border-t pt-2 mt-2 flex flex-col gap-1">
-                  <HelpSheet page={pathname.slice(1) || undefined}>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-start"
-                    >
-                      Help
-                    </Button>
-                  </HelpSheet>
                   <Button
                     variant="ghost"
                     size="sm"

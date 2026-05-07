@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { PortableText, type PortableTextComponents } from "@portabletext/react";
 import { Heading } from "@/components/typography/heading";
 import { client } from "@/sanity/lib/client";
@@ -88,8 +89,15 @@ export function HelpSheet({
   const [articles, setArticles] = useState<HelpArticle[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [fetchedPage, setFetchedPage] = useState<string | undefined>(undefined);
+  const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
 
   function handleOpenChange(open: boolean) {
+    setOpen(open);
     if (open && (articles === null || fetchedPage !== page) && !loading) {
       setLoading(true);
       client
@@ -107,7 +115,7 @@ export function HelpSheet({
   const pageArticles = articles?.filter((a) => a.scope !== "common") ?? [];
 
   return (
-    <Sheet onOpenChange={handleOpenChange}>
+    <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetTrigger asChild>{children}</SheetTrigger>
       <SheetContent
         side="right"

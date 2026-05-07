@@ -764,16 +764,6 @@ export const DataGrid = ({
                 />
                 Show Stats
               </label>
-              <Tooltip delayDuration={200}>
-                <TooltipTrigger asChild>
-                  <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>
-                    Stats columns show up to the left of the time-series columns
-                  </p>
-                </TooltipContent>
-              </Tooltip>
             </div>
           )}
           <div className="w-[300px]">
