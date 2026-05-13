@@ -42,6 +42,7 @@ type IRow = Awaited<ReturnType<typeof getTopCustomers>>[number];
 const lsKey = (key: string) => `top-customers-${key}`;
 const SHOW_STATS_KEY = lsKey("showStats");
 const SHOW_QTY_AS_PERC_KEY = lsKey("showQtyAsPerc");
+const PERC_BASE_KEY = lsKey("percBase");
 const SELECTED_GROUPS_KEY = lsKey("selectedGroups");
 const GRID_SORT_KEY = lsKey("sort");
 
@@ -63,6 +64,9 @@ export const DataGrid = ({
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
   const [showStats, setShowStats] = useState(false);
   const [showQtyAsPerc, setShowQtyAsPerc] = useState(false);
+  const [percBase, setPercBase] = useState<"grand-total" | "within-group">(
+    "grand-total",
+  );
   const { isTimeFlipped } = useTimeDirectionStore();
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -95,6 +99,11 @@ export const DataGrid = ({
       setShowQtyAsPerc(storedShowQtyAsPerc === "true");
     }
 
+    const storedPercBase = localStorage.getItem(PERC_BASE_KEY);
+    if (storedPercBase === "within-group" || storedPercBase === "grand-total") {
+      setPercBase(storedPercBase);
+    }
+
     const storedSelectedGroups = localStorage.getItem(SELECTED_GROUPS_KEY);
     if (storedSelectedGroups) {
       try {
@@ -113,9 +122,10 @@ export const DataGrid = ({
     if (isInitialized) {
       localStorage.setItem(SHOW_STATS_KEY, String(showStats));
       localStorage.setItem(SHOW_QTY_AS_PERC_KEY, String(showQtyAsPerc));
+      localStorage.setItem(PERC_BASE_KEY, percBase);
       localStorage.setItem(SELECTED_GROUPS_KEY, JSON.stringify(selectedGroups));
     }
-  }, [showStats, showQtyAsPerc, selectedGroups, isInitialized]);
+  }, [showStats, showQtyAsPerc, percBase, selectedGroups, isInitialized]);
 
   useEffect(() => {
     if (gridApi && destination) {
@@ -339,6 +349,13 @@ export const DataGrid = ({
         aggFunc: "sum",
         valueFormatter: (params) => {
           if (showQtyAsPerc) {
+            if (percBase === "within-group") {
+              const groupTotal =
+                params.node?.parent?.aggData?.["totalQty"] ??
+                colTotals["totalQty"];
+              if (!groupTotal) return formatIndianNumber(params.value);
+              return ((params.value / groupTotal) * 100).toFixed(1) + "%";
+            }
             const total = colTotals["totalQty"];
             if (!total) return formatIndianNumber(params.value);
             return ((params.value / total) * 100).toFixed(1) + "%";
@@ -603,6 +620,12 @@ export const DataGrid = ({
         aggFunc: "sum",
         valueFormatter: (params) => {
           if (showQtyAsPerc) {
+            if (percBase === "within-group") {
+              const groupTotal =
+                params.node?.parent?.aggData?.[period] ?? colTotals[period];
+              if (!groupTotal) return formatIndianNumber(params.value);
+              return ((params.value / groupTotal) * 100).toFixed(1) + "%";
+            }
             const total = colTotals[period];
             if (!total) return formatIndianNumber(params.value);
             return ((params.value / total) * 100).toFixed(1) + "%";
@@ -691,6 +714,7 @@ export const DataGrid = ({
     selectedGroups,
     showStats,
     showQtyAsPerc,
+    percBase,
     colTotals,
     isTimeFlipped,
   ]);
@@ -743,14 +767,24 @@ export const DataGrid = ({
         </div>
         <div className="flex items-center gap-4">
           {selectedGroups.includes("qty") && (
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <label className="flex items-center gap-1 text-sm cursor-pointer">
               <input
                 type="checkbox"
                 checked={showQtyAsPerc}
                 onChange={(e) => setShowQtyAsPerc(e.target.checked)}
                 className="rounded border-gray-300"
               />
-              Qty as %
+              <span>Qty as % of</span>
+              <select
+                value={percBase}
+                onChange={(e) =>
+                  setPercBase(e.target.value as "grand-total" | "within-group")
+                }
+                className="ml-1 bg-gray-100 rounded-sm text-sm p-1 font-medium"
+              >
+                <option value="grand-total">total</option>
+                <option value="within-group">group</option>
+              </select>
             </label>
           )}
           {selectedGroups.length > 0 && (
