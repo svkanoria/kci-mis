@@ -21,7 +21,6 @@ export async function getDistributionPattern(
   const orderedSalesSq = db
     .select({
       id: filteredRawSq.id,
-      consigneeId: filteredRawSq.consignee,
       consigneeName: filteredRawSq.consigneeName,
       recipientName: filteredRawSq.recipientName,
       distChannelDescription: filteredRawSq.distChannelDescription,
@@ -45,33 +44,40 @@ export async function getDistributionPattern(
 
   const aggregatesSq = db
     .select({
-      consigneeId: salesInvoicesRawTable.consignee,
-      lastInvDate: sql<string>`max(${salesInvoicesRawTable.invDate})`.as(
-        "lastInvDate",
-      ),
+      consigneeName: filteredRawSq.consigneeName,
+      lastInvDate: sql<string>`max(${filteredRawSq.invDate})`.as("lastInvDate"),
       invCount: count().as("invCount"),
     })
-    .from(salesInvoicesRawTable)
-    .groupBy(salesInvoicesRawTable.consignee)
+    .from(filteredRawSq)
+    .groupBy(filteredRawSq.consigneeName)
     .as("aggregates");
+
+  const isCategoryFilter = filters.product?.startsWith("C:");
+
+  const qtyCol = isCategoryFilter
+    ? salesInvoicesDerivedTable.normQty
+    : filteredRawSq.qty;
 
   const sixMonthQtySq = db
     .select({
-      consigneeId: salesInvoicesRawTable.consignee,
-      avgQtyL6M: sql<number>`SUM(${salesInvoicesRawTable.qty}) / 6`
+      consigneeName: filteredRawSq.consigneeName,
+      avgQtyL6M: sql<number>`SUM(${qtyCol}) / 6`
         .mapWith(Number)
         .as("avg_qty_l6m"),
     })
-    .from(salesInvoicesRawTable)
-    .where(
-      sql`${salesInvoicesRawTable.invDate} >= (SELECT MAX(${salesInvoicesRawTable.invDate}) - INTERVAL '6 months' FROM ${salesInvoicesRawTable})`,
+    .from(filteredRawSq)
+    .leftJoin(
+      salesInvoicesDerivedTable,
+      eq(filteredRawSq.id, salesInvoicesDerivedTable.rawId),
     )
-    .groupBy(salesInvoicesRawTable.consignee)
+    .where(
+      sql`${filteredRawSq.invDate} >= (SELECT MAX(${filteredRawSq.invDate}) - INTERVAL '6 months' FROM ${filteredRawSq})`,
+    )
+    .groupBy(filteredRawSq.consigneeName)
     .as("six_months_qty");
 
   const rows = await db
     .select({
-      consigneeId: orderedSalesSq.consigneeId,
       consigneeName: orderedSalesSq.consigneeName,
       recipientName: orderedSalesSq.recipientName,
       distChannelDescription: orderedSalesSq.distChannelDescription,
@@ -87,11 +93,11 @@ export async function getDistributionPattern(
     .from(orderedSalesSq)
     .leftJoin(
       aggregatesSq,
-      eq(orderedSalesSq.consigneeId, aggregatesSq.consigneeId),
+      eq(orderedSalesSq.consigneeName, aggregatesSq.consigneeName),
     )
     .leftJoin(
       sixMonthQtySq,
-      eq(orderedSalesSq.consigneeId, sixMonthQtySq.consigneeId),
+      eq(orderedSalesSq.consigneeName, sixMonthQtySq.consigneeName),
     )
     .where(
       and(
