@@ -2,13 +2,11 @@ import { db } from "@/db/drizzle";
 import {
   salesInvoicesRawTable,
   salesInvoicesDerivedTable,
-  methanolPricesInterpolatedView,
   routesTable,
 } from "@/db/schema";
 import { and, eq, isNotNull, not, sql } from "drizzle-orm";
 import { mean, standardDeviation, sum } from "simple-statistics";
 import { calculateRegression } from "@/lib/utils/stats";
-import { match } from "ts-pattern";
 import {
   CommonFilterParams,
   getRawCommonConditions,
@@ -19,7 +17,6 @@ import {
   getDeltaAmountSql,
   addDeltaAmountJoinsToQuery,
 } from "./utils";
-import { add } from "lodash";
 
 export async function getTopCustomers(
   filters: CommonFilterParams &
