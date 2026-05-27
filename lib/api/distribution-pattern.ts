@@ -47,6 +47,9 @@ export async function getDistributionPattern(
       consigneeName: filteredRawSq.consigneeName,
       lastInvDate: sql<string>`max(${filteredRawSq.invDate})`.as("lastInvDate"),
       invCount: count().as("invCount"),
+      plants: sql<
+        string[]
+      >`array_agg(DISTINCT ${filteredRawSq.plant}::text)`.as("plants"),
     })
     .from(filteredRawSq)
     .groupBy(filteredRawSq.consigneeName)
@@ -89,6 +92,7 @@ export async function getDistributionPattern(
       ),
       lastInvDate: aggregatesSq.lastInvDate,
       invCount: aggregatesSq.invCount,
+      plants: aggregatesSq.plants,
     })
     .from(orderedSalesSq)
     .leftJoin(

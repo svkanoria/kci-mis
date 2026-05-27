@@ -16,6 +16,7 @@ import { AgGridReact } from "ag-grid-react";
 import { getDistributionPattern } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import { formatIndianNumber } from "@/lib/utils/format";
+import { isArray } from "lodash";
 
 // Register License Key with LicenseManager
 LicenseManager.setLicenseKey(process.env.NEXT_PUBLIC_AG_GRID_LICENSE || "");
@@ -86,6 +87,12 @@ export const DataGrid = ({ data }: { data: Promise<ResponseType> }) => {
     };
   }, []);
 
+  const autoGroupColumnDef = useMemo<ColDef>(() => {
+    return {
+      width: 130,
+    };
+  }, []);
+
   const colDefs = useMemo<ColDef<IRow>[]>(() => {
     return [
       {
@@ -131,6 +138,7 @@ export const DataGrid = ({ data }: { data: Promise<ResponseType> }) => {
         width: 160,
         filter: "agSetColumnFilter",
         cellRenderer: ChannelWithRecipientRenderer,
+        rowGroup: true,
       },
       {
         field: "prevDistChannelDescription",
@@ -146,6 +154,15 @@ export const DataGrid = ({ data }: { data: Promise<ResponseType> }) => {
         type: "numericColumn",
         filter: "agNumberColumnFilter",
         valueFormatter: (params) => formatIndianNumber(params.value),
+      },
+      {
+        field: "plants",
+        headerName: "Plants",
+        width: 120,
+        filter: "agSetColumnFilter",
+        sortable: false,
+        valueFormatter: (params) =>
+          isArray(params.value) ? params.value?.join(", ") : params.value,
       },
       {
         field: "switchCount",
@@ -230,10 +247,12 @@ export const DataGrid = ({ data }: { data: Promise<ResponseType> }) => {
           rowData={rows}
           columnDefs={colDefs}
           defaultColDef={defaultColDef}
+          autoGroupColumnDef={autoGroupColumnDef}
           headerHeight={60}
           rowHeight={47}
           pagination
           rowGroupPanelShow="always"
+          groupDisplayType="multipleColumns"
           suppressAggFuncInHeader
           suppressAggFilteredOnly
           enableBrowserTooltips
