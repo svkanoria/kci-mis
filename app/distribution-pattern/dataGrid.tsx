@@ -109,6 +109,7 @@ export const DataGrid = ({ data }: { data: Promise<ResponseType> }) => {
         width: 150,
         filter: "agDateColumnFilter",
         sort: "desc",
+        sortIndex: 1,
         valueFormatter: (params) => {
           if (!params.value) return "";
           return new Date(params.value).toLocaleDateString("en-IN", {
@@ -139,6 +140,8 @@ export const DataGrid = ({ data }: { data: Promise<ResponseType> }) => {
         filter: "agSetColumnFilter",
         cellRenderer: ChannelWithRecipientRenderer,
         rowGroup: true,
+        sort: "desc",
+        sortIndex: 0,
       },
       {
         field: "prevDistChannelDescription",
@@ -175,6 +178,13 @@ export const DataGrid = ({ data }: { data: Promise<ResponseType> }) => {
         field: "invCount",
         headerName: "# Invoices",
         width: 100,
+        type: "numericColumn",
+        filter: "agNumberColumnFilter",
+      },
+      {
+        field: "invoicesBetween",
+        headerName: "# Invs b/w Switch & Last",
+        width: 110,
         type: "numericColumn",
         filter: "agNumberColumnFilter",
       },

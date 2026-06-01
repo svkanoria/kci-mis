@@ -33,6 +33,10 @@ export async function getDistributionPattern(
         sql<string>`LAG(${filteredRawSq.distChannelDescription}) OVER (PARTITION BY ${filteredRawSq.consigneeName} ORDER BY ${filteredRawSq.invDate} ASC, ${filteredRawSq.id} ASC)`.as(
           "prevDistChannelDescription",
         ),
+      invoicesBetween:
+        sql<number>`GREATEST(0, ROW_NUMBER() OVER (PARTITION BY ${filteredRawSq.consigneeName} ORDER BY ${filteredRawSq.invDate} DESC, ${filteredRawSq.id} DESC) - 2)`
+          .mapWith(Number)
+          .as("invoicesBetween"),
     })
     .from(filteredRawSq)
     .leftJoin(
@@ -87,6 +91,7 @@ export async function getDistributionPattern(
       invDate: orderedSalesSq.invDate,
       prevRecipientName: orderedSalesSq.prevRecipientName,
       prevDistChannelDescription: orderedSalesSq.prevDistChannelDescription,
+      invoicesBetween: orderedSalesSq.invoicesBetween,
       avgQtyL6M: sql<number>`COALESCE(${sixMonthQtySq.avgQtyL6M}, 0)`.mapWith(
         Number,
       ),
