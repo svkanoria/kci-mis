@@ -45,12 +45,19 @@ const ChannelWithRecipientRenderer = (params: ICellRendererParams<IRow>) => {
     return <span>{channel}</span>;
   }
 
+  const isSuspicious =
+    params.data.recipientName === params.data.prevRecipientName;
+
   return (
     <div className="flex flex-col justify-center h-full w-full pr-1 pt-1.25">
       <span className="truncate leading-tight font-medium" title={channel}>
         {channel}
       </span>
-      <div className="flex items-center gap-1 text-[10px] text-muted-foreground w-full -mt-0.5">
+      <div
+        className={`flex items-center gap-1 text-[10px] w-full -mt-0.5 ${
+          isSuspicious ? "text-red-500 font-semibold" : "text-muted-foreground"
+        }`}
+      >
         <span className="truncate" title={recipientName}>
           {recipientName}
         </span>

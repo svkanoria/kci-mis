@@ -138,6 +138,12 @@ export async function getDistributionPattern(
     if (row.consigneeName !== currConsigneeName) {
       currConsigneeName = row.consigneeName;
       const resultRow = { ...row, history: [], switchCount: 1 };
+
+      const channel = resultRow.distChannelDescription;
+      if (resultRow.recipientName === resultRow.prevRecipientName) {
+        resultRow.distChannelDescription = `${channel} ⚠️`;
+      }
+
       result.push(resultRow);
     } else {
       const lastEntry = result[result.length - 1]!;
