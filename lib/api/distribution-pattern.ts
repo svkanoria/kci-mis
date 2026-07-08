@@ -34,7 +34,7 @@ export async function getDistributionPattern(
           "prevDistChannelDescription",
         ),
       invoicesBetween:
-        sql<number>`GREATEST(0, ROW_NUMBER() OVER (PARTITION BY ${filteredRawSq.consigneeName} ORDER BY ${filteredRawSq.invDate} DESC, ${filteredRawSq.id} DESC) - 2)`
+        sql<number>`GREATEST(0, ROW_NUMBER() OVER (PARTITION BY ${filteredRawSq.consigneeName} ORDER BY ${filteredRawSq.invDate} DESC, ${filteredRawSq.id} DESC) - 1)`
           .mapWith(Number)
           .as("invoicesBetween"),
     })
