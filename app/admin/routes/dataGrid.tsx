@@ -27,6 +27,8 @@ export const DataGrid = ({ routes }: { routes: Route[] }) => {
   const [rowData, setRowData] = useState<Route[]>(routes);
   const [quickFilterText, setQuickFilterText] = useState("");
 
+  const hasMissingDistance = (route: Route) => route.distanceKm == null;
+
   const handleCopyCsv = () => {
     const data = rowData.map((row) => ({
       plant: row.plant,
@@ -58,7 +60,7 @@ export const DataGrid = ({ routes }: { routes: Route[] }) => {
         cellStyle: (params) =>
           params.value === null || params.value === undefined
             ? { backgroundColor: "var(--warning)", opacity: 0.3 }
-            : null,
+            : { backgroundColor: "", opacity: 1 },
         valueParser: (params) => {
           return Number(params.newValue);
         },
@@ -94,12 +96,7 @@ export const DataGrid = ({ routes }: { routes: Route[] }) => {
         <div className="flex items-center gap-4">
           <div className="text-sm text-warning flex items-center gap-2">
             <AlertTriangle className="h-4 w-4" />
-            {
-              routes.filter(
-                (r) => r.distanceKm === null || r.distanceKm === undefined,
-              ).length
-            }{" "}
-            distances missing
+            {rowData.filter(hasMissingDistance).length} distances missing
           </div>
           <Button onClick={handleCopyCsv}>Copy as CSV</Button>
         </div>

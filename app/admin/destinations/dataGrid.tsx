@@ -39,6 +39,9 @@ export const DataGrid = ({ destinations }: { destinations: Destination[] }) => {
   const [lngInput, setLngInput] = useState("");
   const [quickFilterText, setQuickFilterText] = useState("");
 
+  const hasMissingCoordinates = (destination: Destination) =>
+    destination.lat == null || destination.lng == null;
+
   const handlePasteCoordinates = async () => {
     try {
       const text = await navigator.clipboard.readText();
@@ -140,7 +143,7 @@ export const DataGrid = ({ destinations }: { destinations: Destination[] }) => {
         cellStyle: (params) =>
           params.value === null || params.value === undefined
             ? { backgroundColor: "var(--warning)", opacity: 0.3 }
-            : null,
+            : { backgroundColor: "", opacity: 1 },
       },
       {
         field: "lng",
@@ -149,7 +152,7 @@ export const DataGrid = ({ destinations }: { destinations: Destination[] }) => {
         cellStyle: (params) =>
           params.value === null || params.value === undefined
             ? { backgroundColor: "var(--warning)", opacity: 0.3 }
-            : null,
+            : { backgroundColor: "", opacity: 1 },
       },
       {
         headerName: "",
@@ -174,10 +177,10 @@ export const DataGrid = ({ destinations }: { destinations: Destination[] }) => {
                 size="icon"
                 className="h-6 w-6"
                 title="Copy coordinates"
-                disabled={!params.data.lat || !params.data.lng}
+                disabled={params.data.lat == null || params.data.lng == null}
                 onClick={() => {
                   const { lat, lng } = params.data;
-                  if (lat && lng) {
+                  if (lat != null && lng != null) {
                     navigator.clipboard.writeText(`${lat},${lng}`);
                   }
                 }}
@@ -212,8 +215,7 @@ export const DataGrid = ({ destinations }: { destinations: Destination[] }) => {
         <div className="flex items-center gap-4">
           <div className="text-sm text-warning flex items-center gap-2">
             <AlertTriangle className="h-4 w-4" />
-            {destinations.filter((d) => !d.lat || !d.lng).length} coordinates
-            missing
+            {rowData.filter(hasMissingCoordinates).length} coordinates missing
           </div>
           <Button onClick={handleCopyCsv}>Copy as CSV</Button>
         </div>
