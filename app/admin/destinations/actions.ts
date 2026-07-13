@@ -4,6 +4,7 @@ import { db } from "@/db/drizzle";
 import { destinationsTable } from "@/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { getDestinationCustomers as fetchCustomers } from "@/lib/api";
 
 export async function updateDestinationCoordinates(
   id: number,
@@ -21,4 +22,8 @@ export async function updateDestinationCoordinates(
     .where(eq(destinationsTable.id, id));
 
   revalidatePath("/admin/destinations");
+}
+
+export async function getDestinationCustomers(city: string, region: string) {
+  return await fetchCustomers(city, region);
 }

@@ -8,7 +8,10 @@ import {
   ColDef,
 } from "ag-grid-enterprise";
 import { AgGridReact } from "ag-grid-react";
-import { updateDestinationCoordinates } from "./actions";
+import {
+  updateDestinationCoordinates,
+  getDestinationCustomers,
+} from "./actions";
 import { getDestinations } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,7 +24,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { stringify } from "csv-stringify/sync";
-import { AlertTriangle, ClipboardPaste, Copy } from "lucide-react";
+import { AlertTriangle, ClipboardPaste, Copy, Edit, List } from "lucide-react";
 
 // Register License Key with LicenseManager
 LicenseManager.setLicenseKey(process.env.NEXT_PUBLIC_AG_GRID_LICENSE || "");
@@ -38,6 +41,28 @@ export const DataGrid = ({ destinations }: { destinations: Destination[] }) => {
   const [latInput, setLatInput] = useState("");
   const [lngInput, setLngInput] = useState("");
   const [quickFilterText, setQuickFilterText] = useState("");
+  const [isCustomersOpen, setIsCustomersOpen] = useState(false);
+  const [loadingCustomers, setLoadingCustomers] = useState(false);
+  const [customersList, setCustomersList] = useState<string[]>([]);
+  const [dialogDestName, setDialogDestName] = useState("");
+
+  const handleViewCustomers = async (destination: Destination) => {
+    setDialogDestName(`${destination.city}, ${destination.region}`);
+    setLoadingCustomers(true);
+    setIsCustomersOpen(true);
+    try {
+      const list = await getDestinationCustomers(
+        destination.city,
+        destination.region,
+      );
+      setCustomersList(list);
+    } catch (error) {
+      alert("Failed to load customers");
+      setIsCustomersOpen(false);
+    } finally {
+      setLoadingCustomers(false);
+    }
+  };
 
   const hasMissingCoordinates = (destination: Destination) =>
     destination.lat == null || destination.lng == null;
@@ -133,7 +158,7 @@ export const DataGrid = ({ destinations }: { destinations: Destination[] }) => {
   };
 
   const colDefs = useMemo<ColDef<Destination>[]>(() => {
-    return [
+    const cols: ColDef<Destination>[] = [
       { field: "city", headerName: "City", width: 150, filter: true },
       { field: "region", headerName: "Region", width: 150, filter: true },
       {
@@ -189,17 +214,28 @@ export const DataGrid = ({ destinations }: { destinations: Destination[] }) => {
               </Button>
               <Button
                 variant="outline"
-                size="sm"
-                className="text-xs h-6"
+                size="icon"
+                className="h-6 w-6"
+                title="Edit coordinates"
                 onClick={() => handleEdit(params.data)}
               >
-                Edit
+                <Edit className="h-3 w-3" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-6 w-6"
+                title="View customers"
+                onClick={() => handleViewCustomers(params.data)}
+              >
+                <List className="h-3 w-3" />
               </Button>
             </>
           );
         },
       },
     ];
+    return cols;
   }, []);
 
   return (
@@ -290,6 +326,36 @@ export const DataGrid = ({ destinations }: { destinations: Destination[] }) => {
               Cancel
             </Button>
             <Button onClick={handleSave}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isCustomersOpen} onOpenChange={setIsCustomersOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Customers in {dialogDestName}</DialogTitle>
+          </DialogHeader>
+          <div className="py-4 max-h-[300px] overflow-y-auto">
+            {loadingCustomers ? (
+              <div className="text-sm text-muted-foreground text-center py-4">
+                Loading customers...
+              </div>
+            ) : customersList.length === 0 ? (
+              <div className="text-sm text-muted-foreground text-center py-4">
+                No customers found.
+              </div>
+            ) : (
+              <ul className="list-disc pl-5 space-y-1.5 text-sm">
+                {customersList.map((customer, idx) => (
+                  <li key={idx} className="font-medium text-foreground">
+                    {customer}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setIsCustomersOpen(false)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

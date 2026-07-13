@@ -9,11 +9,18 @@ import {
   CellValueChangedEvent,
 } from "ag-grid-enterprise";
 import { AgGridReact } from "ag-grid-react";
-import { updateRouteDistance } from "./actions";
+import { updateRouteDistance, getRouteCustomers } from "./actions";
 import { getRoutes } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, List } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { stringify } from "csv-stringify/sync";
 
 // Register License Key with LicenseManager
@@ -26,6 +33,25 @@ type Route = Awaited<ReturnType<typeof getRoutes>>[number];
 export const DataGrid = ({ routes }: { routes: Route[] }) => {
   const [rowData, setRowData] = useState<Route[]>(routes);
   const [quickFilterText, setQuickFilterText] = useState("");
+  const [isCustomersOpen, setIsCustomersOpen] = useState(false);
+  const [loadingCustomers, setLoadingCustomers] = useState(false);
+  const [customersList, setCustomersList] = useState<string[]>([]);
+  const [dialogRouteName, setDialogRouteName] = useState("");
+
+  const handleViewCustomers = async (route: Route) => {
+    setDialogRouteName(`${route.city}, ${route.region}`);
+    setLoadingCustomers(true);
+    setIsCustomersOpen(true);
+    try {
+      const list = await getRouteCustomers(route.city, route.region);
+      setCustomersList(list);
+    } catch (error) {
+      alert("Failed to load customers");
+      setIsCustomersOpen(false);
+    } finally {
+      setLoadingCustomers(false);
+    }
+  };
 
   const hasMissingDistance = (route: Route) => route.distanceKm == null;
 
@@ -48,7 +74,7 @@ export const DataGrid = ({ routes }: { routes: Route[] }) => {
   };
 
   const colDefs = useMemo<ColDef<Route>[]>(() => {
-    return [
+    const cols: ColDef<Route>[] = [
       { field: "plant", headerName: "From Plant", width: 150, filter: true },
       { field: "city", headerName: " To City", width: 150, filter: true },
       { field: "region", headerName: "Region", width: 150, filter: true },
@@ -61,11 +87,53 @@ export const DataGrid = ({ routes }: { routes: Route[] }) => {
           params.value === null || params.value === undefined
             ? { backgroundColor: "var(--warning)", opacity: 0.3 }
             : { backgroundColor: "", opacity: 1 },
+        cellRenderer: (params: any) => {
+          if (
+            params.value === null ||
+            params.value === undefined ||
+            params.value === ""
+          ) {
+            return <span className="italic text-xs">Double click to edit</span>;
+          }
+          return params.value;
+        },
         valueParser: (params) => {
           return Number(params.newValue);
         },
       },
+      {
+        headerName: "",
+        width: 60,
+        filter: false,
+        sortable: false,
+        resizable: false,
+        suppressHeaderMenuButton: true,
+        suppressNavigable: true,
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "8px",
+        },
+        cellRenderer: (params: any) => {
+          if (!params.data) return null;
+          return (
+            <>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-6 w-6"
+                title="View customers"
+                onClick={() => handleViewCustomers(params.data)}
+              >
+                <List className="h-3 w-3" />
+              </Button>
+            </>
+          );
+        },
+      },
     ];
+    return cols;
   }, []);
 
   const onCellValueChanged = async (event: CellValueChangedEvent<Route>) => {
@@ -122,6 +190,36 @@ export const DataGrid = ({ routes }: { routes: Route[] }) => {
           onCellValueChanged={onCellValueChanged}
         />
       </div>
+
+      <Dialog open={isCustomersOpen} onOpenChange={setIsCustomersOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Customers in {dialogRouteName}</DialogTitle>
+          </DialogHeader>
+          <div className="py-4 max-h-[300px] overflow-y-auto">
+            {loadingCustomers ? (
+              <div className="text-sm text-muted-foreground text-center py-4">
+                Loading customers...
+              </div>
+            ) : customersList.length === 0 ? (
+              <div className="text-sm text-muted-foreground text-center py-4">
+                No customers found.
+              </div>
+            ) : (
+              <ul className="list-disc pl-5 space-y-1.5 text-sm">
+                {customersList.map((customer, idx) => (
+                  <li key={idx} className="font-medium text-foreground">
+                    {customer}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setIsCustomersOpen(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

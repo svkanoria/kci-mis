@@ -1,6 +1,6 @@
 import { db } from "@/db/drizzle";
-import { destinationsTable } from "@/db/schema";
-import { sql } from "drizzle-orm";
+import { destinationsTable, salesInvoicesRawTable } from "@/db/schema";
+import { and, eq, sql } from "drizzle-orm";
 
 export async function getDestinations() {
   return await db
@@ -17,4 +17,19 @@ export async function getDestinations() {
     })
     .from(destinationsTable)
     .orderBy(destinationsTable.city);
+}
+
+export async function getDestinationCustomers(city: string, region: string) {
+  const result = await db
+    .selectDistinct({ consigneeName: salesInvoicesRawTable.consigneeName })
+    .from(salesInvoicesRawTable)
+    .where(
+      and(
+        eq(salesInvoicesRawTable.consigneeCity, city),
+        eq(salesInvoicesRawTable.consigneeRegion, region),
+      ),
+    )
+    .orderBy(salesInvoicesRawTable.consigneeName);
+
+  return result.map((r) => r.consigneeName).filter(Boolean);
 }
