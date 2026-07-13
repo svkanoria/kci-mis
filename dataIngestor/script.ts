@@ -1,7 +1,7 @@
 import path from "path";
 import fs from "fs";
 import { Command } from "commander";
-import { select, confirm } from "@inquirer/prompts";
+import { select, confirm, Separator } from "@inquirer/prompts";
 import { fileSelector } from "inquirer-file-selector";
 import chalk from "chalk";
 import logger, { logStyles } from "./logger";
@@ -10,6 +10,7 @@ import { insertSalesInvoicesFromCSV } from "./ops/insertSalesInvoicesFromCSV";
 import { insertICISMethanolPricesFromCSV } from "./ops/insertICISMethanolPricesFromCSV";
 import { computeRoutes } from "./ops/computeRoutes";
 import { deleteAllSalesData } from "./ops/deleteAllSalesData";
+import { deleteMethanolPriceData } from "./ops/deleteMethanolPriceData";
 import { populateDestinationCoords } from "./ops/populateDestinationCoords";
 import { populateRouteDistances } from "./ops/populateRouteDistances";
 
@@ -26,13 +27,18 @@ async function main() {
       const processingType = await select({
         message: "What type of processing do you want to do?",
         choices: [
+          new Separator("=== Sales Related Data ==="),
           { name: "Full sales data", value: "Full sales" },
-          { name: "Derived sales data", value: "Derived sales" },
-          { name: "Methanol price data", value: "Methanol price" },
-          { name: "Delete all sales data", value: "Delete sales" },
           { name: "Destination coordinates", value: "Dest coords" },
           { name: "Route distances", value: "Route distances" },
+          { name: "Derived sales data only", value: "Derived sales" },
+          { name: "Delete all sales related data", value: "Delete sales" },
+          new Separator("=== Raw Material Related Data ==="),
+          { name: "Methanol price data", value: "Methanol price" },
+          { name: "Delete Methanol price data", value: "Delete methanol" },
         ],
+        loop: false,
+        theme: { indexMode: "number" },
       });
 
       if (processingType === "Delete sales") {
@@ -45,6 +51,22 @@ async function main() {
 
         if (isConfirmed) {
           await deleteAllSalesData();
+        } else {
+          console.log(chalk.yellow("Operation cancelled."));
+        }
+        return;
+      }
+
+      if (processingType === "Delete methanol") {
+        const isConfirmed = await confirm({
+          message:
+            "Are you sure you want to delete all Methanol price data?" +
+            " This action cannot be undone.",
+          default: false,
+        });
+
+        if (isConfirmed) {
+          await deleteMethanolPriceData();
         } else {
           console.log(chalk.yellow("Operation cancelled."));
         }
