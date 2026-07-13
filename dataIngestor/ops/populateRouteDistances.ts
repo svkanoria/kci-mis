@@ -33,7 +33,10 @@ function calculateDistance(
   return R * c;
 }
 
-export async function populateRouteDistances(csvFilePath?: string) {
+export async function populateRouteDistances(
+  csvFilePath?: string,
+  skipEstimation = false,
+) {
   logger.info("Starting route distances population...");
 
   const manualDistances = new Map<
@@ -112,6 +115,14 @@ export async function populateRouteDistances(csvFilePath?: string) {
         updatedCount++;
         continue;
       }
+    }
+
+    if (skipEstimation) {
+      logger.info(
+        `Skipping distance estimation for route ${route.id} (plant: ${route.plant}, destination: ${route.destCity}).`
+      );
+      skippedCount++;
+      continue;
     }
 
     const plantLocation = plantCoords[route.plant as keyof typeof plantCoords];

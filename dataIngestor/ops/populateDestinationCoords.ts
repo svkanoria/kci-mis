@@ -13,7 +13,10 @@ async function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export async function populateDestinationCoords(csvFilePath?: string) {
+export async function populateDestinationCoords(
+  csvFilePath?: string,
+  skipApi = false,
+) {
   logger.info("Starting destination coordinates population...");
 
   const manualCoords = new Map<string, { lat: number; lon: number }>();
@@ -88,9 +91,17 @@ export async function populateDestinationCoords(csvFilePath?: string) {
           .where(eq(destinationsTable.id, dest.id));
 
         logger.info(
-          `Updated coordinates for ${dest.city} (from CSV): (${coords.lat}, ${coords.lon})`,
+          `Updated coordinates for ${dest.city} (from CSV): (${coords.lat}, ${coords.lon})`
         );
         updatedCount++;
+        continue;
+      }
+
+      if (skipApi) {
+        logger.info(
+          `Skipping API lookup for ${dest.city}, ${dest.region} (API lookup disabled).`
+        );
+        failedCount++;
         continue;
       }
 

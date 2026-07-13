@@ -80,6 +80,7 @@ async function main() {
         });
 
         let csvFilePath: string | undefined;
+        let skipApi = false;
 
         if (useCsv) {
           const selection = await fileSelector({
@@ -89,9 +90,16 @@ async function main() {
               (item.isDirectory || item.name.toLowerCase().endsWith(".csv")),
           });
           csvFilePath = selection.path;
+
+          const callApi = await confirm({
+            message:
+              "Do you want to call the geocoding API for destinations not found in the CSV?",
+            default: true,
+          });
+          skipApi = !callApi;
         }
 
-        await populateDestinationCoords(csvFilePath);
+        await populateDestinationCoords(csvFilePath, skipApi);
         return;
       }
 
@@ -102,6 +110,7 @@ async function main() {
         });
 
         let csvFilePath: string | undefined;
+        let skipEstimation = false;
 
         if (useCsv) {
           const selection = await fileSelector({
@@ -111,9 +120,16 @@ async function main() {
               (item.isDirectory || item.name.toLowerCase().endsWith(".csv")),
           });
           csvFilePath = selection.path;
+
+          const estimate = await confirm({
+            message:
+              "Do you want to estimate distances for routes not found in the CSV?",
+            default: true,
+          });
+          skipEstimation = !estimate;
         }
 
-        await populateRouteDistances(csvFilePath);
+        await populateRouteDistances(csvFilePath, skipEstimation);
         return;
       }
 
