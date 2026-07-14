@@ -41,12 +41,21 @@ const cityMappings: [RegExp, string][] = [
   [/Neloore/i, "Nellore"],
   [/North\s+West\s+Delhi/i, "Delhi North West"],
   [/Panoliankleshwar/i, "Panoli"],
+  [/Pangareddygudem.*/i, "Jangareddigudem"],
   [/Parawada.*/i, "Parawada"],
   [/Pune\s+Maharashtra/i, "Pune"],
+  [/Ranga\sReddy/i, "Rangareddy"],
+  [/Rangareddi/i, "Rangareddy"],
+  [/Roha\sraigad/i, "Roha"],
+  [/Ravdapura/i, "Ravlapura"],
   [/Sanga\sReddy/i, "Sangareddy"],
+  [/Sanglidist/i, "Sangli"],
+  [/Site\s+I\s+Panki\+Kanpur/i, "Kanpur"],
   [/Thiruvallore/i, "Thiruvallur"],
   [/Vish?akh?apata?nam/i, "Visakhapatnam"],
+  [/Visakhaptnam/i, "Visakhapatnam"],
   [/Vizianagram/i, "Vizianagaram"],
+  [/Yadadri\s*bhuvanagir.*/i, "Yadadri Bhuvanagiri"],
 ];
 
 // Keep keys sorted alphabetically for ease
