@@ -109,6 +109,7 @@ export const DataGrid = ({ routes }: { routes: Route[] }) => {
         resizable: false,
         suppressHeaderMenuButton: true,
         suppressNavigable: true,
+        cellClass: "no-focus-outline",
         cellStyle: {
           display: "flex",
           alignItems: "center",

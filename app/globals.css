@@ -127,3 +127,13 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Suppress AG-Grid cell focus border on action columns */
+.no-focus-outline.ag-cell-focus,
+.no-focus-outline.ag-cell-focus::after,
+.no-focus-outline.ag-cell-focus:focus {
+  outline: none !important;
+  border: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
