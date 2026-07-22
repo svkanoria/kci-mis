@@ -10,6 +10,7 @@ import {
   CircleMarker,
   Popup,
   Tooltip,
+  useMap,
 } from "react-leaflet";
 import { Button } from "@/components/ui/button";
 import { ExternalLink, ChevronLeft, Sliders, MapPin, ArrowUpDown } from "lucide-react";
@@ -62,6 +63,18 @@ function getClusterStyle(isDense: boolean, isSelected: boolean): ClusterStyle {
   }
 }
 
+// Helper component to establish a custom high z-index pane for consignee markers (above popupPane at 700)
+const ConsigneePaneSetup = () => {
+  const map = useMap();
+  useEffect(() => {
+    if (!map.getPane("consigneePane")) {
+      const pane = map.createPane("consigneePane");
+      pane.style.zIndex = "800"; // Higher than Leaflet popupPane (700)
+    }
+  }, [map]);
+  return null;
+};
+
 
 
 const RADIUS_KM = 100; // Fixed radius of 100 km for distribution hub identification
@@ -79,6 +92,7 @@ export const Map = ({
 }) => {
   const [minDensityQty, setMinDensityQty] = useState<number>(100);
   const [selectedClusterId, setSelectedClusterId] = useState<string | null>(null);
+  const [hoveredConsigneeId, setHoveredConsigneeId] = useState<number | string | null>(null);
 
   // Compute number of months in the date range
   const numMonths = useMemo(() => {
@@ -95,6 +109,7 @@ export const Map = ({
   useEffect(() => {
     setSelectedClusterId(null);
     setMinDensityQty(100);
+    setHoveredConsigneeId(null);
   }, [salesPoints]);
 
   // Compute clusters asynchronously in Web Worker thread using MILP Facility Location optimization
@@ -322,6 +337,28 @@ export const Map = ({
               </CircleMarker>
             );
           })}
+
+          <ConsigneePaneSetup />
+
+          {/* Pass 3: Plot Consignees as Dots for Activated/Selected Cluster */}
+          {selectedCluster &&
+            selectedCluster.points.map((point, idx) => {
+              const isHovered = hoveredConsigneeId === point.consigneeId;
+              return (
+                <CircleMarker
+                  key={`selected-point-${point.consigneeId}-${point.city}-${idx}`}
+                  center={[point.lat, point.lng]}
+                  radius={isHovered ? 8.5 : 4.5}
+                  pane="consigneePane"
+                  pathOptions={{
+                    color: isHovered ? "#44ef4aff" : "var(--color-indigo-900)",
+                    fillColor: "var(--color-indigo-600)",
+                    fillOpacity: isHovered ? 1 : 0.85,
+                    weight: isHovered ? 5.5 : 1.5,
+                  }}
+                />
+              );
+            })}
         </MapContainer>
       </div>
 
@@ -507,33 +544,42 @@ export const Map = ({
                   <tbody className="divide-y">
                     {selectedCluster.points
                       .sort((a, b) => b.totalQty - a.totalQty)
-                      .map((point, idx) => (
-                        <tr
-                          key={`${point.consigneeId}-${point.city}-${idx}`}
-                          className="hover:bg-gray-50"
-                        >
-                          <td className="px-3 py-2 min-w-0">
-                            <div className="font-semibold text-gray-800 break-words max-w-[180px]">
-                              {point.consigneeName}
-                            </div>
-                            <div className="text-[10px] text-gray-500">
-                              {point.city}, {point.region}
-                            </div>
-                          </td>
-                          <td className="px-3 py-2 text-right font-semibold text-gray-900">
-                            {formatIndianNumber(point.totalQty)}
-                          </td>
-                          <td className="px-3 py-2 text-center">
-                            <Link
-                              href={getDetailsUrl(point.consigneeName)}
-                              target="_blank"
-                              className="inline-flex items-center justify-center p-1 hover:bg-gray-200 rounded-full text-gray-500 transition-colors"
-                            >
-                              <ExternalLink className="w-3.5 h-3.5" />
-                            </Link>
-                          </td>
-                        </tr>
-                      ))}
+                      .map((point, idx) => {
+                        const isHovered = hoveredConsigneeId === point.consigneeId;
+                        return (
+                          <tr
+                            key={`${point.consigneeId}-${point.city}-${idx}`}
+                            onMouseEnter={() => setHoveredConsigneeId(point.consigneeId)}
+                            onMouseLeave={() => setHoveredConsigneeId(null)}
+                            className={`transition-colors cursor-pointer ${
+                              isHovered
+                                ? "bg-red-50/80"
+                                : "hover:bg-gray-50"
+                            }`}
+                          >
+                            <td className="px-3 py-2 min-w-0">
+                              <div className={`break-words max-w-[180px] ${isHovered ? "text-red-900 font-bold" : "font-semibold text-gray-800"}`}>
+                                {point.consigneeName}
+                              </div>
+                              <div className="text-[10px] text-gray-500">
+                                {point.city}, {point.region}
+                              </div>
+                            </td>
+                            <td className="px-3 py-2 text-right font-semibold text-gray-900">
+                              {formatIndianNumber(point.totalQty)}
+                            </td>
+                            <td className="px-3 py-2 text-center">
+                              <Link
+                                href={getDetailsUrl(point.consigneeName)}
+                                target="_blank"
+                                className="inline-flex items-center justify-center p-1 hover:bg-gray-200 rounded-full text-gray-500 transition-colors"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                              </Link>
+                            </td>
+                          </tr>
+                        );
+                      })}
                   </tbody>
                 </table>
               </div>
