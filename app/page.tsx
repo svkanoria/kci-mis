@@ -7,6 +7,7 @@ import {
   TrendingDown,
   Route,
   Truck,
+  MapPin,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HeaderTitleUpdater } from "./_components/headerTitleUpdater";
@@ -55,6 +56,13 @@ export default async function Home() {
           description="View and analyse delivery routes and destinations."
           icon={<Route className="w-6 h-6" />}
           iconContainerClassName="bg-green-500/10 text-green-500 group-hover:bg-green-500 group-hover:text-white"
+        />
+        <ReportCard
+          href="/sales-clusters"
+          title="Sales Clusters"
+          description="View geographical clusters of high sales quantities."
+          icon={<MapPin className="w-6 h-6" />}
+          iconContainerClassName="bg-indigo-500/10 text-indigo-500 group-hover:bg-indigo-500 group-hover:text-white"
         />
       </Section>
 

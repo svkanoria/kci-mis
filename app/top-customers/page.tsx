@@ -42,6 +42,11 @@ export default async function Page({
       ? resolvedSearchParams.destination
       : undefined;
 
+  const consignee =
+    typeof resolvedSearchParams.consignee === "string"
+      ? resolvedSearchParams.consignee
+      : undefined;
+
   return (
     <div className="flex h-full flex-col gap-4 p-3">
       <HeaderTitleUpdater title="Top Customers" />
@@ -59,9 +64,11 @@ export default async function Page({
           data={data}
           initialGrouping={grouping}
           destination={destination}
+          consignee={consignee}
           key={`${from}-${to}-${product}-${period}-${grouping}-${channels}`}
         />
       </Suspense>
     </div>
   );
+
 }

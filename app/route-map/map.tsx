@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
-import { plantCoords } from "@/lib/constants";
+import { plantCoords, plantColors } from "@/lib/constants";
 import { formatDate } from "@/lib/utils/date"; // Import formatDate
+import { formatIndianNumber } from "@/lib/utils/format";
 import "leaflet/dist/leaflet.css";
 import { divIcon, LatLngBoundsExpression } from "leaflet";
 import {
@@ -242,12 +243,6 @@ export const Map = ({
     localStorage.setItem(HEATMAP_MODE_KEY, JSON.stringify(heatmapMode));
   }, [heatmapMode]);
 
-  const plantColors: Record<number, string> = {
-    1100: "red",
-    1200: "blue",
-    1300: "green",
-  };
-
   const { minQty, maxQty } = useMemo(() => {
     let min = Infinity;
     let max = -Infinity;
@@ -484,17 +479,10 @@ export const Map = ({
                             </Link>
                           </div>
                           <div>
-                            Qty:{" "}
-                            {route.totalQty?.toLocaleString(undefined, {
-                              maximumFractionDigits: 0,
-                            })}{" "}
-                            MT
+                            Qty: {formatIndianNumber(route.totalQty)} MT
                           </div>
                           <div>
-                            Avg Rate:{" "}
-                            {route.avgPrice?.toLocaleString(undefined, {
-                              maximumFractionDigits: 0,
-                            })}
+                            Avg Rate: {formatIndianNumber(route.avgPrice)}
                           </div>
                           <RouteHistoryChart history={route.history} />
                         </div>
@@ -575,9 +563,7 @@ export const Map = ({
                     {route.distanceKm ? Math.round(route.distanceKm) : "-"}
                   </td>
                   <td className="px-3 py-2 text-right font-medium">
-                    {route.totalQty?.toLocaleString(undefined, {
-                      maximumFractionDigits: 0,
-                    })}
+                    {formatIndianNumber(route.totalQty)}
                   </td>
                   <td className="px-3 py-2 text-center">
                     <Link

@@ -55,10 +55,12 @@ export const DataGrid = ({
   data,
   initialGrouping,
   destination,
+  consignee,
 }: {
   data: Promise<IRow[]>;
   initialGrouping?: string;
   destination?: string;
+  consignee?: string;
 }) => {
   const groupedData = use(data);
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
@@ -139,6 +141,20 @@ export const DataGrid = ({
         });
     }
   }, [gridApi, destination]);
+
+  useEffect(() => {
+    if (gridApi && consignee) {
+      gridApi
+        .setColumnFilterModel("consigneeName", {
+          type: "contains",
+          filter: consignee,
+          filterType: "text",
+        })
+        .then(() => {
+          gridApi.onFilterChanged();
+        });
+    }
+  }, [gridApi, consignee]);
 
   useEffect(() => {
     if (gridApi && showStats) {
