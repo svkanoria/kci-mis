@@ -6,3 +6,5 @@ export * from "./destinations";
 export * from "./sales-by-route";
 export * from "./distribution-pattern";
 export * from "./sales-by-consignee";
+export * from "./contract-overlaps";
+

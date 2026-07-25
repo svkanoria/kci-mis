@@ -8,6 +8,7 @@ import {
   Route,
   Truck,
   MapPin,
+  ChartNoAxesGantt,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HeaderTitleUpdater } from "./_components/headerTitleUpdater";
@@ -63,6 +64,13 @@ export default async function Home() {
           description="View geographical clusters of high sales quantities."
           icon={<MapPin className="w-6 h-6" />}
           iconContainerClassName="bg-indigo-500/10 text-indigo-500 group-hover:bg-indigo-500 group-hover:text-white"
+        />
+        <ReportCard
+          href="/contract-overlaps"
+          title="Contract Overlaps"
+          description="Analyze overlapping sales contracts for consignees."
+          icon={<ChartNoAxesGantt className="w-6 h-6" />}
+          iconContainerClassName="bg-rose-500/10 text-rose-500 group-hover:bg-rose-500 group-hover:text-white"
         />
       </Section>
 
