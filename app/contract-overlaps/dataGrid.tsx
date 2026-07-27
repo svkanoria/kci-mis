@@ -15,6 +15,16 @@ import {
   ArrowRight,
   TrendingDown,
 } from "lucide-react";
+import { differenceInDays, parseISO, isValid } from "date-fns";
+
+function getContractDurationDays(contractDate?: string | null, completionDate?: string | null): string {
+  if (!contractDate || !completionDate) return "N/A";
+  const start = parseISO(contractDate);
+  const end = parseISO(completionDate);
+  if (!isValid(start) || !isValid(end)) return "N/A";
+  const days = differenceInDays(end, start);
+  return days >= 0 ? `${days} days` : "N/A";
+}
 
 interface DataGridProps {
   queryResult: Promise<ConsigneeOverlapSummary[]>;
@@ -374,6 +384,10 @@ export function DataGrid({ queryResult }: DataGridProps) {
                                 <span>Completion Date (last inv):</span>
                                 <span>{instance.prevContract.completionDate}</span>
                               </div>
+                              <div className="flex justify-between text-muted-foreground">
+                                <span>Contract duration:</span>
+                                <span>{getContractDurationDays(instance.prevContract.contractDate, instance.prevContract.completionDate)}</span>
+                              </div>
                               <div className="flex justify-between font-bold text-foreground pt-1.5 border-t">
                                 <span>Unit Price (Basic Rate):</span>
                                 <span className="font-mono text-amber-900 dark:text-amber-300">
@@ -405,6 +419,10 @@ export function DataGrid({ queryResult }: DataGridProps) {
                               <div className="flex justify-between font-medium">
                                 <span>Completion Date (last inv):</span>
                                 <span>{instance.subsequentContract.completionDate}</span>
+                              </div>
+                              <div className="flex justify-between text-muted-foreground">
+                                <span>Contract duration:</span>
+                                <span>{getContractDurationDays(instance.subsequentContract.contractDate, instance.subsequentContract.completionDate)}</span>
                               </div>
                               <div className="flex justify-between font-bold text-foreground pt-1.5 border-t">
                                 <span>Unit Price (Basic Rate):</span>
