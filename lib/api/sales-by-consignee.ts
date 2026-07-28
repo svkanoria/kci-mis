@@ -23,7 +23,7 @@ export interface ConsigneeSalesPoint {
 }
 
 export async function getSalesByConsignee(
-  filters: Omit<CommonFilterParams, "period">
+  filters: Omit<CommonFilterParams, "period">,
 ): Promise<ConsigneeSalesPoint[]> {
   const rawConditions = getRawCommonConditions(filters);
 
@@ -44,44 +44,43 @@ export async function getSalesByConsignee(
       consigneeName: filteredRawSq.consigneeName,
       city: destinationsTable.city,
       region: destinationsTable.region,
-      lat: sql<number | null>`ST_Y(${destinationsTable.coordinates})`.mapWith((v) =>
-        v === null ? null : Number(v)
+      lat: sql<number | null>`ST_Y(${destinationsTable.coordinates})`.mapWith(
+        (v) => (v === null ? null : Number(v)),
       ),
-      lng: sql<number | null>`ST_X(${destinationsTable.coordinates})`.mapWith((v) =>
-        v === null ? null : Number(v)
+      lng: sql<number | null>`ST_X(${destinationsTable.coordinates})`.mapWith(
+        (v) => (v === null ? null : Number(v)),
       ),
       totalQty: sql<number>`sum(${qtyCol})`.mapWith(Number).as("totalQty"),
     })
     .from(filteredRawSq)
     .leftJoin(
       salesInvoicesDerivedTable,
-      eq(filteredRawSq.id, salesInvoicesDerivedTable.rawId)
+      eq(filteredRawSq.id, salesInvoicesDerivedTable.rawId),
     )
     .leftJoin(
       routesTable,
-      eq(salesInvoicesDerivedTable.routeId, routesTable.id)
+      eq(salesInvoicesDerivedTable.routeId, routesTable.id),
     )
     .leftJoin(
       destinationsTable,
-      eq(routesTable.destinationId, destinationsTable.id)
+      eq(routesTable.destinationId, destinationsTable.id),
     )
     .where(
       and(
         ...getDerivedCommonConditions(filters),
-        isNotNull(destinationsTable.coordinates)
-      )
+        isNotNull(destinationsTable.coordinates),
+      ),
     )
     .groupBy(
       filteredRawSq.consignee,
       filteredRawSq.consigneeName,
       destinationsTable.id,
       destinationsTable.city,
-      destinationsTable.region
+      destinationsTable.region,
     )
     .orderBy(sql`sum(${qtyCol}) desc`);
 
   return rows.filter(
-    (row): row is ConsigneeSalesPoint =>
-      row.lat !== null && row.lng !== null
+    (row): row is ConsigneeSalesPoint => row.lat !== null && row.lng !== null,
   );
 }

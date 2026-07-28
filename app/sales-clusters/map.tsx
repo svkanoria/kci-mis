@@ -13,7 +13,13 @@ import {
   useMap,
 } from "react-leaflet";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, ChevronLeft, Sliders, MapPin, ArrowUpDown } from "lucide-react";
+import {
+  ExternalLink,
+  ChevronLeft,
+  Sliders,
+  MapPin,
+  ArrowUpDown,
+} from "lucide-react";
 import Link from "next/link";
 import { ConsigneeSalesPoint } from "@/lib/api/sales-by-consignee";
 import { formatDate } from "@/lib/utils/date";
@@ -27,7 +33,7 @@ interface ClusterStyle {
   circleFillOpacity: number;
   markerColor: string;
   markerFillOpacity: number;
-  
+
   cardBgClass: string;
   badgeBgClass: string;
   volumeTextClass: string;
@@ -39,11 +45,12 @@ function getClusterStyle(isDense: boolean, isSelected: boolean): ClusterStyle {
   if (isDense) {
     return {
       circleColor: "var(--color-pink-400)",
-      circleFillOpacity: isSelected ? 0.28 : 0.20,
+      circleFillOpacity: isSelected ? 0.28 : 0.2,
       markerColor: "var(--color-pink-600)",
       markerFillOpacity: 0.7,
-      
-      cardBgClass: "bg-pink-50/20 border-pink-200 hover:bg-pink-50 hover:border-pink-300",
+
+      cardBgClass:
+        "bg-pink-50/20 border-pink-200 hover:bg-pink-50 hover:border-pink-300",
       badgeBgClass: "bg-pink-100 text-pink-800",
       volumeTextClass: "text-pink-700",
       indicatorBgClass: "bg-pink-500",
@@ -54,8 +61,9 @@ function getClusterStyle(isDense: boolean, isSelected: boolean): ClusterStyle {
       circleFillOpacity: isSelected ? 0.28 : 0.23,
       markerColor: "var(--color-slate-700)",
       markerFillOpacity: 0.4,
-      
-      cardBgClass: "bg-gray-50/10 border-gray-200 hover:bg-gray-50 hover:border-gray-300",
+
+      cardBgClass:
+        "bg-gray-50/10 border-gray-200 hover:bg-gray-50 hover:border-gray-300",
       badgeBgClass: "bg-gray-100 text-gray-800",
       volumeTextClass: "text-gray-700",
       indicatorBgClass: "bg-gray-500",
@@ -75,8 +83,6 @@ const ConsigneePaneSetup = () => {
   return null;
 };
 
-
-
 const RADIUS_KM = 100; // Fixed radius of 100 km for distribution hub identification
 
 export const Map = ({
@@ -91,8 +97,12 @@ export const Map = ({
   product?: string;
 }) => {
   const [minDensityQty, setMinDensityQty] = useState<number>(100);
-  const [selectedClusterId, setSelectedClusterId] = useState<string | null>(null);
-  const [hoveredConsigneeId, setHoveredConsigneeId] = useState<number | string | null>(null);
+  const [selectedClusterId, setSelectedClusterId] = useState<string | null>(
+    null,
+  );
+  const [hoveredConsigneeId, setHoveredConsigneeId] = useState<
+    number | string | null
+  >(null);
 
   // Compute number of months in the date range
   const numMonths = useMemo(() => {
@@ -122,9 +132,7 @@ export const Map = ({
 
     setIsCalculating(true);
 
-    const worker = new Worker(
-      new URL("./clusterWorker.ts", import.meta.url)
-    );
+    const worker = new Worker(new URL("./clusterWorker.ts", import.meta.url));
 
     worker.onmessage = (event: MessageEvent<{ clusters: Cluster[] }>) => {
       setComputedClusters(event.data.clusters);
@@ -162,7 +170,10 @@ export const Map = ({
   // Auto-scale the slider maximum based on maximum average monthly quantity in clusters
   const sliderMax = useMemo(() => {
     if (computedClusters.length === 0) return 500;
-    const maxVal = Math.max(...computedClusters.map((c) => c.avgMonthlyQty), 10);
+    const maxVal = Math.max(
+      ...computedClusters.map((c) => c.avgMonthlyQty),
+      10,
+    );
     return Math.ceil(maxVal);
   }, [computedClusters]);
 
@@ -212,7 +223,6 @@ export const Map = ({
           scrollWheelZoom={true}
           style={{ height: "100%", width: "100%" }}
         >
-
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -259,7 +269,9 @@ export const Map = ({
                 center={[cluster.center.lat, cluster.center.lng]}
                 radius={RADIUS_KM * 1000} // React-Leaflet takes radius in meters
                 pathOptions={{
-                  color: isSelected ? "var(--color-slate-600)" : "var(--color-slate-400)",
+                  color: isSelected
+                    ? "var(--color-slate-600)"
+                    : "var(--color-slate-400)",
                   fillColor: styles.circleColor,
                   fillOpacity: styles.circleFillOpacity,
                   weight: isSelected ? 2 : 1.5,
@@ -275,7 +287,7 @@ export const Map = ({
             const isSelected = selectedClusterId === cluster.id;
             const markerRadius = Math.max(
               6,
-              Math.min(24, 6 + (cluster.totalQty / maxClusterQty) * 18)
+              Math.min(24, 6 + (cluster.totalQty / maxClusterQty) * 18),
             );
 
             const styles = getClusterStyle(cluster.isDense, isSelected);
@@ -286,7 +298,9 @@ export const Map = ({
                 center={[cluster.center.lat, cluster.center.lng]}
                 radius={markerRadius}
                 pathOptions={{
-                  color: isSelected ? "var(--color-slate-800)" : "var(--color-slate-600)",
+                  color: isSelected
+                    ? "var(--color-slate-800)"
+                    : "var(--color-slate-600)",
                   fillColor: styles.markerColor,
                   fillOpacity: styles.markerFillOpacity,
                   weight: isSelected ? 3 : 1.5,
@@ -294,7 +308,7 @@ export const Map = ({
                 eventHandlers={{
                   click: () => {
                     setSelectedClusterId(
-                      cluster.id === selectedClusterId ? null : cluster.id
+                      cluster.id === selectedClusterId ? null : cluster.id,
                     );
                   },
                 }}
@@ -319,7 +333,8 @@ export const Map = ({
                       </span>
                     </div>
                     <div className="text-gray-600 text-[10px] mt-0.5">
-                      Total Volume: {formatIndianNumber(cluster.totalQty)} MT | Consignees: {cluster.points.length}
+                      Total Volume: {formatIndianNumber(cluster.totalQty)} MT |
+                      Consignees: {cluster.points.length}
                     </div>
                     <div className="mt-1.5">
                       {cluster.isDense ? (
@@ -448,7 +463,9 @@ export const Map = ({
                               {cluster.hubName.split(",")[0]}
                             </span>
                             {cluster.isDense && (
-                              <span className={`inline-block text-[9px] ${styles.indicatorBgClass} text-white font-bold px-1 rounded-sm shrink-0 uppercase tracking-tight scale-90`}>
+                              <span
+                                className={`inline-block text-[9px] ${styles.indicatorBgClass} text-white font-bold px-1 rounded-sm shrink-0 uppercase tracking-tight scale-90`}
+                              >
                                 Hub
                               </span>
                             )}
@@ -458,10 +475,14 @@ export const Map = ({
                           </div>
                         </div>
                         <div className="text-right shrink-0">
-                          <div className={`font-bold text-sm ${styles.volumeTextClass}`}>
+                          <div
+                            className={`font-bold text-sm ${styles.volumeTextClass}`}
+                          >
                             {formatIndianNumber(cluster.avgMonthlyQty)}
                           </div>
-                          <div className="text-[10px] text-gray-400">MT/month</div>
+                          <div className="text-[10px] text-gray-400">
+                            MT/month
+                          </div>
                         </div>
                       </div>
                     );
@@ -499,7 +520,9 @@ export const Map = ({
                     </div>
                     <div className="text-lg font-extrabold text-pink-600">
                       {formatIndianNumber(selectedCluster.avgMonthlyQty)}{" "}
-                      <span className="text-xs font-medium text-gray-500">MT/mo</span>
+                      <span className="text-xs font-medium text-gray-500">
+                        MT/mo
+                      </span>
                     </div>
                   </div>
                   <div className="text-right">
@@ -507,12 +530,17 @@ export const Map = ({
                       Total Volume
                     </div>
                     <div className="text-sm font-bold text-slate-800">
-                      {formatIndianNumber(selectedCluster.totalQty)} <span className="text-xs font-medium text-gray-500">MT</span>
+                      {formatIndianNumber(selectedCluster.totalQty)}{" "}
+                      <span className="text-xs font-medium text-gray-500">
+                        MT
+                      </span>
                     </div>
                   </div>
                 </div>
                 <div className="flex justify-between items-center text-xs border-t pt-2 mt-1">
-                  <span className="text-gray-500">Consignees: {selectedCluster.points.length}</span>
+                  <span className="text-gray-500">
+                    Consignees: {selectedCluster.points.length}
+                  </span>
                   {selectedCluster.isDense ? (
                     <span className="bg-pink-100 text-pink-800 text-[10px] font-bold px-2 py-0.5 rounded">
                       Dense Cluster
@@ -545,20 +573,23 @@ export const Map = ({
                     {selectedCluster.points
                       .sort((a, b) => b.totalQty - a.totalQty)
                       .map((point, idx) => {
-                        const isHovered = hoveredConsigneeId === point.consigneeId;
+                        const isHovered =
+                          hoveredConsigneeId === point.consigneeId;
                         return (
                           <tr
                             key={`${point.consigneeId}-${point.city}-${idx}`}
-                            onMouseEnter={() => setHoveredConsigneeId(point.consigneeId)}
+                            onMouseEnter={() =>
+                              setHoveredConsigneeId(point.consigneeId)
+                            }
                             onMouseLeave={() => setHoveredConsigneeId(null)}
                             className={`transition-colors cursor-pointer ${
-                              isHovered
-                                ? "bg-red-50/80"
-                                : "hover:bg-gray-50"
+                              isHovered ? "bg-red-50/80" : "hover:bg-gray-50"
                             }`}
                           >
                             <td className="px-3 py-2 min-w-0">
-                              <div className={`break-words max-w-[180px] ${isHovered ? "text-red-900 font-bold" : "font-semibold text-gray-800"}`}>
+                              <div
+                                className={`break-words max-w-[180px] ${isHovered ? "text-red-900 font-bold" : "font-semibold text-gray-800"}`}
+                              >
                                 {point.consigneeName}
                               </div>
                               <div className="text-[10px] text-gray-500">

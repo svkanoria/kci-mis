@@ -15,7 +15,7 @@ export interface Cluster {
 export function computeMilpClusters(
   salesPoints: ConsigneeSalesPoint[],
   radiusKm: number,
-  numMonths: number
+  numMonths: number,
 ): Cluster[] {
   if (salesPoints.length === 0) return [];
 
@@ -30,7 +30,7 @@ export function computeMilpClusters(
           pj.lat,
           pj.lng,
           salesPoints[i].lat,
-          salesPoints[i].lng
+          salesPoints[i].lng,
         ) <= radiusKm
       ) {
         neighbors.push(i);
@@ -41,7 +41,7 @@ export function computeMilpClusters(
 
   // Potential volume if candidate j is chosen as a hub center
   const potentialVolumes: number[] = candidateNeighborhoods.map((neighbors) =>
-    neighbors.reduce((sum, idx) => sum + salesPoints[idx].totalQty, 0)
+    neighbors.reduce((sum, idx) => sum + salesPoints[idx].totalQty, 0),
   );
 
   // Filter valid candidate hub centers (potential volume > 0)
@@ -93,7 +93,7 @@ export function computeMilpClusters(
       const newVol = candidateNeighborhoods[cand].reduce(
         (sum, idx) =>
           greedyAssigned.has(idx) ? sum : sum + salesPoints[idx].totalQty,
-        0
+        0,
       );
       if (newVol > maxNewVolume) {
         maxNewVolume = newVol;
@@ -119,14 +119,14 @@ export function computeMilpClusters(
   // Branch-and-Bound solver for global maximum optimization
   const candidateList = candidateIndices.slice(
     0,
-    Math.min(100, candidateIndices.length)
+    Math.min(100, candidateIndices.length),
   );
 
   function branchAndBound(
     candIndex: number,
     currentHubs: number[],
     coveredPoints: Set<number>,
-    currentVol: number
+    currentVol: number,
   ) {
     let maxPossibleAdditionalVol = 0;
     for (let i = 0; i < n; i++) {
@@ -167,7 +167,7 @@ export function computeMilpClusters(
         candIndex + 1,
         currentHubs,
         newCoveredPoints,
-        currentVol + addedVol
+        currentVol + addedVol,
       );
       currentHubs.pop();
     }
@@ -198,14 +198,14 @@ export function computeMilpClusters(
             salesPoints[candCenter].lat,
             salesPoints[candCenter].lng,
             salesPoints[pIdx].lat,
-            salesPoints[pIdx].lng
-          ) <= radiusKm
+            salesPoints[pIdx].lng,
+          ) <= radiusKm,
       );
 
       if (valid) {
         const candVol = candidateNeighborhoods[candCenter].reduce(
           (sum, idx) => sum + salesPoints[idx].totalQty,
-          0
+          0,
         );
         if (candVol > maxCenterVol) {
           maxCenterVol = candVol;
@@ -233,7 +233,7 @@ export function computeMilpClusters(
         p.lat,
         p.lng,
         salesPoints[h].lat,
-        salesPoints[h].lng
+        salesPoints[h].lng,
       );
       if (dist <= radiusKm && dist < minDist) {
         minDist = dist;
@@ -256,7 +256,7 @@ export function computeMilpClusters(
     const hubPoint = salesPoints[hubIdx];
     const totalQty = points.reduce(
       (sum: number, p: ConsigneeSalesPoint) => sum + p.totalQty,
-      0
+      0,
     );
     const avgMonthlyQty = totalQty / numMonths;
 

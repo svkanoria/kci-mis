@@ -70,5 +70,4 @@ export default async function Page({
       </Suspense>
     </div>
   );
-
 }

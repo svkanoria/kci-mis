@@ -40,10 +40,9 @@ export interface ConsigneeOverlapSummary {
 }
 
 export async function getContractOverlaps(
-  filters: Omit<CommonFilterParams, "period">
+  filters: Omit<CommonFilterParams, "period">,
 ): Promise<ConsigneeOverlapSummary[]> {
   const rawConditions = getRawCommonConditions(filters);
-  const derivedConditions = getDerivedCommonConditions(filters);
 
   const filteredRawSq = db
     .select()
@@ -71,21 +70,21 @@ export async function getContractOverlaps(
     .from(filteredRawSq)
     .leftJoin(
       salesInvoicesDerivedTable,
-      eq(filteredRawSq.id, salesInvoicesDerivedTable.rawId)
+      eq(filteredRawSq.id, salesInvoicesDerivedTable.rawId),
     )
-    .where(and(...derivedConditions))
+    .where(and(...getDerivedCommonConditions(filters)))
     .groupBy(
       filteredRawSq.consigneeName,
       filteredRawSq.consigneeCity,
       filteredRawSq.consigneeRegion,
       filteredRawSq.contractNo,
       filteredRawSq.contractDate,
-      filteredRawSq.invDate
+      filteredRawSq.invDate,
     )
     .orderBy(
       filteredRawSq.consigneeName,
       filteredRawSq.contractNo,
-      filteredRawSq.invDate
+      filteredRawSq.invDate,
     );
 
   const consigneeMap = new Map<
@@ -136,7 +135,8 @@ export async function getContractOverlaps(
     }
 
     if (row.invDate < contract.startDate) contract.startDate = row.invDate;
-    if (row.invDate > contract.completionDate) contract.completionDate = row.invDate;
+    if (row.invDate > contract.completionDate)
+      contract.completionDate = row.invDate;
     contract.totalQty += row.qty;
     contract.totalAmount += row.amount;
     contract.invoiceCount += Number(row.invoiceCount);
@@ -155,7 +155,7 @@ export async function getContractOverlaps(
         (a, b) =>
           a.startDate.localeCompare(b.startDate) ||
           (a.contractDate || "").localeCompare(b.contractDate || "") ||
-          a.contractNo.localeCompare(b.contractNo)
+          a.contractNo.localeCompare(b.contractNo),
       );
 
     const overlappingInstances: OverlapInstance[] = [];
@@ -215,7 +215,7 @@ export async function getContractOverlaps(
     (a, b) =>
       b.lowerPriceOverlapCount - a.lowerPriceOverlapCount ||
       b.overlapCount - a.overlapCount ||
-      b.totalContracts - a.totalContracts
+      b.totalContracts - a.totalContracts,
   );
 
   return result;

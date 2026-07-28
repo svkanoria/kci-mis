@@ -13,7 +13,8 @@ export function extractFilterParams(
 ) {
   const { from, to, product, period } = searchParams;
 
-  const parsedFrom = typeof from === "string" ? parseDate(from) : defaults?.from;
+  const parsedFrom =
+    typeof from === "string" ? parseDate(from) : defaults?.from;
   const parsedTo = typeof to === "string" ? parseDate(to) : defaults?.to;
   const parsedPeriod = (
     typeof period === "string" && ["month", "quarter", "year"].includes(period)

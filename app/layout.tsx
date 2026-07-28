@@ -17,9 +17,7 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en" className="h-full">
-        <body
-          className="font-sans antialiased h-full flex flex-col"
-        >
+        <body className="font-sans antialiased h-full flex flex-col">
           <NuqsAdapter>
             <NavBar />
             <main className="flex-1">{children}</main>
