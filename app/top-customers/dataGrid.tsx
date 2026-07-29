@@ -14,12 +14,6 @@ import { getTopCustomers } from "@/lib/api";
 import { formatIndianNumber } from "@/lib/utils/format";
 import Select from "react-select";
 import { calculateRegression } from "@/lib/utils/stats";
-import { HelpCircle } from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { Input } from "@/components/ui/input";
 import { TimeDirectionButton } from "@/app/_components/timeDirectionButton";
 import { useTimeDirectionStore } from "@/lib/store";

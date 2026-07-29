@@ -9,6 +9,7 @@ import {
   Truck,
   MapPin,
   ChartNoAxesGantt,
+  FileSpreadsheet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HeaderTitleUpdater } from "./_components/headerTitleUpdater";
@@ -71,6 +72,13 @@ export default async function Home() {
           description="Analyze overlapping sales contracts for consignees."
           icon={<ChartNoAxesGantt className="w-6 h-6" />}
           iconContainerClassName="bg-rose-500/10 text-rose-500 group-hover:bg-rose-500 group-hover:text-white"
+        />
+        <ReportCard
+          href="/contract-consignees"
+          title="Contract Consignees"
+          description="View contracts and associated consignee breakdown."
+          icon={<FileSpreadsheet className="w-6 h-6" />}
+          iconContainerClassName="bg-teal-500/10 text-teal-500 group-hover:bg-teal-500 group-hover:text-white"
         />
       </Section>
 
