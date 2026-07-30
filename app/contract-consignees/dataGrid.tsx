@@ -475,7 +475,7 @@ export const DataGrid = ({
                             key={d}
                             className={`sticky top-0 z-20 px-3 py-2 border-b border-r text-right font-semibold whitespace-nowrap min-w-[90px] ${
                               isCoreDate
-                                ? "bg-primary/20 text-foreground"
+                                ? "bg-[color-mix(in_srgb,var(--primary)_20%,var(--muted))] text-foreground"
                                 : "bg-muted text-muted-foreground"
                             }`}
                           >
@@ -493,11 +493,14 @@ export const DataGrid = ({
                         ? "bg-primary/10 hover:bg-primary/15 font-medium"
                         : "hover:bg-muted/50";
                       const stickyBgClass = isSelected
-                        ? "bg-primary/15"
-                        : "bg-background";
+                        ? "bg-[color-mix(in_srgb,var(--primary)_15%,var(--background))]"
+                        : "bg-background group-hover:bg-[color-mix(in_srgb,var(--muted)_50%,var(--background))]";
 
                       return (
-                        <tr key={row.consigneeName} className={rowBgClass}>
+                        <tr
+                          key={row.consigneeName}
+                          className={`group ${rowBgClass}`}
+                        >
                           <td
                             className={`sticky left-0 z-10 px-3 py-2 border-b border-r whitespace-nowrap ${stickyBgClass}`}
                           >
