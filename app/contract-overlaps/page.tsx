@@ -22,7 +22,7 @@ export default async function Page({
   });
 
   return (
-    <div className="flex h-full flex-col gap-4 p-4 max-w-7xl mx-auto w-full">
+    <div className="flex h-full flex-col gap-4 p-3">
       <HeaderTitleUpdater title="Sales Contract Overlaps" />
       <Filter
         initialFrom={from}
