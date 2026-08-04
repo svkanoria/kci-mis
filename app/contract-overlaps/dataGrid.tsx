@@ -1,7 +1,16 @@
 "use client";
 
 import React, { use, useState, useMemo } from "react";
+import { ModuleRegistry, SortChangedEvent } from "ag-grid-community";
+import {
+  AllEnterpriseModule,
+  LicenseManager,
+  ColDef,
+  GridApi,
+} from "ag-grid-enterprise";
+import { AgGridReact } from "ag-grid-react";
 import { ConsigneeOverlapSummary } from "@/lib/api/contract-overlaps";
+import { formatIndianNumber } from "@/lib/utils/format";
 import {
   Sheet,
   SheetContent,
@@ -14,14 +23,19 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
   AlertTriangle,
-  Search,
   FileText,
   ChartNoAxesGantt,
   MapPin,
-  ArrowRight,
-  TrendingDown,
 } from "lucide-react";
 import { differenceInDays, parseISO, isValid } from "date-fns";
+
+// Register License Key with LicenseManager
+LicenseManager.setLicenseKey(process.env.NEXT_PUBLIC_AG_GRID_LICENSE || "");
+
+ModuleRegistry.registerModules([AllEnterpriseModule]);
+
+const lsKey = (key: string) => `contract-overlaps-${key}`;
+const GRID_SORT_KEY = lsKey("sort");
 
 function getContractDurationDays(
   contractDate?: string | null,
@@ -42,6 +56,7 @@ interface DataGridProps {
 export function DataGrid({ queryResult }: DataGridProps) {
   const data = use(queryResult);
 
+  const [gridApi, setGridApi] = useState<GridApi | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterMode, setFilterMode] = useState<"all" | "overlaps" | "flagged">(
     "all",
@@ -67,131 +82,160 @@ export function DataGrid({ queryResult }: DataGridProps) {
     });
   }, [data, searchTerm, filterMode]);
 
-  // Aggregate Metrics
+  // Aggregate Metrics for filter toolbar buttons
   const metrics = useMemo(() => {
-    const totalConsignees = data.length;
     const consigneesWithOverlaps = data.filter(
       (c) => c.overlapCount > 0,
     ).length;
     const consigneesWithFlaggedOverlaps = data.filter(
       (c) => c.lowerPriceOverlapCount > 0,
     ).length;
-    const totalOverlaps = data.reduce((sum, c) => sum + c.overlapCount, 0);
-    const totalFlaggedOverlaps = data.reduce(
-      (sum, c) => sum + c.lowerPriceOverlapCount,
-      0,
-    );
-    const totalContracts = data.reduce((sum, c) => sum + c.totalContracts, 0);
-    const topFlaggedConsignee = data.length > 0 ? data[0] : null;
 
     return {
-      totalConsignees,
       consigneesWithOverlaps,
       consigneesWithFlaggedOverlaps,
-      totalOverlaps,
-      totalFlaggedOverlaps,
-      totalContracts,
-      topFlaggedConsignee,
     };
   }, [data]);
 
+  const onGridReady = (params: import("ag-grid-community").GridReadyEvent) => {
+    setGridApi(params.api);
+    const savedSort = localStorage.getItem(GRID_SORT_KEY);
+    if (savedSort) {
+      params.api.applyColumnState({
+        state: JSON.parse(savedSort),
+        defaultState: { sort: null },
+      });
+    }
+  };
+
+  const onSortChanged = (params: SortChangedEvent) => {
+    const sortState = params.api.getColumnState().filter((s) => s.sort != null);
+    localStorage.setItem(GRID_SORT_KEY, JSON.stringify(sortState));
+  };
+
+  const defaultColDef = useMemo<ColDef>(() => {
+    return {
+      suppressHeaderMenuButton: true,
+      wrapHeaderText: true,
+      sortable: true,
+      resizable: true,
+    };
+  }, []);
+
+  const colDefs = useMemo<ColDef<ConsigneeOverlapSummary>[]>(() => {
+    return [
+      {
+        field: "consigneeName",
+        headerName: "Consignee Name",
+        width: 250,
+        filter: "agTextColumnFilter",
+        tooltipField: "consigneeName",
+      },
+      {
+        headerName: "Location",
+        width: 180,
+        filter: "agTextColumnFilter",
+        valueGetter: (params) => {
+          if (!params.data) return "";
+          return `${params.data.consigneeCity}, ${params.data.consigneeRegion}`;
+        },
+        tooltipValueGetter: (params) => params.value,
+      },
+      {
+        field: "lowerPriceOverlapCount",
+        headerName: "Flagged",
+        width: 120,
+        type: "numericColumn",
+        sort: "desc",
+        filter: "agNumberColumnFilter",
+      },
+      {
+        field: "overlapCount",
+        headerName: "Total Overlaps",
+        width: 140,
+        type: "numericColumn",
+        filter: "agNumberColumnFilter",
+      },
+      {
+        headerName: "% Flagged",
+        width: 120,
+        type: "numericColumn",
+        filter: "agNumberColumnFilter",
+        valueGetter: (params) => {
+          if (
+            !params.data ||
+            !params.data.overlapCount ||
+            params.data.overlapCount === 0
+          ) {
+            return 0;
+          }
+          return (
+            (params.data.lowerPriceOverlapCount / params.data.overlapCount) *
+            100
+          );
+        },
+        valueFormatter: (params) => {
+          if (params.value == null) return "0.0%";
+          return `${Number(params.value).toFixed(1)}%`;
+        },
+      },
+      {
+        field: "totalContracts",
+        headerName: "Contracts",
+        width: 110,
+        type: "numericColumn",
+        filter: "agNumberColumnFilter",
+      },
+      {
+        field: "totalQty",
+        headerName: "Total Qty (MT)",
+        width: 150,
+        type: "numericColumn",
+        filter: "agNumberColumnFilter",
+        valueFormatter: (params) =>
+          params.value != null ? formatIndianNumber(params.value) : "",
+      },
+      {
+        headerName: "Actions",
+        width: 100,
+        sortable: false,
+        filter: false,
+        resizable: false,
+        suppressHeaderMenuButton: true,
+        cellClass: "no-focus-outline flex items-center justify-center",
+        cellRenderer: (params: any) => {
+          if (!params.data) return null;
+          return (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 px-2 text-xs font-medium mt-0.5"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedConsignee(params.data);
+              }}
+            >
+              Analyse
+            </Button>
+          );
+        },
+      },
+    ];
+  }, []);
+
   return (
-    <div className="flex flex-col gap-6">
-      {/* Top Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="rounded-xl border bg-card p-5 shadow-xs flex flex-col gap-2">
-          <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-sm font-medium">Flagged Overlaps</span>
-            <AlertTriangle className="w-5 h-5 text-rose-600 animate-pulse" />
-          </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-bold tracking-tight text-rose-600">
-              {metrics.totalFlaggedOverlaps.toLocaleString()}
-            </span>
-            <span className="text-xs text-muted-foreground">
-              in {metrics.consigneesWithFlaggedOverlaps.toLocaleString()}{" "}
-              consignees
-            </span>
-          </div>
-          <p className="text-xs text-rose-600 font-medium">
-            Overlapping contracts started at lower price (≥0.5% discount) than
-            active contract
-          </p>
-        </div>
-
-        <div className="rounded-xl border bg-card p-5 shadow-xs flex flex-col gap-2">
-          <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-sm font-medium">Total Overlap Instances</span>
-            <ChartNoAxesGantt className="w-5 h-5 text-amber-500" />
-          </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-bold tracking-tight text-amber-600">
-              {metrics.totalOverlaps.toLocaleString()}
-            </span>
-            <span className="text-xs text-muted-foreground">
-              in {metrics.consigneesWithOverlaps.toLocaleString()} consignees
-            </span>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Total overlapping contract periods
-          </p>
-        </div>
-
-        <div className="rounded-xl border bg-card p-5 shadow-xs flex flex-col gap-2">
-          <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-sm font-medium">Contracts Analyzed</span>
-            <FileText className="w-5 h-5 text-blue-500" />
-          </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-bold tracking-tight">
-              {metrics.totalContracts.toLocaleString()}
-            </span>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Total sales contracts evaluated
-          </p>
-        </div>
-
-        <div className="rounded-xl border bg-card p-5 shadow-xs flex flex-col gap-2">
-          <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-sm font-medium">Top Flagged Customer</span>
-            <TrendingDown className="w-5 h-5 text-rose-600" />
-          </div>
-          {metrics.topFlaggedConsignee ? (
-            <div>
-              <div
-                className="text-base font-semibold truncate text-foreground"
-                title={metrics.topFlaggedConsignee.consigneeName}
-              >
-                {metrics.topFlaggedConsignee.consigneeName}
-              </div>
-              <div className="text-xs text-muted-foreground mt-0.5">
-                <span className="font-semibold text-rose-600">
-                  {metrics.topFlaggedConsignee.lowerPriceOverlapCount}{" "}
-                  lower-price overlaps
-                </span>{" "}
-                ({metrics.topFlaggedConsignee.overlapCount} total)
-              </div>
-            </div>
-          ) : (
-            <span className="text-sm text-muted-foreground">N/A</span>
-          )}
-        </div>
-      </div>
-
+    <div className="grow min-h-0 flex flex-col gap-2">
       {/* Toolbar & Search */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-muted/40 p-3 rounded-lg border">
-        <div className="relative w-full sm:w-80">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+      <div className="flex justify-between items-center gap-4">
+        <div className="w-72">
           <Input
-            placeholder="Search consignee, city, or ID..."
+            placeholder="Quick search..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9 bg-background"
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+        <div className="flex items-center gap-2">
           <div className="inline-flex rounded-md border p-0.5 bg-background text-xs">
             <button
               className={`px-3 py-1.5 rounded-sm font-medium transition-colors ${
@@ -227,105 +271,31 @@ export function DataGrid({ queryResult }: DataGridProps) {
         </div>
       </div>
 
-      {/* Consignees Table */}
-      <div className="rounded-xl border bg-card shadow-xs overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm border-collapse table-fixed">
-            <thead>
-              <tr className="border-b bg-muted/50 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                <th className="py-3 px-2 w-[5%] text-center">Rank</th>
-                <th className="py-3 px-3 w-[27%]">Consignee Name</th>
-                <th className="py-3 px-2.5 w-[15%]">Location</th>
-                <th className="py-3 px-2.5 w-[15%] text-center">Flagged</th>
-                <th className="py-3 px-2.5 w-[13%] text-center">
-                  Total Overlaps
-                </th>
-                <th className="py-3 px-2 w-[8%] text-center">Contracts</th>
-                <th className="py-3 px-3 w-[10%] text-right">Total Qty (MT)</th>
-                <th className="py-3 px-2 w-[7%] text-center">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {filteredData.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={8}
-                    className="py-12 text-center text-muted-foreground"
-                  >
-                    No consignees found matching your filter criteria.
-                  </td>
-                </tr>
-              ) : (
-                filteredData.map((row, idx) => (
-                  <tr
-                    key={row.consigneeName}
-                    className="hover:bg-muted/40 transition-colors group cursor-pointer"
-                    onClick={() => setSelectedConsignee(row)}
-                  >
-                    <td className="py-3 px-2 text-center font-medium text-muted-foreground text-xs">
-                      #{idx + 1}
-                    </td>
-                    <td
-                      className="py-3 px-3 font-semibold text-foreground text-xs sm:text-sm truncate"
-                      title={row.consigneeName}
-                    >
-                      {row.consigneeName}
-                    </td>
-                    <td
-                      className="py-3 px-2.5 text-muted-foreground text-xs truncate"
-                      title={`${row.consigneeCity}, ${row.consigneeRegion}`}
-                    >
-                      {row.consigneeCity}, {row.consigneeRegion}
-                    </td>
-                    <td className="py-3 px-2.5 text-center">
-                      {row.lowerPriceOverlapCount > 0 ? (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-rose-600 text-white shadow-xs whitespace-nowrap">
-                          <AlertTriangle className="w-3 h-3 mr-1 shrink-0" />
-                          {row.lowerPriceOverlapCount} flagged
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground">
-                          0
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-3 px-2.5 text-center">
-                      {row.overlapCount > 0 ? (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-700 border border-amber-500/20 whitespace-nowrap">
-                          {row.overlapCount} overlaps
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground text-xs">0</span>
-                      )}
-                    </td>
-                    <td className="py-3 px-2 text-center font-medium text-foreground text-xs">
-                      {row.totalContracts}
-                    </td>
-                    <td className="py-3 px-3 text-right font-mono text-xs whitespace-nowrap">
-                      {row.totalQty.toLocaleString(undefined, {
-                        maximumFractionDigits: 0,
-                      })}
-                    </td>
-                    <td className="py-3 px-2 text-center">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-primary group-hover:bg-primary group-hover:text-primary-foreground"
-                        title="Inspect Overlaps"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedConsignee(row);
-                        }}
-                      >
-                        <ArrowRight className="w-4 h-4" />
-                      </Button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+      {/* Consignees AgGrid */}
+      <div
+        className="grow min-h-0"
+        style={
+          {
+            "--ag-spacing": "4px",
+            "--ag-font-size": "12px",
+          } as React.CSSProperties
+        }
+      >
+        <AgGridReact
+          quickFilterText={searchTerm}
+          rowData={filteredData}
+          columnDefs={colDefs}
+          defaultColDef={defaultColDef}
+          headerHeight={45}
+          rowHeight={45}
+          pagination
+          enableBrowserTooltips
+          onGridReady={onGridReady}
+          onSortChanged={onSortChanged}
+          onRowClicked={(params) =>
+            params.data && setSelectedConsignee(params.data)
+          }
+        />
       </div>
 
       {/* Consignee Detail Inspector Drawer */}

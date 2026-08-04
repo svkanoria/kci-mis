@@ -354,7 +354,7 @@ export const DataGrid = ({
             },
           },
           {
-            headerName: "Analyse",
+            headerName: "Actions",
             width: 110,
             sortable: false,
             filter: false,
@@ -367,7 +367,7 @@ export const DataGrid = ({
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-7 px-2 text-xs font-medium"
+                  className="h-7 px-2 text-xs font-medium mt-0.5"
                   onClick={() => handleAnalyse(params.data)}
                 >
                   Analyse
