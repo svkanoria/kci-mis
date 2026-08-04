@@ -427,7 +427,7 @@ export const DataGrid = ({
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[800px] w-full flex flex-col p-6">
+        <DialogContent className="sm:max-w-[950px] w-full flex flex-col p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
               <BarChart3 className="h-5 w-5 text-primary" />
@@ -473,7 +473,7 @@ export const DataGrid = ({
                         return (
                           <th
                             key={d}
-                            className={`sticky top-0 z-20 px-3 py-2 border-b border-r text-right font-semibold whitespace-nowrap min-w-[90px] ${
+                            className={`sticky top-0 z-20 px-3 py-2 border-b border-r text-right font-semibold whitespace-nowrap min-w-[140px] ${
                               isCoreDate
                                 ? "bg-[color-mix(in_srgb,var(--primary)_20%,var(--muted))] text-foreground"
                                 : "bg-muted text-muted-foreground"
@@ -520,7 +520,7 @@ export const DataGrid = ({
                             const isCoreDate =
                               d >= analysisResult.firstInvDate &&
                               d <= analysisResult.lastInvDate;
-                            const val = row.prices[d];
+                            const cellData = row.prices[d];
 
                             return (
                               <td
@@ -528,12 +528,31 @@ export const DataGrid = ({
                                 className={`px-3 py-2 border-b border-r text-right font-mono whitespace-nowrap ${
                                   isCoreDate ? "bg-primary/5" : ""
                                 } ${
-                                  val != null
+                                  cellData != null
                                     ? "text-foreground font-medium"
                                     : "text-muted-foreground/40"
                                 }`}
                               >
-                                {val != null ? formatIndianNumber(val) : "-"}
+                                {cellData != null ? (
+                                  <div className="flex flex-col items-end gap-0.5">
+                                    <span>
+                                      {formatIndianNumber(cellData.price)}
+                                    </span>
+                                    {cellData.recipientNames &&
+                                      cellData.recipientNames.length > 0 && (
+                                        <span
+                                          className="text-[10px] text-muted-foreground font-sans font-normal leading-tight max-w-[150px] truncate"
+                                          title={cellData.recipientNames.join(
+                                            ", ",
+                                          )}
+                                        >
+                                          {cellData.recipientNames.join(", ")}
+                                        </span>
+                                      )}
+                                  </div>
+                                ) : (
+                                  "-"
+                                )}
                               </td>
                             );
                           })}

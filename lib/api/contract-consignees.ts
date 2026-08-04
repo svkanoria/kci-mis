@@ -40,9 +40,14 @@ export interface ConsigneePriceAnalysisParams {
   clickedConsigneeName?: string;
 }
 
+export interface ConsigneePriceCell {
+  price: number;
+  recipientNames: string[];
+}
+
 export interface ConsigneePriceRow {
   consigneeName: string;
-  prices: Record<string, number | null>;
+  prices: Record<string, ConsigneePriceCell | null>;
   totalQty: number;
   totalBasicAmount: number;
   avgPrice: number;
@@ -234,6 +239,7 @@ export async function getConsigneePriceAnalysis(
     .select({
       consigneeName: salesInvoicesRawTable.consigneeName,
       invDate: salesInvoicesRawTable.invDate,
+      recipientName: salesInvoicesRawTable.recipientName,
       qty: sql<number>`sum(${qtyCol})`.mapWith(Number),
       basicAmount:
         sql<number>`sum(${salesInvoicesRawTable.basicAmount})`.mapWith(Number),
@@ -244,7 +250,11 @@ export async function getConsigneePriceAnalysis(
       eq(salesInvoicesRawTable.id, salesInvoicesDerivedTable.rawId),
     )
     .where(and(...rawConditions, ...derivedConditions))
-    .groupBy(salesInvoicesRawTable.consigneeName, salesInvoicesRawTable.invDate)
+    .groupBy(
+      salesInvoicesRawTable.consigneeName,
+      salesInvoicesRawTable.invDate,
+      salesInvoicesRawTable.recipientName,
+    )
     .orderBy(
       salesInvoicesRawTable.consigneeName,
       salesInvoicesRawTable.invDate,
@@ -254,7 +264,10 @@ export async function getConsigneePriceAnalysis(
     string,
     {
       consigneeName: string;
-      prices: Map<string, { qty: number; basicAmount: number }>;
+      prices: Map<
+        string,
+        { qty: number; basicAmount: number; recipientNames: Set<string> }
+      >;
       totalQty: number;
       totalBasicAmount: number;
     }
@@ -271,21 +284,36 @@ export async function getConsigneePriceAnalysis(
       };
       consigneeMap.set(row.consigneeName, entry);
     }
-    entry.prices.set(row.invDate, {
-      qty: row.qty,
-      basicAmount: row.basicAmount,
-    });
+    let dateData = entry.prices.get(row.invDate);
+    if (!dateData) {
+      dateData = {
+        qty: 0,
+        basicAmount: 0,
+        recipientNames: new Set<string>(),
+      };
+      entry.prices.set(row.invDate, dateData);
+    }
+
+    dateData.qty += row.qty;
+    dateData.basicAmount += row.basicAmount;
+    if (row.recipientName) {
+      dateData.recipientNames.add(row.recipientName);
+    }
+
     entry.totalQty += row.qty;
     entry.totalBasicAmount += row.basicAmount;
   }
 
   const consignees: ConsigneePriceRow[] = Array.from(consigneeMap.values()).map(
     (c) => {
-      const pricesObj: Record<string, number | null> = {};
+      const pricesObj: Record<string, ConsigneePriceCell | null> = {};
       for (const d of dates) {
         const dateData = c.prices.get(d);
         if (dateData && dateData.qty > 0) {
-          pricesObj[d] = dateData.basicAmount / dateData.qty;
+          pricesObj[d] = {
+            price: dateData.basicAmount / dateData.qty,
+            recipientNames: Array.from(dateData.recipientNames).sort(),
+          };
         } else {
           pricesObj[d] = null;
         }
@@ -321,3 +349,4 @@ export async function getConsigneePriceAnalysis(
     consignees,
   };
 }
+
